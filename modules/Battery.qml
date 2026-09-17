@@ -10,8 +10,6 @@ Pill {
   readonly property bool charging: battery.state === UPowerDeviceState.Charging
   readonly property int level: Math.round(battery.percentage * 100)
 
-  // Material Symbols names the charging icons by percentage, but the
-  // discharging ones by how many of the six bars are filled.
   icon: {
     if (charging) {
       if (level >= 95) return "battery_charging_full_2"

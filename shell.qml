@@ -45,6 +45,8 @@ ShellRoot {
 
         Item { Layout.fillWidth: true }
 
+        Volume {}
+        Network {}
         Battery {}
         Clock {}
       }
