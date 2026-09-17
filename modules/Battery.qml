@@ -1,43 +1,38 @@
-import Quickshell
-import Quickshell.Services.UPower
 import QtQuick
-import QtQuick.Layouts
+import Quickshell.Services.UPower
+import qs.theme
+import qs.components
 
-RowLayout {
+Pill {
   id: root
-  spacing: 6
 
-  property var battery: UPower.displayDevice
-  property var charging: battery.state === UPowerDeviceState.Charging
+  readonly property var battery: UPower.displayDevice
+  readonly property bool charging: battery.state === UPowerDeviceState.Charging
   readonly property int level: Math.round(battery.percentage * 100)
 
-  readonly property string icon: {
-    if (charging) return String.fromCodePoint(0xF0084)
-    if (level >= 100) return String.fromCodePoint(0xF0079)
-    if (level < 10) return String.fromCodePoint(0xF0083)
-
-    return String.fromCodePoint(0xF007A + (Math.floor(level / 10) - 1))
-  }
-
-  Text {
-    text: root.icon
-    color: root.charging ? "#7ad9a8" : root.level <= 15 ? "#ff5048" : root.level <= 30 ? "#ffa478" : "#7ad9a8"
-
-    font {
-      family: "JetBrainsMono Nerd Font Propo"
-      pixelSize: 13
+  // Material Symbols names the charging icons by percentage, but the
+  // discharging ones by how many of the six bars are filled.
+  icon: {
+    if (charging) {
+      if (level >= 95) return "battery_charging_full_2"
+      if (level >= 90) return "battery_charging_90_2"
+      if (level >= 80) return "battery_charging_80_2"
+      if (level >= 60) return "battery_charging_60_2"
+      if (level >= 50) return "battery_charging_50_2"
+      if (level >= 30) return "battery_charging_30_2"
+      return "battery_charging_20_2"
     }
+
+    if (level >= 95) return "battery_android_frame_full"
+    if (level >= 90) return "battery_android_frame_6"
+    if (level >= 80) return "battery_android_frame_5"
+    if (level >= 60) return "battery_android_frame_4"
+    if (level >= 50) return "battery_android_frame_3"
+    if (level >= 30) return "battery_android_frame_2"
+    return "battery_android_frame_alert"
   }
 
-  Text {
-    text: root.level + "%"
-    color: "#f5e2c5"
+  iconColor: charging ? Theme.green : level <= 15 ? Theme.red : level <= 30 ? Theme.orange : Theme.green
 
-    font {
-      family: "SFProDisplay Nerd Font"
-      pixelSize: 13
-      weight: 600
-    }
-  }
+  text: `${root.level}%`
 }
-
