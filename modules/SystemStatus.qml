@@ -1,11 +1,12 @@
 import QtQuick
+import Quickshell.Bluetooth
 import Quickshell.Networking
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import qs.theme
 import qs.components
 
-// the right tab: wifi, volume, battery and the do-not-disturb lamp.
+// the right tab: wifi, bluetooth, volume, battery and the do-not-disturb lamp.
 Row {
   id: root
 
@@ -13,6 +14,10 @@ Row {
   readonly property var wifiNetwork: root.wifiDevice?.networks.values.find(n => n.connected) ?? null
   readonly property bool wifiUp: Networking.wifiEnabled && root.wifiNetwork !== null
   readonly property real signalStrength: root.wifiNetwork?.signalStrength ?? 0
+
+  readonly property var btAdapter: Bluetooth.defaultAdapter
+  readonly property bool btEnabled: root.btAdapter?.enabled ?? false
+  readonly property bool btConnected: root.btEnabled && Bluetooth.devices.values.some(d => d.connected)
 
   readonly property var sink: Pipewire.defaultAudioSink
   readonly property bool sinkReady: root.sink?.ready ?? false
@@ -39,6 +44,16 @@ Row {
     // the design paints every glyph the same shade. dimming rather than
     // reddening is the smallest deviation that still makes a dead radio legible.
     iconColor: root.wifiUp ? Theme.glyph : Theme.textDim
+  }
+
+  Glyph {
+    icon: {
+      if (!root.btEnabled) return "bluetooth_disabled"
+      if (root.btConnected) return "bluetooth_connected"
+      return "bluetooth"
+    }
+
+    iconColor: root.btEnabled ? Theme.glyph : Theme.textDim
   }
 
   Glyph {
