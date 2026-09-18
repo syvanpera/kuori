@@ -36,6 +36,11 @@ Singleton {
   readonly property color workspaceOccupied: "#6f87a8"
   readonly property color workspaceEmpty: root.tint.alpha(0.28)
 
+  // the focused-window marker borrows the accent the same way the active
+  // workspace dot does, instead of reaching for Theme.accent at the call site.
+  // the hyprland border it replaces was this exact colour.
+  readonly property color focusMarkColor: root.accent
+
   property int borderWidth: 5
   property int screenCornerRadius: 12
 
@@ -65,6 +70,18 @@ Singleton {
   property int dotSize: 5
   property int dotSpacing: 7
   property real dotGlow: 7
+
+  // the triangle marking the focused window, drawn into its upper-right corner.
+  // this is the length of each of its two legs, not its hypotenuse.
+  property int focusMarkSize: 14
+
+  // hyprland rounds window corners by 8, so a triangle whose right angle sat
+  // exactly on the corner would point at a sliver of wallpaper outside the
+  // window's own curve. pulling the vertex in diagonally keeps the whole mark
+  // on the window surface.
+  property int focusMarkInset: 3
+
+  property int focusMarkFade: 150
 
   property int systemSpacing: 9
   property int batterySpacing: 5
