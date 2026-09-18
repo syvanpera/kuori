@@ -8,8 +8,15 @@ Singleton {
   // the design's palette, hardcoded. the colors.json this singleton used to
   // watch is not on disk any more, and a frame this specific is not meant to be
   // recoloured from a generated palette.
-  readonly property color frame: "#0b0f16"
-  readonly property color notch: "#0f1726"
+
+  // the frame and the notches are one surface: the border band and the tabs
+  // hanging off it read as a single continuous shape, which only works while they
+  // are exactly the same colour. they were #0b0f16 and #0f1726 until the design
+  // merged them, so this is one token with two names rather than two values that
+  // have to be kept in step by hand.
+  readonly property color surface: "#0f1726"
+  readonly property color frame: root.surface
+  readonly property color notch: root.surface
 
   readonly property color accent: "#5aa2ff"
   readonly property color urgent: "#e4574f"
