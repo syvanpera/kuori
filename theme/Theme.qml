@@ -90,4 +90,114 @@ Singleton {
     "GRAD": 0,
     "opsz": 24
   })
+
+  // the launcher dims the whole screen behind itself. the only colour in the
+  // design not derived from the frame's palette, because it is the desktop seen
+  // through smoked glass rather than a surface of the shell.
+  readonly property color shade: "#06090e"
+  readonly property color ink: "#000000"
+  readonly property color launcherScrim: root.shade.alpha(0.55)
+  readonly property color launcherShadow: root.ink.alpha(0.5)
+
+  // every raised surface inside the panel is white at one of three alphas over
+  // the notch colour, the same trick the frame plays with tint.
+  readonly property color sheen: "#ffffff"
+  readonly property color launcherLine: root.sheen.alpha(0.07)
+  readonly property color launcherRaise: root.sheen.alpha(0.06)
+  readonly property color launcherSunken: root.sheen.alpha(0.04)
+  readonly property color launcherChipActive: root.accent.alpha(0.14)
+
+  // the mockup writes the launcher's neutral as #e0eaf8 and the frame's as
+  // #dce6f5. two hex steps apart is not two colours, so the launcher borrows the
+  // frame's tint and keeps only the alphas.
+  readonly property color launcherKeyText: root.tint.alpha(0.6)
+  readonly property color launcherChipText: root.tint.alpha(0.5)
+  readonly property color launcherNameText: root.tint.alpha(0.8)
+  readonly property color launcherDimText: root.tint.alpha(0.4)
+
+  // the query being typed and the row under the selection are the only things in
+  // the panel allowed to be brighter than the frame's text.
+  readonly property color tintBright: "#eef4fd"
+
+  property int launcherWidth: 520
+  property int launcherTop: 96
+  property int launcherRise: 12
+
+  property int launcherPadding: 16
+  property int launcherRowGap: 11
+  property int launcherSearchPadding: 14
+  property int launcherSearchIcon: 19
+  property int launcherInputSize: 14
+
+  // the keycaps are their own thing: every future overlay labels its shortcuts
+  // the same way, so these are not prefixed.
+  property int keyCapPaddingH: 6
+  property int keyCapPaddingV: 2
+  property int keyCapRadius: 5
+
+  // the design says 9.5px. font.pixelSize is an int, and pointSize would make the
+  // size depend on whichever monitor the launcher opened on.
+  property int keyCapSize: 10
+
+  property int launcherChipRowPadding: 10
+  property int launcherChipRowBottom: 6
+  property int launcherChipSpacing: 6
+  property int launcherChipPaddingH: 11
+  property int launcherChipPaddingV: 6
+  property int launcherChipRadius: 9
+  property int launcherChipSize: 10
+
+  // css letter-spacing is in em, font.letterSpacing is in pixels.
+  readonly property real launcherChipLetterSpacing: root.launcherChipSize * 0.07
+
+  property int launcherGridPadding: 10
+  property int launcherGridTop: 6
+  property int launcherGridBottom: 12
+  property int launcherGridGap: 4
+  property int launcherGridMax: 326
+
+  property int launcherRowPaddingH: 11
+  property int launcherRowPaddingV: 9
+  property int launcherRowRadius: 11
+  property int launcherRowTextSpacing: 2
+  property int launcherIconSize: 32
+  property int launcherIconRadius: 9
+  property int launcherIconInner: 20
+
+  // the icon chip plus its padding above and below. the grid's cell height is
+  // derived from this, so it cannot just fall out of the row's contents.
+  readonly property int launcherRowHeight: root.launcherIconSize + root.launcherRowPaddingV * 2
+
+  property int launcherNameSize: 12
+  property int launcherDetailSize: 10
+  property int launcherEmptySize: 12
+  property int launcherEmptyBottom: 18
+
+  property int launcherFooterPaddingH: 14
+  property int launcherFooterPaddingV: 9
+  property int launcherFooterSpacing: 8
+  property int launcherFooterSize: 10
+
+  property int launcherFade: 160
+  property int launcherSlideDuration: 200
+
+  // css cubic-bezier(.2,.8,.2,1). Easing.Bezier wants the two control points
+  // followed by the end point, which is always 1,1.
+  readonly property var launcherEase: [0.2, 0.8, 0.2, 1.0, 1.0, 1.0]
+
+  property real launcherShadowBlur: 70
+  property real launcherShadowOffset: 24
+
+  property string uiFont: "Manrope"
+
+  // Manrope is one variable file whose default named instance is ExtraLight, so
+  // font.weight alone leaves a 600 heading looking like a hairline. pinning the
+  // axis is the same fix the symbol font already needs.
+  property var uiAxesSemiBold: ({ "wght": 600 })
+
+  // css line-height:1.2 in a box. Text.implicitHeight follows the font's own line
+  // spacing, which is taller, and would make every chip a few pixels fat.
+  function lineBox(size: real): int {
+    return Math.round(size * 1.2)
+  }
 }
