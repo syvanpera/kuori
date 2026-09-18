@@ -14,7 +14,9 @@ Singleton {
   // are exactly the same colour. they were #0b0f16 and #0f1726 until the design
   // merged them, so this is one token with two names rather than two values that
   // have to be kept in step by hand.
-  readonly property color surface: "#0f1726"
+  readonly property color surface: "#0b0f16"
+  // The color below is here just so that I remember it
+  // readonly property color surface: "#0f1726"
   readonly property color frame: root.surface
   readonly property color notch: root.surface
 
