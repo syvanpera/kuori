@@ -36,10 +36,19 @@ Singleton {
   readonly property color workspaceOccupied: "#6f87a8"
   readonly property color workspaceEmpty: root.tint.alpha(0.28)
 
-  // the focused-window marker borrows the accent the same way the active
-  // workspace dot does, instead of reaching for Theme.accent at the call site.
-  // the hyprland border it replaces was this exact colour.
-  readonly property color focusMarkColor: root.accent
+  // how solid the focus mark is over the window it sits on. at full strength the
+  // accent is a hard block against a dark window, so it is let down a little and
+  // the window reads through it.
+  //
+  // this is alpha baked into the fill rather than an opacity on the item, because
+  // FrameWindow drives that property to fade the mark in and out and would
+  // overwrite anything set here.
+  property real focusMarkOpacity: 0.75
+
+  // the mark borrows the accent the same way the active workspace dot does,
+  // instead of reaching for Theme.accent at the call site. the hyprland border it
+  // stands in for was this exact colour.
+  readonly property color focusMarkColor: root.accent.alpha(root.focusMarkOpacity)
 
   property int borderWidth: 5
   property int screenCornerRadius: 12
@@ -77,7 +86,7 @@ Singleton {
   //
   // it has to clear focusMarkRadius comfortably or the corner arc eats the whole
   // shape and the wedge stops reading as one.
-  property int focusMarkSize: 24
+  property int focusMarkSize: 20
 
   // the mark sits flush in the corner, so its own outer corner has to be rounded
   // by exactly what hyprland rounds the window by -- decoration.rounding in
