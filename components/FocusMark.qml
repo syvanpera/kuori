@@ -2,54 +2,63 @@ import QtQuick
 import QtQuick.Shapes
 import qs.theme
 
-// the triangle that marks the focused window: a right angle tucked into the
-// window's top-right corner, with its two legs running back along the top edge
-// and down the right edge.
+// the wedge that marks the focused window: it fills the window's top-right corner
+// out to both edges, with its own corner rounded by the same radius hyprland
+// rounds the window by, so the two outlines coincide and no strip of window shows
+// between the mark and the edges it sits against.
 //
-// the item's own top-right corner is the window's top-right corner, and the
-// triangle sits inset from it, so whatever places this only has to know where the
-// window's corner is.
+// the item is exactly the corner it fills, so whatever places this only has to
+// line its top-right up with the window's.
 Shape {
   id: root
 
-  // the geometry renderer flattens at build time and cannot re-tessellate for a
-  // fractional device pixel ratio; the curve renderer evaluates in the fragment
-  // shader, so the hypotenuse stays clean at eDP-1's 1.6x. same choice, and the
-  // same reason, as DesktopFrame.
+  // the geometry renderer flattens arcs at build time and cannot re-tessellate for
+  // a fractional device pixel ratio; the curve renderer evaluates them in the
+  // fragment shader, so the corner stays smooth at eDP-1's 1.6x. same choice, and
+  // the same reason, as DesktopFrame.
   preferredRendererType: Shape.CurveRenderer
 
   // width and height, not implicitWidth and implicitHeight: Shape derives its own
-  // implicit size from the path bounding box, which is the triangle alone and
-  // leaves out the inset on the top and right. that would put the right angle back
-  // on the window edge, which is the one place it must not be.
-  width: Theme.focusMarkSize + Theme.focusMarkInset
-  height: Theme.focusMarkSize + Theme.focusMarkInset
+  // implicit size from the path bounding box and would overwrite these.
+  width: Theme.focusMarkSize
+  height: Theme.focusMarkSize
 
   // no glow behind it. RectangularShadow only does rectangles, and MultiEffect
-  // would allocate a framebuffer for a fourteen pixel triangle -- the trade
-  // WorkspaceDots already makes for its dots.
+  // would allocate a framebuffer for a mark this size -- the trade WorkspaceDots
+  // already makes for its dots.
   ShapePath {
     fillColor: Theme.focusMarkColor
     strokeWidth: -1
 
-    // the far end of the top leg. the right angle is one PathLine along from here,
-    // pulled in from both edges of the item by the inset.
+    // the inner end of the top edge, where the hypotenuse meets it.
     startX: 0
-    startY: Theme.focusMarkInset
+    startY: 0
 
+    // out along the top edge, stopping where the window's corner starts to turn.
     PathLine {
-      x: Theme.focusMarkSize
-      y: Theme.focusMarkInset
+      x: Theme.focusMarkSize - Theme.focusMarkRadius
+      y: 0
     }
 
-    PathLine {
+    // the corner itself, riding the window's own curve round onto the right edge.
+    PathArc {
       x: Theme.focusMarkSize
-      y: Theme.focusMarkSize + Theme.focusMarkInset
+      y: Theme.focusMarkRadius
+      radiusX: Theme.focusMarkRadius
+      radiusY: Theme.focusMarkRadius
+      direction: PathArc.Clockwise
     }
 
+    // back down the right edge to the bottom of the wedge,
+    PathLine {
+      x: Theme.focusMarkSize
+      y: Theme.focusMarkSize
+    }
+
+    // and the hypotenuse home.
     PathLine {
       x: 0
-      y: Theme.focusMarkInset
+      y: 0
     }
   }
 }

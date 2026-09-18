@@ -71,15 +71,20 @@ Singleton {
   property int dotSpacing: 7
   property real dotGlow: 7
 
-  // the triangle marking the focused window, drawn into its upper-right corner.
-  // this is the length of each of its two legs, not its hypotenuse.
-  property int focusMarkSize: 14
+  // the wedge marking the focused window, which fills its upper-right corner out
+  // to both edges. this is how far it reaches along each of them, not the length
+  // of the hypotenuse across the back.
+  //
+  // it has to clear focusMarkRadius comfortably or the corner arc eats the whole
+  // shape and the wedge stops reading as one.
+  property int focusMarkSize: 24
 
-  // hyprland rounds window corners by 8, so a triangle whose right angle sat
-  // exactly on the corner would point at a sliver of wallpaper outside the
-  // window's own curve. pulling the vertex in diagonally keeps the whole mark
-  // on the window surface.
-  property int focusMarkInset: 3
+  // the mark sits flush in the corner, so its own outer corner has to be rounded
+  // by exactly what hyprland rounds the window by -- decoration.rounding in
+  // looknfeel.lua, which nothing here can read, so the two are kept in step by
+  // hand. it is an arc rather than a superellipse because rounding_power is 2;
+  // anything else there and this would have to be drawn as a curve.
+  property int focusMarkRadius: 12
 
   property int focusMarkFade: 150
 
