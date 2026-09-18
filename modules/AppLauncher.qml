@@ -157,7 +157,16 @@ Rectangle {
           // needs a modifier to jump to the ends.
           const jump = event.modifiers & Qt.ControlModifier
 
-          if (event.key === Qt.Key_Home && jump) {
+          // ctrl+n and ctrl+p as well as the arrows, the readline pair every shell
+          // and editor here already answers to. they keep the hands on the home row
+          // while typing a query, which is the whole point of a launcher.
+          if (event.key === Qt.Key_N && jump) {
+            root.step(1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_P && jump) {
+            root.step(-1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_Home && jump) {
             root.selectedIndex = 0
             root.mouseArmed = false
             event.accepted = true

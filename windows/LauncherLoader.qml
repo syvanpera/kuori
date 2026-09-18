@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
-import QtQuick
 import qs.services
 
 // owns the launcher window's lifetime. the window exists only while the launcher
