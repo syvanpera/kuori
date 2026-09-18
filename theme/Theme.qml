@@ -1,94 +1,93 @@
 pragma Singleton
 import QtQuick
 import Quickshell
-import Quickshell.Io
 
 Singleton {
   id: root
 
-  FileView {
-    path: `${Quickshell.env("HOME")}/Playground/poly-quickshell/colors.json`
-    watchChanges: true
-    onFileChanged: reload()
+  // the design's palette, hardcoded. the colors.json this singleton used to
+  // watch is not on disk any more, and a frame this specific is not meant to be
+  // recoloured from a generated palette.
+  readonly property color frame: "#0b0f16"
+  readonly property color notch: "#0f1726"
 
-    JsonAdapter {
-      id: palette
+  readonly property color accent: "#5aa2ff"
+  readonly property color urgent: "#e4574f"
+  readonly property color warm: "#f0c674"
 
-      property string name: "unknown"
+  // every neutral in the design is one tint at a different alpha, so derive them
+  // instead of pasting four near-identical rgba values.
+  readonly property color tint: "#dce6f5"
+  readonly property color text: root.tint
+  readonly property color glyph: root.tint.alpha(0.85)
+  readonly property color textDim: root.tint.alpha(0.55)
 
-      property string bg0: "#040e0d"
-      property string bg1: "#0a1816"
-      property string bg2: "#0f211f"
-      property string bg3: "#152a26"
-      property string bg4: "#1d3631"
+  readonly property color workspaceActive: root.accent
+  readonly property color workspaceUrgent: root.urgent
+  readonly property color workspaceOccupied: "#6f87a8"
+  readonly property color workspaceEmpty: root.tint.alpha(0.28)
 
-      property string fg: "#f5e2c5"
+  property int borderWidth: 5
+  property int screenCornerRadius: 12
 
-      property string red: "#ff6048"
-      property string orange: "#ffa478"
-      property string yellow: "#f5cd5b"
-      property string green: "#7ad9a8"
-      property string aqua: "#3dd1b0"
-      property string blue: "#5fc8d4"
-      property string purple: "#e89aa8"
+  // the design draws a 5px border inside a 12px corner, which leaves the
+  // desktop opening rounded by whatever is left over.
+  readonly property int screenInnerRadius: Math.max(0, root.screenCornerRadius - root.borderWidth)
 
-      property string grey0: "#3a1a35"
-      property string grey1: "#5a4d3e"
-      property string grey2: "#c4b09a"
-    }
-  }
+  property int notchHeight: 25
+  property int notchRadius: 12
 
-  readonly property string name: palette.name
+  // half a logical pixel of overlap wherever two separately rasterised shapes
+  // meet, so their antialiased edges cannot leave a hairline of transparent
+  // panel showing between them.
+  readonly property real seamBleed: 0.5
 
-  property color bg: "transparent"
+  // the design sizes everything inside a notch off its height, so one change to
+  // notchHeight rescales the whole strip the way the mockup does.
+  readonly property int notchPadding: Math.round(root.notchHeight * 0.56)
+  readonly property int notchPaddingWide: Math.round(root.notchHeight * 0.8)
+  readonly property int iconSize: Math.round(root.notchHeight * 0.56)
+  readonly property int clockSize: Math.round(root.notchHeight * 0.48)
+  readonly property int labelSize: 10
 
-  readonly property color pill: palette.bg1
-  readonly property color pillIcon: palette.bg3
-  readonly property color text: palette.fg
+  // css letter-spacing is in em, font.letterSpacing is in pixels.
+  readonly property real clockLetterSpacing: root.clockSize * 0.04
 
-  readonly property color red: palette.red
-  readonly property color orange: palette.orange
-  readonly property color yellow: palette.yellow
-  readonly property color green: palette.green
-  readonly property color cyan: palette.aqua
-  readonly property color teal: palette.blue
-  readonly property color blue: palette.blue
-  readonly property color purple: palette.purple
-  readonly property color magenta: palette.purple
-  readonly property color pink: palette.purple
+  property int dotSize: 5
+  property int dotSpacing: 7
+  property real dotGlow: 7
 
-  readonly property color accent: cyan
+  property int systemSpacing: 9
+  property int batterySpacing: 5
 
-  property int barHeight: 50
-  property int moduleHeight: 30
-  property int spacing: 8
-  property int radius: moduleHeight / 2
-  property int margin: 13
-
-  property int shadowRoom: 24
-  property real shadowBlur: 16
-  property real shadowSpread: 1
-  property real shadowOffset: 3
-  property color shadowColor: Qt.rgba(0, 0, 0, 0.45)
-
-  property string font: "SFProDisplay Nerd Font"
-  property real letterSpacing: 0
+  // "JetBrains Mono" does not resolve on this machine, it falls back to DejaVu.
+  // the nerd font patch is the only build installed and keeps the upstream
+  // metrics, so the design's advance widths still land where the mockup put them.
+  property string monoFont: "JetBrainsMono Nerd Font"
 
   property string iconFont: "Material Symbols Rounded"
 
   // Material Symbols ship as one variable font.
-  // Four axes shape every icon on the bar:
+  // Four axes shape every icon on the frame:
   //   FILL  0 outlined, 1 solid. Values between work.
   //   wght  stroke thickness, 100 thin to 700 bold
   //   GRAD  emphasis tweak, -25 to 200
   //   opsz  the size you draw at, so the font tunes proportions
+  // the design pins opsz to 24 even though the glyphs render at 14, so keep it
+  // rather than matching pixelSize.
   property var iconAxes: ({
     "FILL": 0,
-    "wght": 700,
+    "wght": 400,
     "GRAD": 0,
-    "opsz": 20
+    "opsz": 24
   })
 
-  property real textSize: 13
-  property int iconSize: 14
+  // only the do-not-disturb lamp is filled. a second frozen map beats mutating
+  // iconAxes, which would change every glyph at once and emit no notify.
+  property var iconAxesFilled: ({
+    "FILL": 1,
+    "wght": 400,
+    "GRAD": 0,
+    "opsz": 24
+  })
 }
