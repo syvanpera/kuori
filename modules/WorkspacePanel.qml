@@ -55,7 +55,7 @@ Row {
 
         text: pill.id
         color: {
-          if (pill.lit) return Theme.wsPillLitText
+          if (pill.lit) return Theme.litText
           if (pill.occupied) return Theme.workspaceOccupied
           return Theme.wsPillEmptyText
         }

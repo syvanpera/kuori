@@ -106,7 +106,7 @@ Singleton {
   // nothing here has to know what they are. how thick is the whole shape of it:
   // it sits on the edge rather than floating over it, so that it can fill the
   // wedges the window's rounded corners leave and read as part of the window.
-  property int focusStripThickness: 4
+  property int focusStripThickness: 5
 
   // which of the window's horizontal edges the strip sits on: "top" or "bottom".
   property string focusStripEdge: "top"
@@ -192,9 +192,48 @@ Singleton {
   property int wsPillSpacing: 4
   property int wsPillTextSize: 13
 
-  // a lit pill is dark text on the state colour; the rest are a wash over the
-  // surface, the same sheen the launcher raises its rows with.
-  readonly property color wsPillLitText: "#081018"
+  // the clock panel: a big time, the date, a month grid and whatever is on today.
+  property int clockPanelWidth: 224
+  property int clockPanelPaddingH: 18
+  property int clockPanelPaddingV: 14
+
+  readonly property color notchPanelLine: root.sheen.alpha(0.09)
+
+  property int clockBigSize: 30
+  property int clockDateSize: 12
+  property int clockDateGap: 6
+
+  // css letter-spacing is in em, font.letterSpacing is in pixels.
+  readonly property real clockBigSpacing: root.clockBigSize * 0.02
+
+  property int calNavSize: 20
+  property int calNavRadius: 6
+  property int calNavIcon: 16
+  property int calMonthSize: 11
+  readonly property real calMonthSpacing: root.calMonthSize * 0.06
+
+  property int calWeekColumn: 22
+  property int calCellHeight: 22
+  property int calHeadHeight: 16
+  property int calCellRadius: 7
+  property int calGap: 2
+  property int calDaySize: 11
+  property int calHeadSize: 9
+
+  readonly property color calHeadText: root.tint.alpha(0.35)
+  readonly property color calWeekText: root.tint.alpha(0.3)
+  readonly property color calDayText: root.tint.alpha(0.72)
+  readonly property color calNavText: root.tint.alpha(0.55)
+
+  property int eventIcon: 18
+  property int eventTitleSize: 12
+  property int eventDetailSize: 11
+  property int eventGap: 10
+
+  // dark text for anything sitting on a lit accent surface: a workspace pill, the
+  // calendar's today. the rest are a wash over the surface, the same sheen the
+  // launcher raises its rows with.
+  readonly property color litText: "#081018"
   readonly property color wsPillOccupied: root.sheen.alpha(0.09)
   readonly property color wsPillEmpty: root.sheen.alpha(0.04)
   readonly property color wsPillEmptyText: root.tint.alpha(0.38)

@@ -81,6 +81,10 @@ PanelWindow {
     y: Theme.borderWidth
     placement: "center"
 
+    panel: Component {
+      ClockPanel {}
+    }
+
     ClockLabel {}
   }
 
