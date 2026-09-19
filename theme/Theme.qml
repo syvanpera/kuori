@@ -165,6 +165,26 @@ Singleton {
   property real notchShadowAmbientSpread: 2
   property real notchShadowContactSpread: 1
 
+  // hovering a tab collapses its strip and puts a panel in its place. one box that
+  // grows, rather than the design's two stacked boxes, because the tab and the
+  // panel share a corner and the fillets already follow the body wherever it goes.
+  property int notchPanelPadding: 8
+  property int notchExpandDuration: 240
+  property int notchFadeDuration: 160
+
+  // the workspace panel: one pill per workspace, the same states the dots show.
+  property int wsPillSize: 30
+  property int wsPillRadius: 10
+  property int wsPillSpacing: 4
+  property int wsPillTextSize: 13
+
+  // a lit pill is dark text on the state colour; the rest are a wash over the
+  // surface, the same sheen the launcher raises its rows with.
+  readonly property color wsPillLitText: "#081018"
+  readonly property color wsPillOccupied: root.sheen.alpha(0.09)
+  readonly property color wsPillEmpty: root.sheen.alpha(0.04)
+  readonly property color wsPillEmptyText: root.tint.alpha(0.38)
+
   // every raised surface inside the panel is white at one of three alphas over
   // the notch colour, the same trick the frame plays with tint.
   readonly property color sheen: "#ffffff"
@@ -247,9 +267,10 @@ Singleton {
   property int launcherFade: 160
   property int launcherSlideDuration: 200
 
-  // css cubic-bezier(.2,.8,.2,1). Easing.Bezier wants the two control points
-  // followed by the end point, which is always 1,1.
-  readonly property var launcherEase: [0.2, 0.8, 0.2, 1.0, 1.0, 1.0]
+  // the design uses one easing curve everywhere, css cubic-bezier(.2,.8,.2,1).
+  // Easing.Bezier wants the two control points followed by the end point, which is
+  // always 1,1.
+  readonly property var easeStandard: [0.2, 0.8, 0.2, 1.0, 1.0, 1.0]
 
   property real launcherShadowBlur: 70
   property real launcherShadowOffset: 24

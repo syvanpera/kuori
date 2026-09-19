@@ -158,7 +158,7 @@ PanelWindow {
       NumberAnimation {
         duration: Theme.launcherSlideDuration
         easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.launcherEase
+        easing.bezierCurve: Theme.easeStandard
       }
     }
 

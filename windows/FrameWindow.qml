@@ -125,6 +125,10 @@ PanelWindow {
     y: Theme.borderWidth
     placement: "left"
 
+    panel: Component {
+      WorkspacePanel {}
+    }
+
     WorkspaceDots {}
   }
 
