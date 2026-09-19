@@ -420,6 +420,13 @@ Singleton {
 
   readonly property color sysSliderRail: root.sheen.alpha(0.1)
 
+  // the brightness row, which sits under the accordion and is not part of it.
+  property int sysBrightPadding: 9
+  property int sysBrightGap: 10
+  property int sysBrightIcon: 17
+
+  readonly property color sysBrightGlyph: root.tint.alpha(0.6)
+
   // the power profile buttons: three of them sharing the width.
   property int sysProfileGap: 6
   property int sysProfilePaddingV: 7

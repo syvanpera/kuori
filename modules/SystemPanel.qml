@@ -56,5 +56,11 @@ Column {
 
       onToggled: root.toggle("battery")
     }
+
+    // last in the same section as the rows, which is where the design puts it:
+    // close enough to be one list, without pretending to fold open.
+    BrightnessRow {
+      width: parent.width
+    }
   }
 }
