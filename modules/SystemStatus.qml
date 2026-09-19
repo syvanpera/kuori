@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell.Networking
-import Quickshell.Services.UPower
 import qs.services
 import qs.theme
 import qs.components
@@ -23,9 +22,8 @@ Row {
   readonly property bool muted: Audio.muted
   readonly property int volume: Math.round(Audio.volume * 100)
 
-  readonly property var battery: UPower.displayDevice
-  readonly property bool charging: root.battery?.state === UPowerDeviceState.Charging
-  readonly property int level: Math.round((root.battery?.percentage ?? 0) * 100)
+  readonly property bool charging: Power.charging
+  readonly property int level: Power.percent
 
   spacing: Theme.systemSpacing
 
@@ -70,29 +68,9 @@ Row {
     spacing: Theme.batterySpacing
 
     Glyph {
-      // battery_charging_90_2 does not exist in the installed font and rendered
-      // as literal text in the old bar; battery_charging_90 is the real name.
-      readonly property var ladder: root.charging
-        ? [
-          { floor: 95, icon: "battery_charging_full_2" },
-          { floor: 80, icon: "battery_charging_90" },
-          { floor: 60, icon: "battery_charging_80_2" },
-          { floor: 50, icon: "battery_charging_60_2" },
-          { floor: 40, icon: "battery_charging_50_2" },
-          { floor: 20, icon: "battery_charging_30_2" },
-          { floor: 0, icon: "battery_charging_20_2" }
-        ]
-        : [
-          { floor: 95, icon: "battery_android_frame_full" },
-          { floor: 80, icon: "battery_android_frame_6" },
-          { floor: 60, icon: "battery_android_frame_5" },
-          { floor: 50, icon: "battery_android_frame_4" },
-          { floor: 40, icon: "battery_android_frame_3" },
-          { floor: 10, icon: "battery_android_frame_2" },
-          { floor: 0, icon: "battery_android_frame_alert" }
-        ]
-
-      icon: ladder.find(step => root.level >= step.floor).icon
+      // the same ladder the panel's battery row draws from, so the strip and the
+      // row can never disagree about what the battery looks like.
+      icon: Power.glyph
       iconColor: !root.charging && root.level <= 15 ? Theme.urgent : Theme.glyph
     }
 

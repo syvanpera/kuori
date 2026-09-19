@@ -49,5 +49,12 @@ Column {
 
       onToggled: root.toggle("audio")
     }
+
+    BatteryRow {
+      width: parent.width
+      expanded: root.open === "battery"
+
+      onToggled: root.toggle("battery")
+    }
   }
 }

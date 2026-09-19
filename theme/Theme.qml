@@ -419,6 +419,15 @@ Singleton {
   property int sysSliderLabelWidth: 26
 
   readonly property color sysSliderRail: root.sheen.alpha(0.1)
+
+  // the power profile buttons: three of them sharing the width.
+  property int sysProfileGap: 6
+  property int sysProfilePaddingV: 7
+  property int sysProfileRadius: 9
+  property int sysProfileSize: 10
+
+  readonly property color sysProfileOn: root.accent.alpha(0.14)
+  readonly property color sysProfileOff: root.sheen.alpha(0.04)
   readonly property color sysSliderText: root.tint.alpha(0.6)
 
   // an output or input you could pick. two hex steps dimmer than a network name

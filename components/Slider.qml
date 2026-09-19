@@ -1,9 +1,9 @@
 import QtQuick
 import qs.theme
 
-// the design's slider: a thin track with an accent fill and a round knob centred
-// on the end of it. it reports where it was dragged to rather than moving itself,
-// so what it shows is always what the thing behind it settled on.
+// a Meter with a knob on the end of the fill and somewhere to drag it. it reports
+// where it was dragged to rather than moving itself, so what it shows is always
+// what the thing behind it settled on.
 Item {
   id: root
 
@@ -12,31 +12,22 @@ Item {
 
   signal moved(real value)
 
-  readonly property real fraction: Math.max(0, Math.min(1, root.value))
-
   implicitHeight: Theme.sysSliderKnob
 
-  Rectangle {
+  Meter {
+    id: track
+
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.verticalCenter: parent.verticalCenter
 
-    height: Theme.sysSliderTrack
-    radius: Theme.sysSliderRadius
-    color: Theme.sysSliderRail
-
-    Rectangle {
-      width: parent.width * root.fraction
-      height: parent.height
-      radius: parent.radius
-      color: Theme.accent
-    }
+    value: root.value
   }
 
   // centred on the end of the fill, so at full it sits half outside the track --
   // which is what the design draws.
   Rectangle {
-    x: root.width * root.fraction - width / 2
+    x: root.width * track.fraction - width / 2
     anchors.verticalCenter: parent.verticalCenter
 
     width: Theme.sysSliderKnob
