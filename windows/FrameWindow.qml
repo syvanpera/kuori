@@ -113,6 +113,10 @@ PanelWindow {
     notchId: "system"
     trigger: "click"
 
+    panel: Component {
+      SystemPanel {}
+    }
+
     SystemStatus {}
   }
 }
