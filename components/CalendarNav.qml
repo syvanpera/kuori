@@ -12,7 +12,7 @@ Rectangle {
   width: Theme.calNavSize
   height: Theme.calNavSize
   radius: Theme.calNavRadius
-  color: hover.hovered ? Theme.launcherRaise : "transparent"
+  color: mouse.containsMouse ? Theme.launcherRaise : "transparent"
 
   Behavior on color {
     ColorAnimation { duration: 150 }
@@ -26,11 +26,15 @@ Rectangle {
     size: Theme.calNavIcon
   }
 
-  HoverHandler {
-    id: hover
-  }
+  // a MouseArea rather than Tap and Hover handlers: a TapHandler takes an
+  // exclusive grab when it fires, which cancels the hover the tab is holding
+  // itself open with, so paging the month folded the whole panel away instead.
+  MouseArea {
+    id: mouse
 
-  TapHandler {
-    onTapped: root.clicked()
+    anchors.fill: parent
+    hoverEnabled: true
+
+    onClicked: root.clicked()
   }
 }
