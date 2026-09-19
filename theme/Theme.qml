@@ -212,6 +212,10 @@ Singleton {
   property int clockBigSize: 30
   property int clockDateSize: 12
   property int clockDateGap: 6
+  property int dateUndoSize: 13
+  property int dateUndoGap: 5
+
+  readonly property color clockDateText: root.tint.alpha(0.62)
 
   // css letter-spacing is in em, font.letterSpacing is in pixels.
   readonly property real clockBigSpacing: root.clockBigSize * 0.02

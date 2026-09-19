@@ -10,6 +10,9 @@ Column {
 
   readonly property date now: Time.date
 
+  readonly property bool offMonth: root.monthOffset !== 0
+  readonly property color dateColor: root.offMonth ? Theme.accent : Theme.clockDateText
+
   // which month the grid is showing, as a count from this one. reset when the tab
   // closes, so it always opens on the current month rather than wherever it was
   // left the last time.
@@ -95,16 +98,67 @@ Column {
     height: Theme.clockDateGap
   }
 
-  Text {
+  // the date is always today's, never the month being looked at. once the grid has
+  // been paged away from now it says so, by going accent and growing an undo arrow,
+  // and clicking it comes back.
+  Item {
     width: root.contentWidth
+    height: dateRow.implicitHeight
 
-    text: Qt.formatDateTime(root.now, "ddd d MMM yyyy")
-    horizontalAlignment: Text.AlignHCenter
-    color: Theme.tint.alpha(0.62)
-    font.family: Theme.uiFont
-    font.pixelSize: Theme.clockDateSize
-    font.weight: Font.Medium
-    font.variableAxes: ({ "wght": 500 })
+    Row {
+      id: dateRow
+
+      anchors.horizontalCenter: parent.horizontalCenter
+      spacing: Theme.dateUndoGap
+
+      Glyph {
+        anchors.verticalCenter: parent.verticalCenter
+
+        icon: "undo"
+        iconColor: root.dateColor
+        size: Theme.dateUndoSize
+
+        // clipped to nothing rather than hidden, so it slides out of the date's
+        // way instead of the line jumping when it appears.
+        width: root.offMonth ? Theme.dateUndoSize : 0
+        opacity: root.offMonth ? 1 : 0
+        clip: true
+
+        Behavior on width {
+          NumberAnimation {
+            duration: Theme.notchExpandDuration
+            easing.type: Easing.Bezier
+            easing.bezierCurve: Theme.easeStandard
+          }
+        }
+
+        Behavior on opacity {
+          NumberAnimation { duration: Theme.notchFadeDuration }
+        }
+      }
+
+      Text {
+        anchors.verticalCenter: parent.verticalCenter
+
+        text: Qt.formatDateTime(root.now, "ddd d MMM yyyy")
+        color: root.dateColor
+        font.family: Theme.uiFont
+        font.pixelSize: Theme.clockDateSize
+        font.weight: Font.Medium
+        font.variableAxes: ({ "wght": 500 })
+
+        Behavior on color {
+          ColorAnimation { duration: Theme.notchFadeDuration }
+        }
+      }
+    }
+
+    MouseArea {
+      anchors.fill: dateRow
+      enabled: root.offMonth
+
+      onClicked: root.monthOffset = 0
+    }
   }
 
   Item {
