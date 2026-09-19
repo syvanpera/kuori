@@ -44,6 +44,17 @@ PanelWindow {
   WlrLayershell.layer: WlrLayer.Top
   WlrLayershell.namespace: "qs-frame"
 
+  // a press that lands over a window hands focus to that window, and the pointer
+  // leave that follows cancels the click before it finishes. the grab keeps input
+  // on the shell while a panel is out, which is also what makes a click anywhere
+  // else dismiss it.
+  HyprlandFocusGrab {
+    windows: [root]
+    active: Notches.open !== ""
+
+    onCleared: Notches.close()
+  }
+
   // before the frame on purpose: the band is drawn over the top of these, so a
   // notch casts onto the desktop below it without smearing the rail it hangs off.
   NotchShadow { notch: workspaces }
@@ -66,6 +77,7 @@ PanelWindow {
     x: Theme.borderWidth
     y: Theme.borderWidth
     placement: "left"
+    notchId: "workspaces"
 
     panel: Component {
       WorkspacePanel {}
@@ -80,12 +92,16 @@ PanelWindow {
     x: Math.round((root.width - width) / 2)
     y: Theme.borderWidth
     placement: "center"
+    notchId: "clock"
+    trigger: "click"
 
     panel: Component {
       ClockPanel {}
     }
 
-    ClockLabel {}
+    ClockLabel {
+      peeking: clock.hovered
+    }
   }
 
   Notch {
@@ -94,6 +110,8 @@ PanelWindow {
     x: root.width - width - Theme.borderWidth
     y: Theme.borderWidth
     placement: "right"
+    notchId: "system"
+    trigger: "click"
 
     SystemStatus {}
   }

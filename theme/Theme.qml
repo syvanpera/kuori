@@ -183,6 +183,16 @@ Singleton {
   // grows, rather than the design's two stacked boxes, because the tab and the
   // panel share a corner and the fillets already follow the body wherever it goes.
   property int notchPanelPadding: 8
+
+  // the strip breathes this much above and below its contents, which is what lets
+  // the clock grow taller when it peeks its date.
+  property int notchStripPadding: 5
+
+  // the clock's date peek: a second line that slides out under the time on hover.
+  property int clockPeekSize: 10
+  property int clockPeekHeight: 13
+  property int clockPeekGap: 10
+  readonly property real clockPeekSpacing: root.clockPeekSize * 0.05
   property int notchExpandDuration: 240
   property int notchFadeDuration: 160
 

@@ -1,14 +1,15 @@
 import QtQuick
+import qs.services
 import qs.theme
 
 // one of the tabs hanging off the top border. the tab is inset by the border
 // width on every side it touches, so the border band runs unbroken behind it and
 // the tab reads as hanging below the band rather than cutting through it.
 //
-// hovering a tab that has a panel collapses its strip and grows the same box into
-// the panel's place. the design draws those as two stacked boxes, one of them
-// zero height at any moment; one box that changes size is the same picture, and
-// it keeps the fillets and the drop shadow following the silhouette for free.
+// a tab with a panel grows the same box into the panel's place. the design draws
+// those as two stacked boxes, one of them zero height at any moment; one box that
+// changes size is the same picture, and it keeps the fillets and the drop shadow
+// following the silhouette for free.
 Item {
   id: root
 
@@ -16,13 +17,31 @@ Item {
   // the side border; the centre one floats between them.
   property string placement: "center"
 
+  // how this tab's panel opens. hovering is right for a panel you only read; a
+  // panel with something to click has to latch, because a press that lands over a
+  // window hands focus to that window and the pointer leave that follows would
+  // fold a hover-held panel away before the click finished.
+  property string trigger: "hover"
+
+  // identifies this tab in the shared open state.
+  property string notchId: ""
+
   // the strip's contents. one child, which lays itself out and gets measured.
   default property alias content: contentItem.data
 
-  // what the tab becomes while hovered. a tab without one never opens.
+  // what the tab becomes while open. a tab without one never opens.
   property Component panel: null
 
-  readonly property bool open: hover.hovered && root.panel !== null
+  readonly property bool hovered: hover.hovered
+
+  readonly property bool open: {
+    if (!root.panel) return false
+    if (root.trigger === "click") return Notches.open === root.notchId
+
+    // a hovering tab stays shut while another tab is being read, so brushing past
+    // it cannot yank a panel out from under the pointer.
+    return root.hovered && Notches.open === ""
+  }
 
   // the item the window mask points at. it tracks the body, so the input region
   // grows with the panel and the pointer never falls out of the region that is
@@ -43,6 +62,10 @@ Item {
   // on a half pixel and soften the fillet seams.
   readonly property real stripWidth: Math.ceil((contentItem.implicitWidth + root.padding * 2) / 2) * 2
 
+  // the collapsed height follows the strip's contents, so a tab whose content
+  // grows -- the clock peeking its date -- grows with it.
+  readonly property real stripHeight: Math.max(Theme.notchHeight, contentItem.implicitHeight + Theme.notchStripPadding * 2)
+
   // the item tracks the body rather than the strip, for two reasons. qt prunes
   // input delivery by the parent's bounds, so a hover handler on a body wider than
   // its item would go dead over the panel; and whatever places a tab anchors it by
@@ -55,7 +78,7 @@ Item {
     id: body
 
     width: root.open ? Math.max(root.stripWidth, panelLoader.implicitWidth) : root.stripWidth
-    height: root.open ? Math.max(Theme.notchHeight, panelLoader.implicitHeight) : Theme.notchHeight
+    height: root.open ? Math.max(root.stripHeight, panelLoader.implicitHeight) : root.stripHeight
     color: Theme.notch
 
     // a flush tab's outer top corner sits exactly on the corner of the desktop
@@ -92,8 +115,8 @@ Item {
     anchors.horizontalCenter: body.horizontalCenter
     anchors.top: body.top
 
-    // pinned inside the strip, so the body growing under it does not drag it down.
-    anchors.topMargin: (Theme.notchHeight - height) / 2
+    // centred in the strip, so the body growing under it does not drag it down.
+    anchors.topMargin: (root.stripHeight - contentItem.height) / 2
 
     // the child sits at 0,0 and never anchors back here, so measuring it this way
     // cannot loop.
@@ -116,8 +139,8 @@ Item {
     id: panelLoader
 
     // loaded even while closed: its implicit size is what the body grows to, and
-    // measuring it on the first hover would mean animating from a size nobody knew
-    // one frame earlier.
+    // measuring it on the first click would mean animating from a size nothing
+    // knew a frame earlier.
     active: root.panel !== null
     sourceComponent: root.panel
 
@@ -130,6 +153,21 @@ Item {
     Behavior on opacity {
       NumberAnimation { duration: Theme.notchFadeDuration }
     }
+  }
+
+  // the strip is what toggles a click-opened panel, open or shut. while the panel
+  // is out this sits over its first row, which for the clock is the big time: a
+  // second click on the time closes what a click on the time opened.
+  MouseArea {
+    anchors.left: body.left
+    anchors.right: body.right
+    anchors.top: body.top
+    height: root.stripHeight
+
+    enabled: root.trigger === "click" && root.panel !== null
+    visible: enabled
+
+    onClicked: Notches.toggle(root.notchId)
   }
 
   // where the tab meets the top band on its left. the flush-left tab has no band
