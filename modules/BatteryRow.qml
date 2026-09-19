@@ -59,8 +59,8 @@ PanelRow {
     }
   }
 
-  // power-profiles-daemon is not installed on this machine, so the whole section
-  // stays away rather than offering buttons that quietly do nothing.
+  // the whole section stays away when no daemon answers, rather than offering
+  // buttons that quietly do nothing.
   Column {
     width: root.bodyWidth
     visible: Power.profilesAvailable

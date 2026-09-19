@@ -96,14 +96,14 @@ Singleton {
   readonly property int profile: PowerProfiles.profile
   readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile
 
-  // whether anything is listening. power-profiles-daemon is not installed here,
-  // and PowerProfiles exposes no flag for that -- profile reads Balanced whether
-  // or not a daemon answered. hasPerformanceProfile comes from the daemon's own
-  // list, so it is false when nothing did, which makes it the closest proxy
-  // available. a laptop running the daemon with no performance profile would lose
-  // the section wrongly; that is rarer than a machine with no daemon showing
-  // buttons that quietly do nothing. one NixOS option brings it back:
-  // services.power-profiles-daemon.enable = true.
+  // whether anything is listening. PowerProfiles exposes no flag for that --
+  // profile reads Balanced whether or not a daemon answered -- and this shell ran
+  // for a while on a machine with no power-profiles-daemon at all, offering three
+  // buttons that quietly did nothing. hasPerformanceProfile comes from the
+  // daemon's own list of profiles, so it is false when nothing answered, which
+  // makes it the closest proxy available. a laptop running the daemon with no
+  // performance profile would lose the section wrongly; that is rarer than the
+  // case this is here to catch.
   readonly property bool profilesAvailable: PowerProfiles.hasPerformanceProfile
 
   function setProfile(which: int): void {
