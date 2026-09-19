@@ -203,7 +203,9 @@ Singleton {
   property int wsPillTextSize: 13
 
   // the clock panel: a big time, the date, a month grid and whatever is on today.
-  property int clockPanelWidth: 224
+  // 224 of content inside 18 of padding. the design writes the 224, because css
+  // pads outside a stated width -- the same reading as the system panel's 314.
+  property int clockPanelWidth: 260
   property int clockPanelPaddingH: 18
   property int clockPanelPaddingV: 14
 
