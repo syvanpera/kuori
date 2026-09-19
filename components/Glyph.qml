@@ -12,10 +12,11 @@ Item {
   property bool filled: false
   property int size: Theme.iconSize
 
-  // the symbol font hangs its glyphs slightly below the middle of the line box,
-  // so centre the box and then lift the text by hand rather than trusting
-  // verticalAlignment.
-  property real nudge: -0.5
+  // a per-instance escape hatch for an icon that needs nudging off the centre of
+  // its box. it defaults to nothing on purpose: it sat at -0.5 uncalibrated for a
+  // long time, which lifted every glyph in the shell most of a device pixel above
+  // the text beside it.
+  property real nudge: 0
 
   implicitWidth: root.size
   implicitHeight: root.size

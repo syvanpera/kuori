@@ -103,7 +103,7 @@ Row {
       height: Theme.iconSize
       verticalAlignment: Text.AlignVCenter
 
-      text: `${root.level}`
+      text: `${root.level}%`
       color: Theme.textDim
       font.family: Theme.monoFont
       font.pixelSize: Theme.labelSize
