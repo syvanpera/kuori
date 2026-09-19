@@ -15,7 +15,22 @@ import Quickshell.Hyprland
 Singleton {
   id: root
 
-  readonly property HyprlandToplevel toplevel: Hyprland.activeToplevel
+  // Hyprland.activeToplevel is driven off activewindowv2, which only fires when
+  // focus *changes*. on a freshly started shell nothing has changed yet, so it is
+  // null and stays null until you switch windows once: the indicator was dark for
+  // the whole session if you never did, which on a single window desktop is every
+  // session. the refreshed snapshot carries focusHistoryID, where 0 is the window
+  // that has focus, so the opening state can be read straight out of it.
+  //
+  // only a fallback: the live property wins the moment hyprland fills it in, and
+  // the snapshot only moves when something refreshes it.
+  readonly property HyprlandToplevel toplevel: Hyprland.activeToplevel ?? root.snapshotToplevel
+
+  readonly property HyprlandToplevel snapshotToplevel: {
+    const all = Hyprland.toplevels.values
+
+    return all.find(tl => (tl.lastIpcObject?.focusHistoryID ?? -1) === 0) ?? null
+  }
 
   // the monitor the focused window is on, so a per-screen consumer can tell
   // whether the mark belongs to it.

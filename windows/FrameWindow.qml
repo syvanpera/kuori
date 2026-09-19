@@ -55,67 +55,9 @@ PanelWindow {
   }
 
   // between the frame and the notches, so a window sitting against the top edge
-  // gets its mark drawn under the tabs rather than over them.
-  FocusMark {
-    id: mark
-
-    // a special workspace is open over the top of a normal one, so its windows are
-    // on screen and focusable while never being their monitor's activeWorkspace.
-    // their ids are the negative ones, and they have to be let through by hand or
-    // the mark vanishes exactly when a scratchpad is pulled up.
-    readonly property bool onShownWorkspace: {
-      const ws = FocusedWindow.toplevel?.workspace ?? null
-      if (!ws) return false
-
-      return ws.id < 0 || ws === root.monitor?.activeWorkspace
-    }
-
-    // and a fullscreen window is alone on its monitor, so there is nothing to tell
-    // apart and nothing to mark.
-    readonly property bool eligible: FocusedWindow.monitor === root.monitor
-      && mark.onShownWorkspace
-      && !FocusedWindow.fullscreen
-      && FocusedWindow.geometry.width > 0
-
-    // dark for one frame after focus moves to a different window, so x and y have
-    // already jumped to the new corner by the time the triangle is drawn again.
-    property bool swapping: false
-
-    readonly property bool lit: mark.eligible && !mark.swapping
-
-    readonly property string address: FocusedWindow.toplevel?.address ?? ""
-
-    x: FocusedWindow.geometry.x + FocusedWindow.geometry.width - mark.width - (root.monitor?.x ?? 0)
-    y: FocusedWindow.geometry.y - (root.monitor?.y ?? 0)
-
-    opacity: mark.lit ? 1 : 0
-    visible: mark.opacity > 0
-
-    onAddressChanged: {
-      mark.swapping = true
-      swap.restart()
-    }
-
-    // fading in is animated, going dark is not. an animated fade-out would run
-    // against the live position binding and show the triangle travelling from the
-    // old window's corner to the new one, which is the whole thing this avoids.
-    // the duration is read when the animation starts, by which point lit already
-    // holds the value that started it.
-    Behavior on opacity {
-      NumberAnimation {
-        duration: mark.lit ? Theme.focusMarkFade : 0
-        easing.type: Easing.OutCubic
-      }
-    }
-
-    Timer {
-      id: swap
-
-      // one frame at 60Hz. the position and the blanking apply in the same frame
-      // anyway; this only guarantees the fade restarts from a repainted corner.
-      interval: 16
-      onTriggered: mark.swapping = false
-    }
+  // gets its indicator drawn under the tabs rather than over them.
+  FocusIndicator {
+    monitor: root.monitor
   }
 
   Notch {

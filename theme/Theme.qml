@@ -43,12 +43,12 @@ Singleton {
   // this is alpha baked into the fill rather than an opacity on the item, because
   // FrameWindow drives that property to fade the mark in and out and would
   // overwrite anything set here.
-  property real focusMarkOpacity: 0.75
+  property real focusOpacity: 0.75
 
   // the mark borrows the accent the same way the active workspace dot does,
   // instead of reaching for Theme.accent at the call site. the hyprland border it
   // stands in for was this exact colour.
-  readonly property color focusMarkColor: root.accent.alpha(root.focusMarkOpacity)
+  readonly property color focusColor: root.accent.alpha(root.focusOpacity)
 
   property int borderWidth: 5
   property int screenCornerRadius: 12
@@ -95,7 +95,17 @@ Singleton {
   // anything else there and this would have to be drawn as a curve.
   property int focusMarkRadius: 12
 
-  property int focusMarkFade: 150
+  property int focusFade: 150
+
+  // "mark" for the wedge in the window's top-right corner, "strip" for a bar the
+  // width of the window hung above it. both read the same focusColor and fade.
+  property string focusStyle: "strip"
+
+  // the strip is placed against the window's top edge, not inside the gap above
+  // it, so changing hyprland's gaps moves the window and the strip together. these
+  // two are the whole shape of it: how thick, and how far off the window.
+  property int focusStripThickness: 4
+  property int focusStripOffset: 0
 
   property int systemSpacing: 9
   property int batterySpacing: 5

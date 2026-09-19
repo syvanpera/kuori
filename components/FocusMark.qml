@@ -27,7 +27,7 @@ Shape {
   // would allocate a framebuffer for a mark this size -- the trade WorkspaceDots
   // already makes for its dots.
   ShapePath {
-    fillColor: Theme.focusMarkColor
+    fillColor: Theme.focusColor
     strokeWidth: -1
 
     // the inner end of the top edge, where the hypotenuse meets it.
