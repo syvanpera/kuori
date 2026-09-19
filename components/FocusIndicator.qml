@@ -43,6 +43,7 @@ Item {
   readonly property real windowX: FocusedWindow.geometry.x - (root.monitor?.x ?? 0)
   readonly property real windowY: FocusedWindow.geometry.y - (root.monitor?.y ?? 0)
   readonly property real windowWidth: FocusedWindow.geometry.width
+  readonly property real windowHeight: FocusedWindow.geometry.height
 
   anchors.fill: parent
 
@@ -92,9 +93,15 @@ Item {
     id: strip
 
     visible: Theme.focusStyle === "strip"
+    atBottom: Theme.focusStripEdge === "bottom"
 
     width: root.windowWidth
     x: root.windowX
-    y: root.windowY - strip.thickness
+
+    // the item is taller than the bar by the horns, and mirroring puts the bar at
+    // whichever end is against the window, so each edge anchors from its own side.
+    y: strip.atBottom
+      ? root.windowY + root.windowHeight - strip.corner
+      : root.windowY - strip.thickness
   }
 }

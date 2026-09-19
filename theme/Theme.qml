@@ -108,6 +108,9 @@ Singleton {
   // wedges the window's rounded corners leave and read as part of the window.
   property int focusStripThickness: 4
 
+  // which of the window's horizontal edges the strip sits on: "top" or "bottom".
+  property string focusStripEdge: "top"
+
   property int systemSpacing: 9
   property int batterySpacing: 5
 
