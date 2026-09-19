@@ -143,8 +143,15 @@ Singleton {
   // spread, plus a tight contact line right under the edge. qt takes blur as the
   // pixel distance the falloff reaches, fed to a smoothstep over a signed distance
   // field, rather than a gaussian sigma, so css blur radii transfer at about 1.2x.
-  readonly property color notchShadowAmbient: root.ink.alpha(0.34)
-  readonly property color notchShadowContact: root.ink.alpha(0.28)
+  // the alphas are dials like the blurs and offsets below, not literals buried in
+  // a colour expression: darkening the shadow is the one adjustment worth making
+  // without enlarging it. the design writes .34 and .28, but it was drawn against
+  // its own lighter #0f1726 surface and reads weaker over the #0b0f16 this runs.
+  property real notchShadowAmbientAlpha: 0.45
+  property real notchShadowContactAlpha: 0.38
+
+  readonly property color notchShadowAmbient: root.ink.alpha(root.notchShadowAmbientAlpha)
+  readonly property color notchShadowContact: root.ink.alpha(root.notchShadowContactAlpha)
 
   property real notchShadowAmbientBlur: 17
   property real notchShadowAmbientOffset: 5
