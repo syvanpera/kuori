@@ -81,9 +81,19 @@ Singleton {
     "configreloaded",
   ]
 
-  // lastIpcObject is empty until something asks for it, so the mark would have
+  // lastIpcObject is empty until something asks for it, so an indicator would have
   // nowhere to sit until the first focus change without this.
-  Component.onCompleted: Hyprland.refreshToplevels()
+  //
+  // and again once the shell has settled. this refresh runs before the shell's own
+  // reservation windows have claimed their edges, so it reads the layout as it was
+  // before everything reflowed around them -- a window five pixels wider and thirty
+  // higher than it ends up. hyprland emits no event for that reflow, and on a quiet
+  // single window desktop nothing else ever fires, so without the second pass the
+  // stale rect is what the indicator sits on for the whole session.
+  Component.onCompleted: {
+    Hyprland.refreshToplevels()
+    settle.restart()
+  }
 
   Connections {
     target: Hyprland

@@ -36,16 +36,16 @@ Shape {
 
     // out along the top edge, stopping where the window's corner starts to turn.
     PathLine {
-      x: Theme.focusMarkSize - Theme.focusMarkRadius
+      x: Theme.focusMarkSize - Theme.windowRadius
       y: 0
     }
 
     // the corner itself, riding the window's own curve round onto the right edge.
     PathArc {
       x: Theme.focusMarkSize
-      y: Theme.focusMarkRadius
-      radiusX: Theme.focusMarkRadius
-      radiusY: Theme.focusMarkRadius
+      y: Theme.windowRadius
+      radiusX: Theme.windowRadius
+      radiusY: Theme.windowRadius
       direction: PathArc.Clockwise
     }
 

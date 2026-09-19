@@ -43,7 +43,7 @@ Singleton {
   // this is alpha baked into the fill rather than an opacity on the item, because
   // FrameWindow drives that property to fade the mark in and out and would
   // overwrite anything set here.
-  property real focusOpacity: 0.75
+  property real focusOpacity: 1.0
 
   // the mark borrows the accent the same way the active workspace dot does,
   // instead of reaching for Theme.accent at the call site. the hyprland border it
@@ -84,7 +84,7 @@ Singleton {
   // to both edges. this is how far it reaches along each of them, not the length
   // of the hypotenuse across the back.
   //
-  // it has to clear focusMarkRadius comfortably or the corner arc eats the whole
+  // it has to clear windowRadius comfortably or the corner arc eats the whole
   // shape and the wedge stops reading as one.
   property int focusMarkSize: 20
 
@@ -93,7 +93,7 @@ Singleton {
   // looknfeel.lua, which nothing here can read, so the two are kept in step by
   // hand. it is an arc rather than a superellipse because rounding_power is 2;
   // anything else there and this would have to be drawn as a curve.
-  property int focusMarkRadius: 12
+  property int windowRadius: 12
 
   property int focusFade: 150
 
@@ -102,10 +102,11 @@ Singleton {
   property string focusStyle: "strip"
 
   // the strip is placed against the window's top edge, not inside the gap above
-  // it, so changing hyprland's gaps moves the window and the strip together. these
-  // two are the whole shape of it: how thick, and how far off the window.
+  // it, so changing hyprland's gaps moves the window and the strip together and
+  // nothing here has to know what they are. how thick is the whole shape of it:
+  // it sits on the edge rather than floating over it, so that it can fill the
+  // wedges the window's rounded corners leave and read as part of the window.
   property int focusStripThickness: 4
-  property int focusStripOffset: 0
 
   property int systemSpacing: 9
   property int batterySpacing: 5

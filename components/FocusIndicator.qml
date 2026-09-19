@@ -83,14 +83,18 @@ Item {
     y: root.windowY
   }
 
-  // or the strip, hung off the window's top edge. it is placed against that edge
+  // or the strip, sitting on the window's top edge. placed against that edge
   // rather than inside the gap above it, so changing hyprland's gaps moves the
   // window and the strip together and nothing here needs to know what they are.
+  // it is taller than the bar, by the horns that reach down into the window's
+  // rounded corners, so it is the bar that is positioned here and not the item.
   FocusStrip {
+    id: strip
+
     visible: Theme.focusStyle === "strip"
 
     width: root.windowWidth
     x: root.windowX
-    y: root.windowY - height - Theme.focusStripOffset
+    y: root.windowY - strip.thickness
   }
 }
