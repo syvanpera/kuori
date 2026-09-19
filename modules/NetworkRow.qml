@@ -105,16 +105,30 @@ PanelRow {
     }
   }
 
-  NetworkList {
+  DeviceSection {
     width: root.bodyWidth
     heading: "KNOWN NETWORKS"
-    networks: Network.known
+    model: Network.known
+
+    delegate: NetworkEntry {
+      required property var modelData
+
+      width: root.bodyWidth
+      network: modelData
+    }
   }
 
-  NetworkList {
+  DeviceSection {
     width: root.bodyWidth
     heading: "AVAILABLE"
-    networks: Network.available
-    stranger: true
+    model: Network.available
+
+    delegate: NetworkEntry {
+      required property var modelData
+
+      width: root.bodyWidth
+      network: modelData
+      stranger: true
+    }
   }
 }

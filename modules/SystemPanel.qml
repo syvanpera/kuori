@@ -35,5 +35,12 @@ Column {
 
       onToggled: root.toggle("wifi")
     }
+
+    BluetoothRow {
+      width: parent.width
+      expanded: root.open === "bluetooth"
+
+      onToggled: root.toggle("bluetooth")
+    }
   }
 }

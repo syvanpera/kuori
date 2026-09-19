@@ -1,8 +1,8 @@
 import QtQuick
-import Quickshell.Bluetooth
 import Quickshell.Networking
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import qs.services
 import qs.theme
 import qs.components
 
@@ -17,9 +17,8 @@ Row {
   readonly property bool wifiUp: Networking.wifiEnabled && root.wifiNetwork !== null
   readonly property real signalStrength: root.wifiNetwork?.signalStrength ?? 0
 
-  readonly property var btAdapter: Bluetooth.defaultAdapter
-  readonly property bool btEnabled: root.btAdapter?.enabled ?? false
-  readonly property bool btConnected: root.btEnabled && Bluetooth.devices.values.some(d => d.connected)
+  readonly property bool btEnabled: Bluez.enabled
+  readonly property bool btConnected: Bluez.connected.length > 0
 
   readonly property var sink: Pipewire.defaultAudioSink
   readonly property bool sinkReady: root.sink?.ready ?? false
