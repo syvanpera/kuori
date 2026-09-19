@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Effects
-import Quickshell.Hyprland
 import qs.services
 import qs.theme
 
@@ -72,7 +71,7 @@ Row {
         anchors.fill: parent
         anchors.margins: -Theme.dotSpacing / 2
 
-        onClicked: dot.modelData ? dot.modelData.activate() : Hyprland.dispatch(`workspace ${dot.index + 1}`)
+        onClicked: Workspaces.focus(dot.index + 1)
       }
     }
   }

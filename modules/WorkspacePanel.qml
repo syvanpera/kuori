@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Hyprland
 import qs.services
 import qs.theme
 
@@ -75,7 +74,7 @@ Row {
 
         // a workspace hyprland has never heard of has no object to activate, so it
         // has to be summoned by id the way the dots do it.
-        onClicked: pill.modelData ? pill.modelData.activate() : Hyprland.dispatch(`workspace ${pill.id}`)
+        onClicked: Workspaces.focus(pill.id)
       }
     }
   }

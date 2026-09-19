@@ -27,4 +27,18 @@ Singleton {
 
     return out
   }
+
+  // switch to a slot. an existing workspace has an object to activate; one
+  // hyprland has never heard of does not, so it has to be summoned by id.
+  //
+  // that dispatch is lua, not the classic "workspace 4" string: this config is a
+  // lua one, and hyprland answers the old form with a syntax error that nothing
+  // here would ever see. it lives in the service so the dots and the panel cannot
+  // drift apart on it again.
+  function focus(id: int): void {
+    const ws = root.slots[id - 1] ?? null
+
+    if (ws) ws.activate()
+    else Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`)
+  }
 }
