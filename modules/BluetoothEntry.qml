@@ -12,7 +12,17 @@ Rectangle {
   required property var device
 
   readonly property bool active: root.device.connected
-  readonly property string charge: Bluez.charge(root.device)
+  readonly property bool refused: Bluez.failed === root.device.address
+
+  // the charge is what a device usually has to say for itself. while it is
+  // changing its mind, or has just failed to, it says that instead -- the design
+  // has no state for either, and a click that does nothing visible is worse than
+  // a line that admits it.
+  readonly property string detail: {
+    if (root.refused) return "Could not connect"
+    if (Bluez.busy(root.device)) return root.active ? "Disconnecting…" : "Connecting…"
+    return Bluez.charge(root.device)
+  }
 
   width: parent.width
   height: Math.max(Theme.sysNetIcon, text.implicitHeight) + Theme.sysNetPaddingV * 2
@@ -62,10 +72,10 @@ Rectangle {
 
     Text {
       width: parent.width
-      visible: root.charge !== ""
+      visible: root.detail !== ""
 
-      text: root.charge
-      color: Theme.sysNetDetail
+      text: root.detail
+      color: root.refused ? Theme.sysError : Theme.sysNetDetail
       font.family: Theme.monoFont
       font.pixelSize: Theme.sysNetDetailSize
     }

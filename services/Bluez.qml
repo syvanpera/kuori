@@ -16,6 +16,14 @@ Singleton {
   // the same bargain the wifi scan makes.
   property bool detailed: false
 
+  // the address of a device we have asked to connect and not heard back about,
+  // and the one whose last attempt came to nothing. a bluetooth device that has
+  // stopped advertising cannot be connected to by the host, and bluez reports
+  // that by simply never arriving -- so without these a refused click and a dead
+  // click look exactly the same.
+  property string pending: ""
+  property string failed: ""
+
   readonly property var adapter: Bluetooth.defaultAdapter
   readonly property bool enabled: root.adapter?.enabled ?? false
 
@@ -25,7 +33,14 @@ Singleton {
 
   // everything the adapter knows about that is not currently on: devices paired
   // before, and whatever discovery turns up while the row is open.
-  readonly property var available: root.devices.filter(d => !d.connected)
+  //
+  // sorted, and paired first. bluez hands them over in whatever order it learned
+  // them, so an unsorted list rearranges itself under the pointer every time
+  // discovery finds something -- and the row you meant to click is a device you
+  // own, not a stranger's fridge.
+  readonly property var available: root.devices
+    .filter(d => !d.connected)
+    .sort((a, b) => (b.paired - a.paired) || a.name.localeCompare(b.name))
 
   // what the collapsed row says on the right. the first connected device, because
   // the row has space for one name and that is the one worth having.
@@ -45,8 +60,24 @@ Singleton {
   // has no room for.
   function toggle(device: var): void {
     if (!device) return
-    if (device.connected) device.disconnect()
-    else device.connect()
+
+    root.failed = ""
+
+    if (device.connected) {
+      device.disconnect()
+      return
+    }
+
+    root.pending = device.address
+    device.connect()
+  }
+
+  // whether this device is in the middle of changing its mind.
+  function busy(device: var): bool {
+    if (!device) return false
+    return device.address === root.pending
+      || device.state === BluetoothDeviceState.Connecting
+      || device.state === BluetoothDeviceState.Disconnecting
   }
 
   // bluez reports a freedesktop icon name, which the design draws as material
@@ -78,6 +109,51 @@ Singleton {
   function charge(device: var): string {
     if (!device?.batteryAvailable) return ""
     return `${Math.round(device.battery * 100)}%`
+  }
+
+  readonly property var pendingDevice: root.devices.find(d => d.address === root.pending) ?? null
+
+  function giveUp(): void {
+    if (root.pending === "") return
+
+    root.failed = root.pending
+    root.pending = ""
+    linger.restart()
+  }
+
+  Connections {
+    target: root.pendingDevice
+
+    function onStateChanged(): void {
+      const device = root.pendingDevice
+      if (!device) return
+
+      if (device.state === BluetoothDeviceState.Connected) {
+        root.pending = ""
+        return
+      }
+
+      // back to where it started without ever arriving. bluez refuses a device
+      // that is not advertising, which is most of them a moment after the host
+      // dropped them -- hence the mouse you have to switch off and on again.
+      if (device.state === BluetoothDeviceState.Disconnected) root.giveUp()
+    }
+  }
+
+  // and in case it never moves at all.
+  Timer {
+    interval: 20000
+    running: root.pending !== ""
+
+    onTriggered: root.giveUp()
+  }
+
+  Timer {
+    id: linger
+
+    interval: 1800
+
+    onTriggered: root.failed = ""
   }
 
   // discovery is what fills the available list with things that were never paired.
