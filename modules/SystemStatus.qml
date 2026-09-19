@@ -6,7 +6,9 @@ import Quickshell.Services.UPower
 import qs.theme
 import qs.components
 
-// the right tab: wifi, bluetooth, volume, battery and the do-not-disturb lamp.
+// the right tab: wifi, bluetooth, volume and battery. the do-not-disturb lamp
+// moved out with the design that gave the toggles a tab of their own, and this
+// strip shows only what it cannot toggle.
 Row {
   id: root
 
@@ -108,12 +110,6 @@ Row {
       font.family: Theme.monoFont
       font.pixelSize: Theme.labelSize
     }
-  }
-
-  Glyph {
-    icon: "bedtime"
-    iconColor: Theme.warm
-    filled: true
   }
 
   // pipewire objects stay unbound until something asks for them, so without this
