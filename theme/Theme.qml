@@ -158,6 +158,13 @@ Singleton {
   property real notchShadowContactBlur: 4
   property real notchShadowContactOffset: 1
 
+  // spread grows the silhouette before the falloff is applied, so it thickens the
+  // dark core rather than reaching further with the same fade. the design writes
+  // no spread at all; this is deliberately past it, and it is the dial with the
+  // most effect per unit if the shadow still wants more weight.
+  property real notchShadowAmbientSpread: 2
+  property real notchShadowContactSpread: 1
+
   // every raised surface inside the panel is white at one of three alphas over
   // the notch colour, the same trick the frame plays with tint.
   readonly property color sheen: "#ffffff"

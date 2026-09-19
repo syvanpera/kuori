@@ -27,12 +27,14 @@ Item {
   width: root.notch.width
   height: root.notch.bodyHeight
 
-  // each layer paints up to blur past these bounds on every side, which is fine:
-  // nothing here clips, and the band is drawn over the top afterwards.
+  // each layer paints up to blur plus spread past these bounds on every side,
+  // which is fine: nothing here clips, and the band is drawn over the top
+  // afterwards, so the extra reach is only ever seen below and beside the tab.
   RectangularShadow {
     anchors.fill: parent
 
     blur: Theme.notchShadowAmbientBlur
+    spread: Theme.notchShadowAmbientSpread
     offset.y: Theme.notchShadowAmbientOffset
     color: Theme.notchShadowAmbient
 
@@ -50,6 +52,7 @@ Item {
     anchors.fill: parent
 
     blur: Theme.notchShadowContactBlur
+    spread: Theme.notchShadowContactSpread
     offset.y: Theme.notchShadowContactOffset
     color: Theme.notchShadowContact
 
