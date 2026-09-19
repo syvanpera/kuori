@@ -55,6 +55,22 @@ PanelWindow {
     onCleared: Notches.close()
   }
 
+  // escape shuts whatever is latched open. the grab above is what makes this
+  // reachable: it routes the keyboard here as well as the pointer, so the frame
+  // needs no keyboard focus of its own -- and asking for one breaks both the
+  // other things on this page. WlrKeyboardFocus.Exclusive is a focus change in
+  // the same frame as the grab, which answers it with an immediate cleared() and
+  // shuts the panel as it opens; and once held, it stops hyprland counting a
+  // click elsewhere as breaking the grab, so click-outside-to-dismiss dies too.
+  //
+  // no size: this exists to hold focus, and an item filling the window would sit
+  // over the tabs for no reason.
+  Item {
+    focus: true
+
+    Keys.onEscapePressed: Notches.close()
+  }
+
   // before the frame on purpose: the band is drawn over the top of these, so a
   // notch casts onto the desktop below it without smearing the rail it hangs off.
   NotchShadow { notch: workspaces }
