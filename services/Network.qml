@@ -6,11 +6,11 @@ import Quickshell.Networking
 
 // everything the system tab knows about the wireless link.
 //
-// Quickshell.Networking answers most of it from NetworkManager directly. three
-// of the readings the design puts in the panel are not in that api at all: the
-// round trip time, how many bytes have crossed the interface, and which band the
-// association is on. those come from ping, from sysfs and from nmcli, which is
-// the only reason this singleton owns processes.
+// Quickshell.Networking answers most of it from NetworkManager directly. four of
+// the things the design's panel shows are not in that api at all: the round trip
+// time, how many bytes have crossed the interface, the address, and the frequency
+// an access point is on. those come from ping, from sysfs and from nmcli, which
+// is the only reason this singleton owns processes.
 Singleton {
   id: root
 
@@ -28,11 +28,15 @@ Singleton {
   // reading from the last time it was open.
   property int pingMs: -1
   property real loss: -1
-  property string band: ""
 
-  // NetworkDevice.address is the hardware address, so the reading the design
-  // actually wants has to come from nmcli alongside the band.
+  // NetworkDevice.address is the hardware address, so the one the design shows
+  // has to come from nmcli.
   property string ip: ""
+
+  // ssid -> "5 GHz". a WifiNetwork carries its signal and its security but not
+  // its frequency, and the design puts the band under every available network, so
+  // the whole table is read at once rather than per row.
+  property var bands: ({})
 
   property real rxBytes: 0
   property real txBytes: 0
@@ -42,12 +46,13 @@ Singleton {
   readonly property bool connected: root.device?.connected ?? false
   readonly property var network: root.device?.networks.values.find(n => n.connected) ?? null
   readonly property string ssid: root.network?.name ?? ""
+  readonly property string band: root.bandFor(root.ssid)
 
   // one entry per ssid in range, the connected one first and the rest by signal.
   // sorted here rather than in the view because this only re-runs when the scan
   // finds or loses an access point: signalStrength moves constantly, and sorting
   // on that directly would have the rows swapping places under the pointer.
-  readonly property var visible: {
+  readonly property var scanned: {
     const seen = new Map()
 
     for (const net of root.device?.networks.values ?? []) {
@@ -62,6 +67,11 @@ Singleton {
     return [...seen.values()].sort((a, b) => (b.connected - a.connected) || (b.signalStrength - a.signalStrength))
   }
 
+  // the design splits the list in two: what NetworkManager has a saved profile
+  // for, and what is merely in the air.
+  readonly property var known: root.scanned.filter(n => n.known)
+  readonly property var available: root.scanned.filter(n => !n.known)
+
   function setEnabled(on: bool): void {
     Networking.wifiEnabled = on
   }
@@ -73,6 +83,36 @@ Singleton {
     return net.security !== WifiSecurityType.Open
       && net.security !== WifiSecurityType.Owe
       && net.security !== WifiSecurityType.Unknown
+  }
+
+  // the short names the design writes under an available network. the enum splits
+  // psk from eap and this does not: what the line is for is how hard it would be
+  // to join, and both answers to that are "you need a password".
+  function securityName(net: var): string {
+    switch (net?.security) {
+      case WifiSecurityType.Wpa3SuiteB192:
+      case WifiSecurityType.Sae: return "WPA3"
+      case WifiSecurityType.Wpa2Eap:
+      case WifiSecurityType.Wpa2Psk: return "WPA2"
+      case WifiSecurityType.WpaEap:
+      case WifiSecurityType.WpaPsk: return "WPA"
+      case WifiSecurityType.StaticWep:
+      case WifiSecurityType.DynamicWep: return "WEP"
+      case WifiSecurityType.Leap: return "LEAP"
+      // owe encrypts without a secret, so it is open in the sense the line means.
+      case WifiSecurityType.Owe:
+      case WifiSecurityType.Open: return "Open"
+      default: return ""
+    }
+  }
+
+  function bandFor(ssid: string): string {
+    return root.bands[ssid] ?? ""
+  }
+
+  // "WPA2 · 5 GHz", or whichever half of it we actually know.
+  function detail(net: var): string {
+    return [root.securityName(net), root.bandFor(net?.name ?? "")].filter(part => part).join(" · ")
   }
 
   // three significant figures, which is how the design writes both 1.20 GB and
@@ -90,19 +130,30 @@ Singleton {
     return `${value.toFixed(value >= 100 ? 0 : value >= 10 ? 1 : 2)} ${units[unit]}`
   }
 
-  // the band and the address describe an association rather than the moment, so
-  // they are read when one appears instead of on the poll: two nmcli spawns every
-  // tick would be the most expensive thing in the panel, and would nearly always
-  // come back with what they said last time.
-  function describe(): void {
-    if (!root.detailed || !root.connected) return
-    if (!band.running) band.running = true
-    if (!addr.running) addr.running = true
+  // nmcli -t separates fields with a colon and backslash-escapes the colons
+  // inside one, which an ssid and a mac address are both full of.
+  function fields(line: string): var {
+    const out = []
+    let cur = ""
+
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === "\\") {
+        cur += line[++i] ?? ""
+      } else if (line[i] === ":") {
+        out.push(cur)
+        cur = ""
+      } else {
+        cur += line[i]
+      }
+    }
+
+    out.push(cur)
+    return out
   }
 
   onDetailedChanged: {
     if (root.detailed) {
-      root.describe()
+      addr.running = true
       return
     }
 
@@ -110,11 +161,13 @@ Singleton {
     // never show a reading taken before it was last shut.
     root.pingMs = -1
     root.loss = -1
-    root.band = ""
     root.ip = ""
+    root.bands = ({})
   }
 
-  onSsidChanged: root.describe()
+  // the address belongs to an association rather than to the moment, so it is
+  // read when one appears instead of on every tick.
+  onSsidChanged: if (root.detailed) addr.running = true
 
   // scanning costs airtime and wakes the radio, so the device only looks around
   // while someone is reading the list.
@@ -129,9 +182,15 @@ Singleton {
     interval: 10000
     repeat: true
     triggeredOnStart: true
-    running: root.detailed && root.connected
+    running: root.detailed && root.enabled
 
     onTriggered: {
+      // the band table is polled rather than read once: the list grows as the
+      // scan finds things, and a row without its band looks broken.
+      if (!scan.running) scan.running = true
+
+      if (!root.connected) return
+
       rx.reload()
       tx.reload()
 
@@ -180,24 +239,35 @@ Singleton {
   }
 
   Process {
-    id: band
+    id: scan
 
-    // the frequency is the one thing here nmcli knows and the api does not. no
-    // rescan: this reads the table NetworkManager already has.
-    command: ["nmcli", "-t", "-f", "IN-USE,FREQ", "device", "wifi", "list", "--rescan", "no"]
+    // no rescan: this reads the table NetworkManager already has, which the
+    // device's own scanner is keeping fresh while the row is open.
+    command: ["nmcli", "-t", "-f", "IN-USE,SSID,FREQ", "device", "wifi", "list", "--rescan", "no"]
 
     stdout: StdioCollector {
-      id: bandOut
+      id: scanOut
 
       onStreamFinished: {
-        // nmcli stars the associated ap in the first field.
-        const line = bandOut.text.split("\n").find(l => l.startsWith("*:"))
-        const mhz = line ? parseInt(line.split(":")[1]) : 0
+        const bands = {}
 
-        if (mhz >= 5900) root.band = "6 GHz"
-        else if (mhz >= 4000) root.band = "5 GHz"
-        else if (mhz > 0) root.band = "2.4 GHz"
-        else root.band = ""
+        for (const line of scanOut.text.split("\n")) {
+          if (!line) continue
+
+          const [inUse, ssid, freq] = root.fields(line)
+          const mhz = parseInt(freq)
+          if (!ssid || !mhz) continue
+
+          // nmcli sorts by signal, so the first row for a name is its strongest
+          // radio -- except for the one we are associated with, whose own band is
+          // the only true answer for the reading above. a mesh routinely answers
+          // to one ssid on both bands at once, which is exactly this case.
+          if (bands[ssid] && inUse !== "*") continue
+
+          bands[ssid] = mhz >= 5900 ? "6 GHz" : mhz >= 4000 ? "5 GHz" : "2.4 GHz"
+        }
+
+        root.bands = bands
       }
     }
   }

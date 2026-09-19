@@ -4,7 +4,8 @@ import qs.services
 import qs.theme
 
 // the wi-fi row of the system panel: the link at a glance, and what the design
-// folds out under it -- the radio switch, six readings, and what is in range.
+// folds out under it -- the radio switch, six readings, and the air around you
+// split into networks you have joined before and networks you have not.
 PanelRow {
   id: root
 
@@ -104,88 +105,16 @@ PanelRow {
     }
   }
 
-  Rectangle {
+  NetworkList {
     width: root.bodyWidth
-    height: 1
-    visible: Network.enabled
-    color: Theme.sysLine
+    heading: "KNOWN NETWORKS"
+    networks: Network.known
   }
 
-  Text {
-    visible: Network.enabled
-
-    text: "KNOWN NETWORKS"
-    color: Theme.sysCap
-    font.family: Theme.monoFont
-    font.pixelSize: Theme.sysCapSize
-    font.weight: Font.Medium
-    font.letterSpacing: Theme.sysCapSpacing
-  }
-
-  Column {
+  NetworkList {
     width: root.bodyWidth
-    visible: Network.enabled
-    spacing: Theme.sysNetSpacing
-
-    Repeater {
-      model: Network.visible
-
-      Rectangle {
-        id: entry
-
-        required property var modelData
-
-        readonly property bool active: entry.modelData.connected
-
-        width: parent.width
-        height: Theme.sysNetIcon + Theme.sysNetPaddingV * 2
-
-        radius: Theme.sysNetRadius
-        color: entry.active ? Theme.sysNetActive : "transparent"
-
-        Glyph {
-          id: entryIcon
-
-          x: Theme.sysNetPaddingH
-          anchors.verticalCenter: parent.verticalCenter
-
-          size: Theme.sysNetIcon
-          icon: Network.locked(entry.modelData) ? "wifi_lock" : "wifi"
-          iconColor: entry.active ? Theme.accent : Theme.tint.alpha(0.45)
-        }
-
-        Column {
-          anchors.left: entryIcon.right
-          anchors.leftMargin: Theme.sysNetGap
-          anchors.right: parent.right
-          anchors.rightMargin: Theme.sysNetPaddingH
-          anchors.verticalCenter: parent.verticalCenter
-
-          spacing: Theme.sysNetTextSpacing
-
-          Text {
-            width: parent.width
-
-            text: entry.modelData.name
-            color: entry.active ? Theme.text : Theme.sysNetName
-            font.family: Theme.monoFont
-            font.pixelSize: Theme.sysNetNameSize
-            font.weight: Font.Medium
-            elide: Text.ElideRight
-          }
-
-          Text {
-            // only the one you are on has anything to report. the rest are just
-            // names until the design gives them something to do.
-            visible: entry.active
-
-            text: "Connected"
-            color: Theme.sysNetState
-            font.family: Theme.monoFont
-            font.pixelSize: Theme.sysNetStateSize
-          }
-        }
-      }
-    }
+    heading: "AVAILABLE"
+    networks: Network.available
+    stranger: true
   }
 }

@@ -378,7 +378,7 @@ Singleton {
   property int sysNetGap: 9
   property int sysNetIcon: 14
   property int sysNetNameSize: 11
-  property int sysNetStateSize: 10
+  property int sysNetDetailSize: 10
   property int sysNetTextSpacing: 3
   property int sysNetSpacing: 2
 
@@ -395,7 +395,8 @@ Singleton {
   readonly property color sysStatKey: root.tint.alpha(0.45)
   readonly property color sysStatValue: root.tint.alpha(0.8)
   readonly property color sysNetName: root.tint.alpha(0.62)
-  readonly property color sysNetState: root.tint.alpha(0.4)
+  readonly property color sysNetDetail: root.tint.alpha(0.4)
+  readonly property color sysNetGlyph: root.tint.alpha(0.45)
 
   readonly property color sysRowOpen: root.sheen.alpha(0.05)
   readonly property color sysNetActive: root.sheen.alpha(0.06)
