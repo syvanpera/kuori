@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell.Networking
-import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import qs.services
 import qs.theme
@@ -20,10 +19,9 @@ Row {
   readonly property bool btEnabled: Bluez.enabled
   readonly property bool btConnected: Bluez.connected.length > 0
 
-  readonly property var sink: Pipewire.defaultAudioSink
-  readonly property bool sinkReady: root.sink?.ready ?? false
-  readonly property bool muted: root.sinkReady && root.sink.audio.muted
-  readonly property int volume: root.sinkReady ? Math.round(root.sink.audio.volume * 100) : 0
+  readonly property bool sinkReady: Audio.sinkReady
+  readonly property bool muted: Audio.muted
+  readonly property int volume: Math.round(Audio.volume * 100)
 
   readonly property var battery: UPower.displayDevice
   readonly property bool charging: root.battery?.state === UPowerDeviceState.Charging
@@ -109,11 +107,5 @@ Row {
       font.family: Theme.monoFont
       font.pixelSize: Theme.labelSize
     }
-  }
-
-  // pipewire objects stay unbound until something asks for them, so without this
-  // the sink never becomes ready and audio is null.
-  PwObjectTracker {
-    objects: [root.sink]
   }
 }

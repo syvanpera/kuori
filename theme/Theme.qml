@@ -409,6 +409,22 @@ Singleton {
 
   property int sysLockIcon: 12
 
+  // the volume and gain sliders. the knob is centred on the end of the fill, so
+  // at full it sits half outside the track, which is what the design draws.
+  property int sysSliderTrack: 5
+  property int sysSliderRadius: 3
+  property int sysSliderKnob: 10
+  property int sysSliderGap: 8
+  property int sysSliderLabelSize: 10
+  property int sysSliderLabelWidth: 26
+
+  readonly property color sysSliderRail: root.sheen.alpha(0.1)
+  readonly property color sysSliderText: root.tint.alpha(0.6)
+
+  // an output or input you could pick. two hex steps dimmer than a network name
+  // in the same kind of row, and the design means it.
+  readonly property color sysDeviceName: root.tint.alpha(0.58)
+
   // the passphrase row a locked network opens, and the refusal that can follow.
   property int sysFieldHeight: 45
   property int sysFieldPaddingH: 8

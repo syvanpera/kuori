@@ -42,5 +42,12 @@ Column {
 
       onToggled: root.toggle("bluetooth")
     }
+
+    AudioRow {
+      width: parent.width
+      expanded: root.open === "audio"
+
+      onToggled: root.toggle("audio")
+    }
   }
 }
