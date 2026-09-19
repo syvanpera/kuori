@@ -3,11 +3,10 @@ import qs.components
 import qs.services
 import qs.theme
 
-// one access point in the network row's lists. the two lists label it
-// differently: a known network is a name you have already joined, an available
-// one is a stranger, and the design says how strong it is and what it would take
-// to get on.
-Rectangle {
+// one access point in the network row's lists, and whatever it needs from you.
+// a locked network you have never joined opens a passphrase field underneath
+// itself, and shows there what NetworkManager said if the passphrase was wrong.
+Column {
   id: root
 
   required property var network
@@ -16,12 +15,18 @@ Rectangle {
   property bool stranger: false
 
   readonly property bool active: root.network.connected
+  readonly property bool picked: Network.selected === root.network.name
 
-  // a locked network shows the lock instead of its signal. that loses the signal,
-  // which is the design's choice: what you need to know about a network you have
-  // never joined is first whether you can.
-  readonly property string icon: {
-    if (Network.locked(root.network)) return "wifi_lock"
+  // connected, or the one whose field is open. the design lights both the same
+  // way, because both are the network this list is currently about.
+  readonly property bool highlighted: root.active || root.picked
+
+  readonly property bool locked: Network.locked(root.network)
+
+  // a known network is drawn plain -- you have been here before and the only
+  // question is whether you are on it now. a stranger is drawn by its signal,
+  // because that is what decides whether joining is worth trying.
+  readonly property string glyph: {
     if (!root.stranger) return "wifi"
 
     const strength = root.network.signalStrength
@@ -36,55 +41,134 @@ Rectangle {
     return ""
   }
 
-  // the entry grows with its text rather than sitting at one height, because the
-  // second line is only there some of the time.
-  implicitHeight: Math.max(Theme.sysNetIcon, text.implicitHeight) + Theme.sysNetPaddingV * 2
+  Rectangle {
+    id: line
 
-  radius: Theme.sysNetRadius
-  color: root.active ? Theme.sysNetActive : "transparent"
+    width: root.width
+    height: Math.max(Theme.sysNetIcon, text.implicitHeight) + Theme.sysNetPaddingV * 2
 
-  Glyph {
-    id: entryIcon
-
-    x: Theme.sysNetPaddingH
-    anchors.verticalCenter: parent.verticalCenter
-
-    size: Theme.sysNetIcon
-    icon: root.icon
-    iconColor: root.active ? Theme.accent : Theme.sysNetGlyph
-  }
-
-  Column {
-    id: text
-
-    anchors.left: entryIcon.right
-    anchors.leftMargin: Theme.sysNetGap
-    anchors.right: parent.right
-    anchors.rightMargin: Theme.sysNetPaddingH
-    anchors.verticalCenter: parent.verticalCenter
-
-    spacing: Theme.sysNetTextSpacing
-
-    Text {
-      width: parent.width
-
-      text: root.network.name
-      color: root.active ? Theme.text : Theme.sysNetName
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysNetNameSize
-      font.weight: Font.Medium
-      elide: Text.ElideRight
+    radius: Theme.sysNetRadius
+    color: {
+      if (hover.containsMouse) return Theme.sysNetHover
+      return root.highlighted ? Theme.sysNetActive : "transparent"
     }
 
-    Text {
-      width: parent.width
-      visible: root.detail !== ""
+    Behavior on color {
+      ColorAnimation { duration: Theme.notchFadeDuration }
+    }
 
-      text: root.detail
-      color: Theme.sysNetDetail
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysNetDetailSize
-      elide: Text.ElideRight
+    Glyph {
+      id: entryIcon
+
+      x: Theme.sysNetPaddingH
+      anchors.verticalCenter: parent.verticalCenter
+
+      size: Theme.sysNetIcon
+      icon: root.glyph
+      iconColor: root.highlighted ? Theme.accent : Theme.sysNetGlyph
+    }
+
+    // the lock sits at the far end rather than replacing the signal, so a row can
+    // say how strong a network is and that it is shut at the same time.
+    Glyph {
+      id: lock
+
+      x: line.width - Theme.sysNetPaddingH - width
+      anchors.verticalCenter: parent.verticalCenter
+      visible: root.locked
+
+      size: Theme.sysLockIcon
+      icon: "lock"
+      iconColor: Theme.sysNetLock
+    }
+
+    Column {
+      id: text
+
+      anchors.left: entryIcon.right
+      anchors.leftMargin: Theme.sysNetGap
+      anchors.right: root.locked ? lock.left : parent.right
+      anchors.rightMargin: Theme.sysNetGap
+      anchors.verticalCenter: parent.verticalCenter
+
+      spacing: Theme.sysNetTextSpacing
+
+      Text {
+        width: parent.width
+
+        text: root.network.name
+        color: root.highlighted ? Theme.text : Theme.sysNetName
+        font.family: Theme.monoFont
+        font.pixelSize: Theme.sysNetNameSize
+        font.weight: Font.Medium
+        elide: Text.ElideRight
+      }
+
+      Text {
+        width: parent.width
+        visible: root.detail !== ""
+
+        text: root.detail
+        color: Theme.sysNetDetail
+        font.family: Theme.monoFont
+        font.pixelSize: Theme.sysNetDetailSize
+        elide: Text.ElideRight
+      }
+    }
+
+    MouseArea {
+      id: hover
+
+      anchors.fill: parent
+      hoverEnabled: true
+
+      onClicked: Network.select(root.network)
+    }
+  }
+
+  // the field is for a network we have no way into yet: a saved one is joined by
+  // the click itself, and a refusal replaces the field until it has been read.
+  Loader {
+    width: root.width
+    active: root.stranger && root.picked && !root.active && Network.error === ""
+
+    sourceComponent: Component {
+      PassphraseField {}
+    }
+  }
+
+  Loader {
+    width: root.width
+    active: root.picked && Network.error !== ""
+
+    sourceComponent: Component {
+      Item {
+        implicitHeight: Theme.sysFieldHeight
+
+        Glyph {
+          id: errorIcon
+
+          x: Theme.sysFieldPaddingH
+          y: Theme.sysFieldTop
+
+          size: Theme.sysErrorIcon
+          icon: "error"
+          iconColor: Theme.sysError
+          filled: true
+        }
+
+        Text {
+          anchors.left: errorIcon.right
+          anchors.leftMargin: Theme.sysErrorGap
+          anchors.verticalCenter: errorIcon.verticalCenter
+
+          text: Network.error
+          color: Theme.sysError
+          font.family: Theme.uiFont
+          font.pixelSize: Theme.sysErrorSize
+          font.weight: Font.Medium
+        }
+      }
     }
   }
 }

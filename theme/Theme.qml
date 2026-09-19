@@ -345,7 +345,10 @@ Singleton {
   // the system panel: rows that fold open, one at a time. the design writes its
   // type sizes in halves -- 11.5, 10.5, 9.5 -- and font.pixelSize is an int, so
   // each one is rounded up the way the launcher's keycaps already are.
-  property int sysPanelWidth: 286
+  // the design writes the panel as 286 wide with 14 of padding, and css pads
+  // outside a stated width, so the box is 314. the strip grows to exactly this
+  // when the tab opens, which is the number the design states outright.
+  property int sysPanelWidth: 314
   property int sysPanelPadding: 14
   property int sysSectionGap: 12
   property int sysRowSpacing: 4
@@ -397,6 +400,36 @@ Singleton {
   readonly property color sysNetName: root.tint.alpha(0.62)
   readonly property color sysNetDetail: root.tint.alpha(0.4)
   readonly property color sysNetGlyph: root.tint.alpha(0.45)
+  readonly property color sysNetLock: root.tint.alpha(0.35)
+
+  // a network you are pointing at, and one whose row is open for a passphrase.
+  readonly property color sysNetHover: root.sheen.alpha(0.12)
+
+  property int sysLockIcon: 12
+
+  // the passphrase row a locked network opens, and the refusal that can follow.
+  property int sysFieldHeight: 45
+  property int sysFieldPaddingH: 8
+  property int sysFieldTop: 6
+  property int sysFieldBottom: 8
+  property int sysFieldGap: 6
+  property int sysFieldInnerH: 8
+  property int sysFieldInnerV: 6
+  property int sysFieldRadius: 8
+  property int sysFieldSize: 11
+  property int sysJoinPaddingH: 10
+  property int sysJoinPaddingV: 7
+  property int sysJoinSize: 10
+  property int sysErrorGap: 7
+  property int sysErrorIcon: 13
+  property int sysErrorSize: 10
+
+
+  readonly property color sysFieldBorder: root.sheen.alpha(0.12)
+  readonly property color sysFieldFill: root.sheen.alpha(0.05)
+  readonly property color sysJoinFill: root.accent.alpha(0.16)
+  readonly property color sysJoinHover: root.accent.alpha(0.26)
+  readonly property color sysError: "#e06c75"
 
   readonly property color sysRowOpen: root.sheen.alpha(0.05)
   readonly property color sysNetActive: root.sheen.alpha(0.06)

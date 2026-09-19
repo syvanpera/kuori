@@ -41,6 +41,14 @@ Singleton {
   property real rxBytes: 0
   property real txBytes: 0
 
+  // the ssid whose row is open for a passphrase, "" for none. only one at a time,
+  // and clearing it is what folds the field away again.
+  property string selected: ""
+
+  // what the last refused join said, shown under the row that asked. it clears
+  // itself after a while so the row goes back to offering another try.
+  property string error: ""
+
   readonly property var device: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
   readonly property bool enabled: Networking.wifiEnabled
   readonly property bool connected: root.device?.connected ?? false
@@ -74,6 +82,44 @@ Singleton {
 
   function setEnabled(on: bool): void {
     Networking.wifiEnabled = on
+  }
+
+  // what a click on a network does. one we have credentials for -- saved, or not
+  // locked at all -- we simply join. anything else needs a passphrase first, so
+  // the click opens the field rather than doing something that cannot work.
+  function select(net: var): void {
+    if (!net || net.connected) return
+
+    root.error = ""
+
+    if (net.known || !root.locked(net)) {
+      root.selected = ""
+      net.connect()
+      return
+    }
+
+    root.selected = root.selected === net.name ? "" : net.name
+  }
+
+  function join(psk: string): void {
+    const net = root.scanned.find(n => n.name === root.selected)
+    if (!net || !psk) return
+
+    root.error = ""
+    net.connectWithPsk(psk)
+  }
+
+  // NetworkManager answers a bad passphrase by asking for secrets again, or by
+  // giving up on the handshake. both mean the same thing to whoever typed it.
+  function reasonText(reason: var): string {
+    switch (reason) {
+      case ConnectionFailReason.NoSecrets:
+      case ConnectionFailReason.WifiAuthTimeout: return "Incorrect passphrase"
+      case ConnectionFailReason.WifiNetworkLost: return "Network went away"
+      case ConnectionFailReason.WifiClientDisconnected:
+      case ConnectionFailReason.WifiClientFailed: return "Could not connect"
+      default: return "Could not connect"
+    }
   }
 
   // an ap we are already on is drawn plain, the way the design does it; a lock is
@@ -163,11 +209,36 @@ Singleton {
     root.loss = -1
     root.ip = ""
     root.bands = ({})
+    root.selected = ""
+    root.error = ""
   }
 
   // the address belongs to an association rather than to the moment, so it is
   // read when one appears instead of on every tick.
   onSsidChanged: if (root.detailed) addr.running = true
+
+  // a refusal is reported by the network that refused, so this follows whichever
+  // one the field is open for.
+  Connections {
+    target: root.scanned.find(n => n.name === root.selected) ?? null
+
+    function onConnectionFailed(reason: var): void {
+      root.error = root.reasonText(reason)
+      linger.restart()
+    }
+  }
+
+  Timer {
+    id: linger
+
+    interval: 1800
+
+    onTriggered: root.error = ""
+  }
+
+  // a network that comes up is one that took the passphrase, so the field it was
+  // typed into has nothing left to ask.
+  onConnectedChanged: if (root.connected) root.selected = ""
 
   // scanning costs airtime and wakes the radio, so the device only looks around
   // while someone is reading the list.

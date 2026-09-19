@@ -129,6 +129,10 @@ PanelWindow {
     notchId: "system"
     trigger: "click"
 
+    // the one tab that keeps its strip: the glyphs it reports stay on screen while
+    // its panel is out, and the panel hangs underneath them.
+    keepStrip: true
+
     panel: Component {
       SystemPanel {}
     }

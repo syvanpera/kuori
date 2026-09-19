@@ -32,6 +32,11 @@ Item {
   // what the tab becomes while open. a tab without one never opens.
   property Component panel: null
 
+  // whether the strip stays put when the panel opens. the workspaces and clock
+  // tabs fold into their panels; the system tab keeps its row of glyphs and hangs
+  // the panel underneath, so the things it is reporting never leave the screen.
+  property bool keepStrip: false
+
   readonly property bool hovered: hover.hovered
 
   readonly property bool open: {
@@ -78,7 +83,12 @@ Item {
     id: body
 
     width: root.open ? Math.max(root.stripWidth, panelLoader.implicitWidth) : root.stripWidth
-    height: root.open ? Math.max(root.stripHeight, panelLoader.implicitHeight) : root.stripHeight
+    height: {
+      if (!root.open) return root.stripHeight
+      // a kept strip is above the panel rather than behind it, so the two stack.
+      if (root.keepStrip) return root.stripHeight + panelLoader.implicitHeight
+      return Math.max(root.stripHeight, panelLoader.implicitHeight)
+    }
     color: Theme.notch
 
     // a flush tab's outer top corner sits exactly on the corner of the desktop
@@ -112,11 +122,17 @@ Item {
   Item {
     id: contentItem
 
-    anchors.horizontalCenter: body.horizontalCenter
-    anchors.top: body.top
+    // a flush tab keeps its contents against its own outer edge, so a body that
+    // grows inward leaves them where they were. while the body is only as wide as
+    // the strip this is exactly where centring put them.
+    x: {
+      if (root.flushRight) return body.width - contentItem.width - root.padding
+      if (root.flushLeft) return root.padding
+      return (body.width - contentItem.width) / 2
+    }
 
     // centred in the strip, so the body growing under it does not drag it down.
-    anchors.topMargin: (root.stripHeight - contentItem.height) / 2
+    y: (root.stripHeight - contentItem.height) / 2
 
     // the child sits at 0,0 and never anchors back here, so measuring it this way
     // cannot loop.
@@ -125,10 +141,10 @@ Item {
     width: implicitWidth
     height: implicitHeight
 
-    opacity: root.open ? 0 : 1
+    opacity: root.open && !root.keepStrip ? 0 : 1
 
     // an invisible strip must not keep answering clicks meant for the panel.
-    enabled: !root.open
+    enabled: !root.open || root.keepStrip
 
     Behavior on opacity {
       NumberAnimation { duration: Theme.notchFadeDuration }
@@ -145,7 +161,7 @@ Item {
     sourceComponent: root.panel
 
     anchors.horizontalCenter: body.horizontalCenter
-    anchors.top: body.top
+    y: root.keepStrip ? root.stripHeight : 0
 
     opacity: root.open ? 1 : 0
     enabled: root.open
