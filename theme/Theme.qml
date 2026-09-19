@@ -342,6 +342,67 @@ Singleton {
   property real launcherShadowBlur: 70
   property real launcherShadowOffset: 24
 
+  // the system panel: rows that fold open, one at a time. the design writes its
+  // type sizes in halves -- 11.5, 10.5, 9.5 -- and font.pixelSize is an int, so
+  // each one is rounded up the way the launcher's keycaps already are.
+  property int sysPanelWidth: 286
+  property int sysPanelPadding: 14
+  property int sysSectionGap: 12
+  property int sysRowSpacing: 4
+
+  property int sysRowRadius: 11
+  property int sysRowPaddingH: 9
+  property int sysRowPaddingV: 7
+  property int sysRowGap: 10
+  property int sysRowIcon: 17
+  property int sysRowLabelSize: 12
+  property int sysRowValueSize: 12
+  property int sysChevron: 15
+
+  property int sysBodyPaddingH: 9
+  property int sysBodyTop: 2
+  property int sysBodyBottom: 10
+  property int sysBodyGap: 9
+
+  // the small all-caps headings inside a folded-open row.
+  property int sysCapSize: 10
+  readonly property real sysCapSpacing: root.sysCapSize * 0.09
+
+  property int sysStatSize: 11
+  property int sysStatGapH: 14
+  property int sysStatGapV: 6
+
+  property int sysNetRadius: 9
+  property int sysNetPaddingH: 8
+  property int sysNetPaddingV: 6
+  property int sysNetGap: 9
+  property int sysNetIcon: 14
+  property int sysNetNameSize: 11
+  property int sysNetStateSize: 10
+  property int sysNetTextSpacing: 3
+  property int sysNetSpacing: 2
+
+  // the pill switch. 2 + 11 + 11 + 2 is the design's 26, which is why the knob's
+  // travel is exactly its own width.
+  property int switchWidth: 26
+  property int switchHeight: 15
+  property int switchPadding: 2
+  property int switchKnob: 11
+
+  readonly property color sysDim: root.tint.alpha(0.4)
+  readonly property color sysValue: root.tint.alpha(0.55)
+  readonly property color sysCap: root.tint.alpha(0.35)
+  readonly property color sysStatKey: root.tint.alpha(0.45)
+  readonly property color sysStatValue: root.tint.alpha(0.8)
+  readonly property color sysNetName: root.tint.alpha(0.62)
+  readonly property color sysNetState: root.tint.alpha(0.4)
+
+  readonly property color sysRowOpen: root.sheen.alpha(0.05)
+  readonly property color sysNetActive: root.sheen.alpha(0.06)
+  readonly property color sysLine: root.sheen.alpha(0.07)
+  readonly property color switchTrack: root.sheen.alpha(0.13)
+  readonly property color switchKnobOff: root.tint.alpha(0.55)
+
   property string uiFont: "Manrope"
 
   // Manrope is one variable file whose default named instance is ExtraLight, so
