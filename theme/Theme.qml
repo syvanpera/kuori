@@ -139,6 +139,18 @@ Singleton {
   readonly property color launcherScrim: root.shade.alpha(0.55)
   readonly property color launcherShadow: root.ink.alpha(0.5)
 
+  // the design gives the notches a two layer elevation shadow: a soft ambient
+  // spread, plus a tight contact line right under the edge. qt takes blur as the
+  // pixel distance the falloff reaches, fed to a smoothstep over a signed distance
+  // field, rather than a gaussian sigma, so css blur radii transfer at about 1.2x.
+  readonly property color notchShadowAmbient: root.ink.alpha(0.34)
+  readonly property color notchShadowContact: root.ink.alpha(0.28)
+
+  property real notchShadowAmbientBlur: 17
+  property real notchShadowAmbientOffset: 5
+  property real notchShadowContactBlur: 4
+  property real notchShadowContactOffset: 1
+
   // every raised surface inside the panel is white at one of three alphas over
   // the notch colour, the same trick the frame plays with tint.
   readonly property color sheen: "#ffffff"

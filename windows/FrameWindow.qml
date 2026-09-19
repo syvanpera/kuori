@@ -44,6 +44,12 @@ PanelWindow {
   WlrLayershell.layer: WlrLayer.Top
   WlrLayershell.namespace: "qs-frame"
 
+  // before the frame on purpose: the band is drawn over the top of these, so a
+  // notch casts onto the desktop below it without smearing the rail it hangs off.
+  NotchShadow { notch: workspaces }
+  NotchShadow { notch: clock }
+  NotchShadow { notch: system }
+
   DesktopFrame {
     anchors.fill: parent
   }

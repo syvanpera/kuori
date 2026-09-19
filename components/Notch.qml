@@ -29,6 +29,10 @@ Item {
   // region tree.
   readonly property alias hitArea: hit
 
+  // the silhouette a drop shadow has to match. the body grows with expansion, so
+  // the shadow cannot just use notchHeight.
+  readonly property alias bodyHeight: body.height
+
   readonly property bool flushLeft: root.placement === "left"
   readonly property bool flushRight: root.placement === "right"
 
