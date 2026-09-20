@@ -3,12 +3,13 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// the screen's backlight. quickshell has no module for it, so this is sysfs for
-// reading and brightnessctl for writing.
+// the screen's backlight. quickshell has no module for it, so this is sysfs both
+// ways: acpilight's udev rule gives the brightness file to the video group and
+// this user is in it, so the shell writes the file itself and needs no helper.
 //
-// the sysfs file is root-owned and this user is not in the video group, so a
-// direct write is not possible; brightnessctl gets there through logind's
-// SetBrightness for the active session, which needs no privileges at all.
+// it went through brightnessctl and logind before that, which cost a process per
+// step of a drag and all the machinery to keep those from piling up. one line of
+// nix took the lot away.
 Singleton {
   id: root
 
@@ -24,36 +25,23 @@ Singleton {
   readonly property real level: root.known ? root.raw / root.max : 0
   readonly property int percent: Math.round(root.level * 100)
 
-  // the raw value waiting to be written, or -1 for none. a drag fires
-  // continuously and every write is a process, so requests are coalesced: the
-  // newest wins and only one brightnessctl runs at a time. brightnessctl returns
-  // in a few milliseconds, so this throttles itself without a timer.
-  property int requested: -1
-
   function set(level: real): void {
     if (!root.known) return
 
     const value = Math.round(Math.max(0, Math.min(1, level)) * root.max)
 
-    // shown at once, so the slider follows the pointer rather than the disk.
+    // shown before it is written, so the slider follows the pointer rather than
+    // the disk -- though with a blocking write of five bytes there is not much in
+    // it either way.
     root.raw = value
-    root.requested = value
-
-    root.flush()
+    brightness.setText(`${value}`)
   }
 
-  function flush(): void {
-    if (root.requested < 0 || write.running) return
-
-    write.command = ["brightnessctl", "-q", "set", `${root.requested}`]
-    root.requested = -1
-    write.running = true
-  }
-
+  // brightnessctl only to find out which backlight this is and how far it goes:
+  // the file has to be named before it can be read, and nothing in Quickshell.Io
+  // lists a directory. it is not in the way of a single write.
   onWatchingChanged: if (root.watching && root.device === "") probe.running = true
 
-  // one brightnessctl to learn which device this is and how far it goes. after
-  // that the level comes from sysfs, which costs nothing to read.
   Process {
     id: probe
 
@@ -74,31 +62,27 @@ Singleton {
     }
   }
 
-  Process {
-    id: write
-
-    // whatever arrived while the last one was running goes next.
-    onExited: root.flush()
-  }
-
   Timer {
     interval: 2000
     repeat: true
     running: root.watching && root.device !== ""
 
-    // not while a write is in flight: the file would answer with the value we
-    // have already moved on from and the slider would jump back under the hand.
-    onTriggered: if (!write.running && root.requested < 0) level.reload()
+    onTriggered: brightness.reload()
   }
 
-  // the requested level rather than actual_brightness: it is what brightnessctl
-  // writes, so the two never disagree by a rounding step.
   FileView {
-    id: level
+    id: brightness
 
     path: root.device ? `/sys/class/backlight/${root.device}/brightness` : ""
-    printErrors: false
 
-    onLoaded: root.raw = parseFloat(level.text()) || 0
+    // an atomic write is a write to a temporary followed by a rename, and you
+    // cannot rename anything over a sysfs attribute. it has to go in place.
+    atomicWrites: false
+
+    // five bytes to a kernel attribute, so blocking costs nothing and the write
+    // has landed before the poll below could ask about it.
+    blockWrites: true
+
+    onLoaded: root.raw = parseFloat(brightness.text()) || 0
   }
 }
