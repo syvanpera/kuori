@@ -22,12 +22,11 @@ Shape {
   // in the middle of a narrow window and fold the outline back over itself.
   readonly property real corner: Math.min(Theme.windowRadius, root.width / 2)
 
-  // the bar's outer corners, matched to the window's own radius rather than to the
-  // bar. half the thickness is round in the arithmetic and square to the eye: the
-  // horn makes the outer edge four times taller than the bar, so a radius scaled to
-  // the bar disappears against it. at the window's radius the curve runs out of the
-  // strip and into the window's corner as one line.
-  readonly property real endRadius: root.corner
+  // the bar's outer corners, clamped twice: two of them can no more meet in the
+  // middle than the horns can, and one taller than the strip's outer edge would
+  // fold that side back on itself. the default is the window's radius, for which
+  // Theme.focusStripEndRadius carries the reasoning.
+  readonly property real endRadius: Math.min(Theme.focusStripEndRadius, root.width / 2, root.thickness + root.corner)
 
   // width and height, not their implicit versions: Shape derives its own implicit
   // size from the path's bounding box and would overwrite them. whatever places

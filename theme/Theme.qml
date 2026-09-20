@@ -111,6 +111,17 @@ Singleton {
   // which of the window's horizontal edges the strip sits on: "top" or "bottom".
   property string focusStripEdge: "top"
 
+  // how round the bar's own outer corners are -- the pair away from the window,
+  // not the horns, which have to keep following windowRadius to stay on the same
+  // curve the window does. do not scale it to the thickness: half the thickness is
+  // round in the arithmetic and square to the eye, because the horn makes the outer
+  // edge four times taller than the bar. 0 squares them off; FocusStrip clamps
+  // anything too large for the shape to hold.
+  // the line below is what this followed before it became its own token, kept as a
+  // reminder of where the value came from.
+  // property int focusStripEndRadius: root.windowRadius
+  property int focusStripEndRadius: 8
+
   property int systemSpacing: 9
   property int batterySpacing: 5
 
