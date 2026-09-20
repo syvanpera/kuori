@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Polkit
 
 // what the shell is being asked to authenticate, if anything.
 //
@@ -25,7 +26,14 @@ Singleton {
   // AuthFlow cannot be constructed and its request/showError methods are private
   // slots, so a mock cannot be a real one -- it has to be a separate object of
   // the same shape. hence `var` rather than a type.
-  readonly property var flow: root.mocking ? mock : null
+  readonly property var flow: {
+    if (root.mocking) return mock
+    return agent.isActive ? agent.flow : null
+  }
+
+  // whether the session's authentication agent is us. only one can register at a
+  // time, so this is false whenever something else got there first.
+  readonly property bool registered: agent.isRegistered
 
   // whether the mock is standing in for a real request. driven over ipc so every
   // state can be walked from the command line without touching anyone's password.
@@ -38,6 +46,21 @@ Singleton {
 
   function dismiss(): void {
     root.mocking = false
+  }
+
+  // registration happens on component completion; the default object path is
+  // /org/quickshell/PolkitAgent. there is no register() to call and no error to
+  // catch -- isRegistered is the only thing that says whether it worked, and a
+  // shell that quietly is not the agent looks exactly like one that is until
+  // something asks for a password.
+  PolkitAgent {
+    id: agent
+
+    // registration completes a moment after construction, so this only reports the
+    // transition. a failure never flips the flag and so says nothing here --
+    // quickshell logs that case itself, with the reason ("An authentication agent
+    // already exists for the given subject" when something else got there first).
+    onIsRegisteredChanged: if (agent.isRegistered) console.info("polkit: this shell is the session authentication agent")
   }
 
   // the states the design draws, reachable by name for screenshotting.
