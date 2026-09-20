@@ -151,7 +151,15 @@ PanelWindow {
     id: panel
 
     x: Math.round((root.width - width) / 2)
-    y: Theme.launcherTop - (root.shown ? 0 : Theme.launcherRise)
+
+    // centred in the area windows actually get, not on the screen: the notches
+    // hang 25px into the top of the desktop and the border takes 5 off the
+    // bottom, so centring on root.height alone would sit the panel low and let a
+    // tall one run under the tabs. fullHeight rather than the panel's own height,
+    // so a query that shortens the grid does not slide the whole thing.
+    y: Theme.borderWidth + Theme.notchHeight
+      + Math.round((root.height - Theme.borderWidth * 2 - Theme.notchHeight - panel.fullHeight) / 2)
+      - (root.shown ? 0 : Theme.launcherRise)
     opacity: root.shown ? 1 : 0
 
     Behavior on y {

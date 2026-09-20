@@ -37,6 +37,17 @@ Rectangle {
   implicitWidth: Theme.launcherWidth
   implicitHeight: layout.implicitHeight
 
+  // the height this panel would have with the grid full, which is what positions
+  // it: centring on the current height would glide the whole panel up and down
+  // every time a query changed the row count. exactly one of the grid and the
+  // empty-state line is ever visible, and the grid tops out at launcherGridMax --
+  // its viewport is defined as that less its own padding -- so the tall state can
+  // be worked out without ever being rendered.
+  readonly property int fullHeight: layout.implicitHeight
+    - (resultsBox.visible ? resultsBox.implicitHeight : 0)
+    - (emptyLabel.visible ? emptyLabel.implicitHeight : 0)
+    + Theme.launcherGridMax
+
   color: Theme.notch
   radius: Theme.notchRadius
 
@@ -331,6 +342,8 @@ Rectangle {
     }
 
     Text {
+      id: emptyLabel
+
       width: parent.width
       visible: root.count === 0
 

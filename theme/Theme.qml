@@ -286,7 +286,13 @@ Singleton {
   readonly property color tintBright: "#eef4fd"
 
   property int launcherWidth: 520
-  property int launcherTop: 96
+
+  // no launcherTop: the panel is centred in the desktop opening instead, which
+  // has to be worked out from the window's own height. windows/LauncherWindow.qml
+  // does the arithmetic and says why.
+
+  // how far above its resting place the panel starts, and falls back to on the
+  // way out.
   property int launcherRise: 12
 
   property int launcherPadding: 16
