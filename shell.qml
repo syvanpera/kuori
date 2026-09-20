@@ -16,6 +16,9 @@ ShellRoot {
   // hangs off the root instead of off Variants.
   LauncherLoader {}
 
+  // and one authentication dialog, for the same reason.
+  PolkitLoader {}
+
   // the shell's only external entry point. hyprland cannot talk to a quickshell
   // window, so the keybind shells out to `qs ipc call`. it lives here rather than
   // in the singleton because the reload hook belongs in the root tree, and because

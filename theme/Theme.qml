@@ -471,6 +471,107 @@ Singleton {
   readonly property color switchTrack: root.sheen.alpha(0.13)
   readonly property color switchKnobOff: root.tint.alpha(0.55)
 
+  // the polkit dialog: a modal card asking for a password when something
+  // privileged is attempted. the design writes its type in halves again, so the
+  // sizes are rounded the way every other panel's are.
+  property int pkWidth: 404
+  property int pkGutter: 18
+  property int pkHeadTop: 18
+  property int pkHeadBottom: 14
+  property int pkHeadGap: 13
+  property int pkTitleGap: 6
+  property int pkChipSize: 38
+  property int pkChipRadius: 11
+  property int pkChipIcon: 21
+  property int pkTitleSize: 14
+  property int pkMessageSize: 12
+
+  property int pkIdentityPaddingH: 12
+  property int pkIdentityPaddingV: 10
+  property int pkIdentityRadius: 11
+  property int pkIdentityGap: 10
+  property int pkIdentityCircle: 26
+  property int pkIdentityIcon: 15
+  property int pkIdentityNameSize: 12
+  property int pkIdentitySubSize: 10
+  property int pkIdentityTextGap: 3
+
+  property int pkFieldTop: 12
+  property int pkFieldGap: 7
+  property int pkFieldHeight: 38
+  property int pkFieldPaddingH: 11
+  property int pkFieldRadius: 10
+  property int pkFieldIconGap: 9
+  property int pkFieldGlyph: 15
+  property int pkFieldSize: 12
+  property int pkEyeSize: 16
+
+  property int pkNoteHeight: 16
+  property int pkNoteGap: 6
+  property int pkNoteIcon: 12
+  property int pkNoteSize: 10
+
+  property int pkDetailsTop: 6
+  property int pkDetailsGap: 5
+  property int pkDetailsChevron: 14
+  property int pkDetailsCapSize: 10
+  property int pkDetailsBoxTop: 8
+  property int pkDetailsBoxPaddingH: 11
+  property int pkDetailsBoxPaddingV: 9
+  property int pkDetailsBoxRadius: 10
+  property int pkDetailsRowGap: 6
+  property int pkDetailsColGap: 10
+  property int pkDetailsKeyWidth: 62
+  property int pkDetailsKeySize: 9
+  property int pkDetailsValueSize: 10
+  property int pkDetailsLine: 14
+  readonly property real pkDetailsKeySpacing: root.pkDetailsKeySize * 0.06
+
+  property int pkButtonsTop: 14
+  property int pkButtonsBottom: 16
+  property int pkButtonsGap: 8
+  property int pkButtonPaddingV: 10
+  property int pkButtonRadius: 10
+  property int pkButtonSize: 12
+
+  // the card lifts further off the desktop than anything else in the shell, and
+  // the design hangs a hairline outline on it as well as the shadow.
+  property real pkShadowBlur: 80
+  property real pkShadowOffset: 30
+  property real pkScaleFrom: 0.96
+  property int pkFade: 160
+  property int pkRise: 200
+
+  // the chip behind the admin glyph, and the colour of a passphrase accepted.
+  // neither is anywhere else in the shell yet.
+  readonly property color elevated: "#f0a35e"
+  readonly property color success: "#8fd48a"
+
+  readonly property color pkScrim: root.shade.alpha(0.6)
+  readonly property color pkShadow: root.ink.alpha(0.55)
+  readonly property color pkOutline: root.sheen.alpha(0.05)
+  readonly property color pkChipFill: root.elevated.alpha(0.13)
+  readonly property color pkMessageText: root.tint.alpha(0.58)
+  readonly property color pkIdentityFill: root.sheen.alpha(0.04)
+  readonly property color pkIdentityCircleFill: root.accent.alpha(0.16)
+  readonly property color pkIdentitySub: root.tint.alpha(0.4)
+  readonly property color pkFieldFill: root.sheen.alpha(0.05)
+  readonly property color pkFieldBorder: root.sheen.alpha(0.12)
+  readonly property color pkFieldBorderError: root.sysError.alpha(0.55)
+  readonly property color pkFieldBorderOk: root.success.alpha(0.5)
+  readonly property color pkFieldGlyphColor: root.tint.alpha(0.4)
+  readonly property color pkEye: root.tint.alpha(0.42)
+  readonly property color pkEyeHover: root.tint.alpha(0.8)
+  readonly property color pkNoteIdle: root.tint.alpha(0.45)
+  readonly property color pkDetailsFill: root.sheen.alpha(0.03)
+  readonly property color pkDetailsCap: root.tint.alpha(0.4)
+  readonly property color pkDetailsKey: root.tint.alpha(0.35)
+  readonly property color pkDetailsValue: root.tint.alpha(0.6)
+  readonly property color pkCancelFill: root.sheen.alpha(0.06)
+  readonly property color pkCancelHover: root.sheen.alpha(0.1)
+  readonly property color pkCancelText: root.tint.alpha(0.7)
+  readonly property color pkDoneFill: root.success.alpha(0.2)
+
   property string uiFont: "Manrope"
 
   // Manrope is one variable file whose default named instance is ExtraLight, so
