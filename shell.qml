@@ -30,15 +30,27 @@ ShellRoot {
     // IpcHandler only exposes functions whose parameters and return type are
     // annotated. an untyped function is silently not registered.
     function toggle(): void {
-      Launcher.toggle()
+      Launcher.toggle("all")
     }
 
     function open(): void {
-      Launcher.open()
+      Launcher.open("all")
     }
 
     function close(): void {
       Launcher.close()
+    }
+
+    // one function per category rather than one taking the name, so a hyprland
+    // bind is a fixed string with nothing to mistype and `qs ipc show` lists
+    // everything that can be bound. each toggles: the same bind twice opens and
+    // closes, a different one switches category without closing.
+    function apps(): void {
+      Launcher.toggle("apps")
+    }
+
+    function wallpapers(): void {
+      Launcher.toggle("wallpapers")
     }
   }
 }

@@ -12,25 +12,101 @@ Rectangle {
   readonly property alias query: input.text
 
   property int selectedIndex: 0
-  property int categoryIndex: 0
 
   // hovering selects, but only once the pointer has actually moved. the arrow keys
   // slide the list under a stationary pointer, and the hover that produces is not
   // a choice anyone made.
   property bool mouseArmed: false
 
-  // adding a category should be adding a line here. both of today's two list the
-  // same apps; a category grows a source of its own the day there is a second kind
-  // of result to show.
+  // adding a category is adding a line here and a source below. the design has
+  // seven; these are the ones with something to show.
   readonly property var categories: [
     { id: "all", label: "ALL" },
-    { id: "apps", label: "APPS" }
+    { id: "apps", label: "APPS" },
+    { id: "wallpapers", label: "WALLPAPERS" }
   ]
+
+  // every result is one of these, whatever produced it:
+  //
+  //   { cat, name, detail, icon, image, glyph, path, run }
+  //
+  // plus the fields AppSearch scores -- genericName, keywords, comment, command --
+  // named after the desktop entry ones on purpose, so a wallpaper can be ranked
+  // without the ranking knowing it is not an app.
+  //
+  // the rows themselves have to be stable objects: ScriptModel diffs by identity,
+  // so building them per keystroke would read as a whole new list, reset the view
+  // and reload every icon. these are rebuilt only when a source changes.
 
   // NoDisplay entries are still in `applications`: they are .desktop files that
   // exist to claim a mime type or a startup class, not to be launched.
   readonly property var entries: DesktopEntries.applications.values.filter(entry => !entry.noDisplay)
-  readonly property var matches: AppSearch.rank(root.entries, root.query)
+
+  readonly property var appRows: root.entries.map(entry => ({
+    cat: "apps",
+    name: entry.name,
+
+    // the design's second line. genericName is the field meant for it; a comment
+    // is prose but better than nothing, and the id at least says what will launch.
+    detail: entry.genericName || entry.comment || entry.id || "",
+    icon: entry.icon ?? "",
+    image: "",
+    glyph: "",
+    genericName: entry.genericName,
+    keywords: entry.keywords,
+    comment: entry.comment,
+    command: entry.command,
+    run: () => root.launchEntry(entry)
+  }))
+
+  readonly property var wallpaperRows: {
+    const rows = Wallpapers.files.map(file => ({
+      cat: "wallpapers",
+      name: file.name,
+      detail: file.file,
+      icon: "",
+      image: file.url,
+      glyph: "",
+      path: file.path,
+
+      // not shown anywhere -- it is here so that typing "wallpaper" in ALL finds
+      // the pictures, the way typing an app's category would.
+      genericName: "Wallpaper",
+      keywords: [file.file],
+      comment: "",
+      command: [file.path],
+      run: () => Wallpapers.set(file.path)
+    }))
+
+    // the design's own last row. it is a verb rather than a picture, so it gets a
+    // glyph where the others get a thumbnail.
+    rows.push({
+      cat: "wallpapers",
+      name: "Random wallpaper",
+      detail: "Pick one at random",
+      icon: "",
+      image: "",
+      glyph: "shuffle",
+
+      // after the pictures, where the design puts it, rather than wherever an
+      // alphabetical sort would drop the word "random".
+      last: true,
+      genericName: "Wallpaper",
+      keywords: ["random", "shuffle"],
+      comment: "",
+      command: [],
+      run: () => Wallpapers.shuffle()
+    })
+
+    return rows
+  }
+
+  readonly property var rows: root.appRows.concat(root.wallpaperRows)
+  readonly property var pool: Launcher.category === "all"
+    ? root.rows
+    : root.rows.filter(row => row.cat === Launcher.category)
+
+  readonly property var matches: AppSearch.rank(root.pool, root.query)
   readonly property int count: root.matches.length
   readonly property var selected: root.matches[root.selectedIndex] ?? null
 
@@ -67,6 +143,16 @@ Rectangle {
 
   Component.onCompleted: input.forceActiveFocus()
 
+  // switching category replaces the list wholesale, and index 3 of the old one
+  // means nothing in the new.
+  Connections {
+    target: Launcher
+
+    function onCategoryChanged(): void {
+      root.selectedIndex = 0
+    }
+  }
+
   // one item per press, not one visual row. the grid is a ranked list folded into
   // two columns, so "down" means the next best match; moving by a row would skip
   // every second result and leave the other column reachable only with left and
@@ -82,9 +168,17 @@ Rectangle {
     root.mouseArmed = false
   }
 
-  function launch(entry: var): void {
-    if (!entry) return
+  // every row carries what it does, so this stays the same whatever the list is
+  // showing. closing afterwards is the design's behaviour for every row, wallpaper
+  // rows included -- picking one is an answer, not a browse.
+  function activate(row: var): void {
+    if (!row) return
 
+    row.run()
+    Launcher.close()
+  }
+
+  function launchEntry(entry: var): void {
     // uwsm puts the app in its own systemd scope, so it survives this shell being
     // reloaded and lands in the right slice. it takes a desktop entry id and
     // expands the Exec field codes and Terminal=true itself, which is why nothing
@@ -93,7 +187,6 @@ Rectangle {
 
     // execDetached double-forks, so nothing is left parented to quickshell.
     Quickshell.execDetached(["uwsm", "app", "--", id])
-    Launcher.close()
   }
 
   // the objects in `values` are the DesktopEntry objects themselves, not wrappers
@@ -153,10 +246,10 @@ Rectangle {
         selectByMouse: true
 
         Keys.onEscapePressed: Launcher.close()
-        Keys.onReturnPressed: root.launch(root.selected)
+        Keys.onReturnPressed: root.activate(root.selected)
 
         // the numpad's enter is a different key.
-        Keys.onEnterPressed: root.launch(root.selected)
+        Keys.onEnterPressed: root.activate(root.selected)
         Keys.onUpPressed: root.step(-1)
         Keys.onDownPressed: root.step(1)
         Keys.onTabPressed: root.step(1)
@@ -248,12 +341,11 @@ Rectangle {
             required property var modelData
 
             label: modelData.label
-            selected: index === root.categoryIndex
+            selected: modelData.id === Launcher.category
 
-            // both categories show the same list today, so this only moves the
-            // highlight. when a category has a source of its own, this is the line
-            // that switches it.
-            onClicked: root.categoryIndex = index
+            // the singleton, not a local index: a keybind can open the launcher
+            // straight into a category, and the chips have to agree with it.
+            onClicked: Launcher.category = modelData.id
           }
         }
       }
@@ -315,12 +407,13 @@ Rectangle {
           width: grid.cellWidth
           height: grid.cellHeight
 
-          AppResult {
+          LauncherRow {
             anchors.fill: parent
             anchors.margins: Theme.launcherGridGap / 2
 
-            entry: cell.modelData
+            row: cell.modelData
             selected: cell.index === root.selectedIndex
+            marked: cell.modelData.path !== undefined && cell.modelData.path === Wallpapers.current
           }
 
           MouseArea {
@@ -335,7 +428,7 @@ Rectangle {
             }
 
             onEntered: if (root.mouseArmed) root.selectedIndex = cell.index
-            onClicked: root.launch(cell.modelData)
+            onClicked: root.activate(cell.modelData)
           }
         }
       }

@@ -108,7 +108,13 @@ Singleton {
     return program.split("/").pop()
   }
 
+  // a row may ask to sort after the rest of its kind, which is how an action that
+  // lives in a list of things -- "Random wallpaper" among the wallpapers -- stays
+  // at the bottom instead of landing wherever its name falls. it is a tiebreak
+  // only: a query that scores it higher still brings it up.
   function byName(a: var, b: var): int {
+    if (!!a.last !== !!b.last) return a.last ? 1 : -1
+
     return (a.name ?? "").localeCompare(b.name ?? "")
   }
 }
