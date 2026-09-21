@@ -88,13 +88,41 @@ Singleton {
     flasher.restart()
   }
 
+  // every monitor as a box slurp can be pointed at, in layout coordinates: the
+  // geometry hyprland reports is physical pixels and slurp works in logical ones.
+  function monitorRects(): string {
+    return Hyprland.monitors.values
+      .map(m => `${m.x},${m.y} ${Math.round(m.width / m.scale)}x${Math.round(m.height / m.scale)}`)
+      .join("\n")
+  }
+
+  readonly property bool manyMonitors: Hyprland.monitors.values.length > 1
+
   function shoot(): void {
-    const how = root.targets.find(t => t.id === root.target)?.shot ?? "area"
+    // grimblast's `area` feeds slurp every window as a selectable box unless told
+    // otherwise, and takes SLURP_RECTS and SLURP_ARGS for exactly this. so the
+    // three targets are one grimblast verb with three different sets of boxes:
+    //
+    //   region   no boxes at all, so the selection is a free drag and the screen
+    //            is not covered in outlines nobody asked for
+    //   app      grimblast's own default, every window, restricted to them
+    //   monitor  one box per monitor -- or no picker at all when there is one
+    //            monitor, because asking which is silly when there is no choice
+    if (root.target === "app") {
+      shot.environment = ({ SLURP_ARGS: "-r" })
+    } else if (root.target === "monitor" && root.manyMonitors) {
+      shot.environment = ({ SLURP_RECTS: root.monitorRects(), SLURP_ARGS: "-r" })
+    } else if (root.target === "region") {
+      shot.environment = ({ SLURP_RECTS: "" })
+    } else {
+      shot.environment = ({})
+    }
 
     // no --notify: grimblast would announce itself as ".grimblast-wrapped", which
     // is the nix wrapper's filename. it prints the path it saved to instead, so
     // the notification below is ours and says kuori.
-    shot.command = ["grimblast", "copysave", how]
+    shot.command = ["grimblast", "copysave",
+      root.target === "monitor" && !root.manyMonitors ? "output" : "area"]
     shot.running = true
   }
 
@@ -107,24 +135,32 @@ Singleton {
     return Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm-ss")
   }
 
-  // a region has to be drawn before anything can be recorded, and slurp is a
-  // process of its own: the recording starts in its onExited, not here.
+  // wf-recorder knows nothing about windows or pickers, so the geometry is drawn
+  // first and the recording starts in the picker's onExited. the targets mean the
+  // same here as they do for a screenshot: region drags, app and monitor pick.
   function record(): void {
-    if (root.target === "region") {
-      picker.running = true
+    if (root.target === "monitor" && !root.manyMonitors) {
+      root.launch("")
       return
     }
 
-    if (root.target === "app") {
-      const window = Hyprland.activeToplevel?.lastIpcObject ?? null
+    // one box per window, from hyprland, which reports them in the layout
+    // coordinates both slurp and wf-recorder speak.
+    const rects = root.target === "app"
+      ? Hyprland.toplevels.values
+        .map(t => t.lastIpcObject)
+        .filter(w => w)
+        .map(w => `${w.at[0]},${w.at[1]} ${w.size[0]}x${w.size[1]}`)
+        .join("\n")
+      : root.monitorRects()
 
-      // hyprland reports a window in the same layout coordinates wf-recorder
-      // takes, so this needs no conversion -- unlike anything measured in pixels.
-      root.launch(window ? `${window.at[0]},${window.at[1]} ${window.size[0]}x${window.size[1]}` : "")
-      return
-    }
+    // a shell because the boxes reach slurp on its stdin, and free-form region
+    // selection is the one case with no boxes to give it.
+    picker.command = root.target === "region"
+      ? ["slurp"]
+      : ["sh", "-c", `printf '%s' '${rects}' | slurp -r -f '%x,%y %wx%h'`]
 
-    root.launch("")
+    picker.running = true
   }
 
   function launch(geometry: string): void {
@@ -271,13 +307,11 @@ Singleton {
   Process {
     id: picker
 
-    command: ["slurp"]
-
     stdout: StdioCollector { id: region }
 
     onExited: exitCode => {
       if (exitCode !== 0) {
-        console.log("capture: region selection cancelled")
+        console.log("capture: selection cancelled")
         return
       }
 

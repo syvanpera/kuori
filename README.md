@@ -223,6 +223,9 @@ App or Monitor — and press **Capture!**. Recording adds two switches, Desktop 
 Microphone (off).
 
 - **Screenshots are saved and copied at once**, so the file is kept *and* ready to paste.
+- **Region** drags a rectangle. **App** dims the screen and lets you click the window you want, not
+  whichever happens to be focused. **Monitor** does the same for screens — and skips the picker when
+  there is only one, since there is nothing to choose.
 - **Where they go is not kuori's decision**: `XDG_SCREENSHOTS_DIR` then `XDG_PICTURES_DIR` from
   `~/.config/user-dirs.dirs`, which on this machine means `~/Pictures/Screenshots`. Recordings go to
   `XDG_VIDEOS_DIR`. Change the file and everything follows, including other tools.
