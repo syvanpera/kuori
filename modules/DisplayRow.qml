@@ -14,14 +14,6 @@ PanelRow {
   value: Display.summary
   lit: true
 
-  // the level is only polled while this is on screen. a panel nobody is looking
-  // at does no work, and the backlight has no change notification to wait on.
-  Binding {
-    target: Backlight
-    property: "watching"
-    value: root.expanded
-  }
-
   Column {
     width: root.bodyWidth
     spacing: Theme.sysBodyGap

@@ -85,6 +85,22 @@ PanelWindow {
   NotchShadow { notch: clock }
   NotchShadow { notch: system }
 
+  // the osd's shadow belongs here with the tabs' own, for the same reason: it is
+  // flush against the side border, and a shadow drawn after the frame would smear
+  // down the band instead of falling on the desktop beside it. its corners are not
+  // a tab's -- it is square where it tucks under the strip.
+  NotchShadow {
+    notch: osd
+
+    visible: osd.visible
+    opacity: osd.opacity
+
+    topLeftRadius: Theme.notchRadius
+    topRightRadius: 0
+    bottomLeftRadius: Theme.notchRadius
+    bottomRightRadius: 0
+  }
+
   DesktopFrame {
     anchors.fill: parent
   }
@@ -141,10 +157,23 @@ PanelWindow {
     // its panel is out, and the panel hangs underneath them.
     keepStrip: true
 
+    // and the one tab something else hangs off: the osd drops out of it.
+    hangHeight: osd.visible ? osd.height : 0
+
     panel: Component {
       SystemPanel {}
     }
 
     SystemStatus {}
+  }
+
+  // last, so it is over the frame and over the focus indicator, like the tabs. it
+  // shares the system tab's right edge and hangs directly below its strip.
+  OsdBox {
+    id: osd
+
+    stripWidth: system.width
+    x: root.width - width - Theme.borderWidth
+    y: Theme.borderWidth + system.bodyHeight
   }
 }

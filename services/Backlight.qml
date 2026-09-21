@@ -13,10 +13,6 @@ import Quickshell.Io
 Singleton {
   id: root
 
-  // raised while the system panel is open. the level is only polled then: nothing
-  // reports a backlight change, so noticing the function keys means asking.
-  property bool watching: false
-
   property string device: ""
   property real max: 0
   property real raw: 0
@@ -40,11 +36,14 @@ Singleton {
   // brightnessctl only to find out which backlight this is and how far it goes:
   // the file has to be named before it can be read, and nothing in Quickshell.Io
   // lists a directory. it is not in the way of a single write.
-  onWatchingChanged: if (root.watching && root.device === "") probe.running = true
-
+  //
+  // it runs at startup rather than when a panel first asks, because the watcher
+  // below needs the device named before it can reload anything, and a key pressed
+  // before the display section was ever opened still has to raise an osd.
   Process {
     id: probe
 
+    running: true
     command: ["brightnessctl", "-m"]
 
     stdout: StdioCollector {
@@ -62,12 +61,21 @@ Singleton {
     }
   }
 
-  Timer {
-    interval: 2000
-    repeat: true
-    running: root.watching && root.device !== ""
+  // the kernel emits a udev event on every backlight change, whoever made it --
+  // the function keys, brightnessctl in a terminal, this shell's own slider -- so
+  // one process asleep on a netlink socket replaces the poll this service used to
+  // run while the panel was open. it is line buffered through a pipe: measured at
+  // 13 to 55 ms from the change to the line.
+  //
+  // reloading after our own write costs a read and changes nothing, because set()
+  // has already put the value it wrote in root.raw.
+  Process {
+    running: root.device !== ""
+    command: ["udevadm", "monitor", "--udev", "--subsystem-match=backlight"]
 
-    onTriggered: brightness.reload()
+    stdout: SplitParser {
+      onRead: brightness.reload()
+    }
   }
 
   FileView {
@@ -80,7 +88,7 @@ Singleton {
     atomicWrites: false
 
     // five bytes to a kernel attribute, so blocking costs nothing and the write
-    // has landed before the poll below could ask about it.
+    // has landed before the watcher above could ask about it.
     blockWrites: true
 
     onLoaded: root.raw = parseFloat(brightness.text()) || 0

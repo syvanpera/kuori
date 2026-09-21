@@ -193,8 +193,19 @@ The bell has three states and a click means something different in each:
 
 A click on the gap between icons still opens and closes the panel as before.
 
-Panels only do work while they are open: the Wi-Fi scan, the latency probe and the backlight poll all
-stop when their row folds away.
+Panels only do work while they are open: the Wi-Fi scan and the latency probe both stop when their row
+folds away.
+
+### The on-screen display
+
+Press a volume or brightness key and a box drops out of the system tab with the glyph, the name, the
+percentage and a bar. It follows further presses and takes itself away 1.7 seconds after the last one.
+Muted says `Muted` and `—`, with the bar at nothing in grey rather than accent.
+
+kuori is not what your keys are bound to — they still run `wpctl` and `brightnessctl` — it watches the
+values instead. So the display also answers a change made from a terminal or by anything else on the
+machine, and nothing about your Hyprland config needs to change. Toasts move down while it is out, and
+it stays away entirely while the system panel is open, since the panel is showing those same sliders.
 
 ## Notifications
 

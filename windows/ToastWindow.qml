@@ -21,8 +21,18 @@ PanelWindow {
   }
 
   margins {
-    top: Theme.toastTop
+    // the osd drops out of the same corner, so the toasts move down out of its way
+    // while it is up rather than being covered by it.
+    top: Osd.shown ? Theme.toastTopOsd : Theme.toastTop
     right: Theme.toastRight
+
+    Behavior on top {
+      NumberAnimation {
+        duration: Theme.notchExpandDuration
+        easing.type: Easing.Bezier
+        easing.bezierCurve: Theme.easeStandard
+      }
+    }
   }
 
   implicitWidth: Theme.toastWidth

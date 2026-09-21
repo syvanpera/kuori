@@ -32,6 +32,12 @@ Item {
   // what the tab becomes while open. a tab without one never opens.
   property Component panel: null
 
+  // how much of something else is hanging below this tab -- the osd, under the
+  // system tab. the tab does not draw it, but it is part of the same silhouette:
+  // the corner between them squares off and the fillet where the tab meets the side
+  // border moves to the bottom of whatever hangs.
+  property real hangHeight: 0
+
   // whether the strip stays put when the panel opens. the workspaces and clock
   // tabs fold into their panels; the system tab keeps its row of glyphs and hangs
   // the panel underneath, so the things it is reporting never leave the screen.
@@ -95,8 +101,10 @@ Item {
     // opening, so it takes the same radius and follows it round.
     topLeftRadius: root.flushLeft ? Theme.screenInnerRadius : 0
     topRightRadius: root.flushRight ? Theme.screenInnerRadius : 0
-    bottomLeftRadius: root.flushLeft ? 0 : Theme.notchRadius
-    bottomRightRadius: root.flushRight ? 0 : Theme.notchRadius
+    // square against whatever hangs below, the way it is square against the side
+    // border it is flush with.
+    bottomLeftRadius: root.flushLeft || root.hangHeight > 0 ? 0 : Theme.notchRadius
+    bottomRightRadius: root.flushRight || root.hangHeight > 0 ? 0 : Theme.notchRadius
 
     Behavior on width {
       NumberAnimation {
@@ -211,12 +219,24 @@ Item {
 
   // a flush tab also meets the side border underneath itself, where the border
   // resumes its normal width. anchored to the body's bottom so it rides down with
-  // an open panel.
+  // an open panel, and past whatever hangs below it.
   InvertedCorner {
     visible: root.flushLeft || root.flushRight
     corner: root.flushLeft ? "bottomRight" : "bottomLeft"
     x: root.flushLeft ? -Theme.seamBleed : body.width - Theme.notchRadius
-    y: body.height - Theme.seamBleed
+    y: body.height + root.hangHeight - Theme.seamBleed
+  }
+
+  // and where the tab meets something wider hanging below it: an inside corner in
+  // the tab's own colour, so the osd looks moulded onto the strip rather than
+  // stepped out from under it. it is on the open side -- a right hand tab grows its
+  // osd leftwards.
+  InvertedCorner {
+    visible: root.hangHeight > 0
+    corner: root.flushRight ? "topLeft" : "topRight"
+    fill: Theme.notch
+    x: root.flushRight ? -Theme.notchRadius : body.width - Theme.seamBleed
+    y: body.height - Theme.notchRadius
   }
 
   Item {

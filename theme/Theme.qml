@@ -777,6 +777,11 @@ Singleton {
   // notifications. the toasts hang off the top right, clear of the band and the
   // notches; the design writes their offsets from the screen edge, not the frame.
   property int toastTop: 50
+
+  // and where they sit while the osd is out of the same corner. the design's own
+  // number rather than the osd's measured height plus a gap: it is the position it
+  // was drawn at, and the two boxes are different heights here anyway.
+  property int toastTopOsd: 124
   property int toastRight: 14
   property int toastWidth: 308
   property int toastGap: 8
@@ -846,6 +851,47 @@ Singleton {
   readonly property color notifDim: root.tint.alpha(0.45)
   readonly property color notifClear: root.tint.alpha(0.45)
   readonly property color notifClearHover: root.tint.alpha(0.85)
+
+  // the on-screen display: the box that drops out of the system tab when the
+  // volume or the brightness keys are pressed.
+  //
+  // it is wider than the strip it hangs from, which is what osdWiden says, so its
+  // left corners are exposed and take the tab's own radius while its right edge
+  // stays flush against the border.
+  property int osdWiden: 34
+  property int osdGap: 13
+  property int osdPaddingH: 16
+  property int osdPaddingTop: 13
+  property int osdPaddingBottom: 14
+  property int osdGlyphSize: 22
+  property int osdColumn: 172
+  property int osdColumnGap: 7
+  property real osdTitleSize: 11
+  property real osdValueSize: 11
+  property int osdTrack: 5
+  property int osdTrackRadius: 3
+
+  readonly property color osdTitleText: root.tintBright
+  readonly property color osdValueText: root.tint.alpha(0.6)
+  readonly property color osdRail: root.sheen.alpha(0.1)
+  readonly property color osdFill: root.accent
+
+  // a muted volume still draws its bar, at nothing, in a colour that is not the
+  // accent: the design says the level is zero and says why in the same glance.
+  readonly property color osdFillMuted: root.tint.alpha(0.35)
+
+  // how long it stays up after the last change.
+  property int osdHold: 1700
+
+  // the drop-in: from ten pixels high, squashed to 0.82 and transparent, over the
+  // notch's own easing.
+  property int osdDuration: 200
+  property int osdRise: 10
+  property real osdSquash: 0.82
+
+  // the bar tracks the value rather than jumping to it, as the design's
+  // `transition: width .14s` does.
+  property int osdFillDuration: 140
 
   property string uiFont: "Manrope"
 

@@ -20,6 +20,13 @@ Item {
 
   required property Item notch
 
+  // the silhouette to match. a tab works these out from which border it is flush
+  // with; anything else that hangs off the band -- the osd -- says what it is.
+  property real topLeftRadius: root.notch.flushLeft ? Theme.screenInnerRadius : 0
+  property real topRightRadius: root.notch.flushRight ? Theme.screenInnerRadius : 0
+  property real bottomLeftRadius: root.notch.flushLeft ? 0 : Theme.notchRadius
+  property real bottomRightRadius: root.notch.flushRight ? 0 : Theme.notchRadius
+
   // the shadow is cast by the notch's body, so it tracks the body's box rather
   // than the notch item, which is taller than the body once a stage 2 panel opens.
   x: root.notch.x
@@ -42,10 +49,10 @@ Item {
     // shader over its single-radius one, which is a slightly heavier fragment
     // shader on a quad this small and buys a silhouette that matches at the
     // bottom corners, where a flush tab is square against the side border.
-    topLeftRadius: root.notch.flushLeft ? Theme.screenInnerRadius : 0
-    topRightRadius: root.notch.flushRight ? Theme.screenInnerRadius : 0
-    bottomLeftRadius: root.notch.flushLeft ? 0 : Theme.notchRadius
-    bottomRightRadius: root.notch.flushRight ? 0 : Theme.notchRadius
+    topLeftRadius: root.topLeftRadius
+    topRightRadius: root.topRightRadius
+    bottomLeftRadius: root.bottomLeftRadius
+    bottomRightRadius: root.bottomRightRadius
   }
 
   RectangularShadow {
@@ -56,9 +63,9 @@ Item {
     offset.y: Theme.notchShadowContactOffset
     color: Theme.notchShadowContact
 
-    topLeftRadius: root.notch.flushLeft ? Theme.screenInnerRadius : 0
-    topRightRadius: root.notch.flushRight ? Theme.screenInnerRadius : 0
-    bottomLeftRadius: root.notch.flushLeft ? 0 : Theme.notchRadius
-    bottomRightRadius: root.notch.flushRight ? 0 : Theme.notchRadius
+    topLeftRadius: root.topLeftRadius
+    topRightRadius: root.topRightRadius
+    bottomLeftRadius: root.bottomLeftRadius
+    bottomRightRadius: root.bottomRightRadius
   }
 }
