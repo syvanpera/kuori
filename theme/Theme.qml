@@ -622,6 +622,26 @@ Singleton {
   readonly property color cfExecText: root.tint.alpha(0.45)
   readonly property color cfHintText: root.tint.alpha(0.32)
 
+  // the display section: two toggles over the brightness slider, and a
+  // temperature slider that appears with the night light.
+  property int dispToggleGap: 8
+  property int dispToggleIcon: 15
+  property int dispToggleTextGap: 3
+  property int dispToggleLabelSize: 11
+  property real dispToggleSubSize: 9.5
+  property int dispTempLabelWidth: 34
+
+  // hyprsunset takes 1000K to 20000K, which is far more than a night light means.
+  // the design puts 4200K at 42% of its track, and 2500..6500 is the range that
+  // lands it there -- 6500 being daylight, where the slider stops doing anything.
+  property int dispTempMin: 2500
+  property int dispTempMax: 6500
+  property int dispTempDefault: 4200
+
+  readonly property color dispToggleLabel: root.tint.alpha(0.82)
+  readonly property color dispToggleSub: root.tint.alpha(0.4)
+  readonly property color dispToggleOff: root.tint.alpha(0.4)
+
   // notifications. the toasts hang off the top right, clear of the band and the
   // notches; the design writes their offsets from the screen edge, not the frame.
   property int toastTop: 50

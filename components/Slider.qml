@@ -10,6 +10,8 @@ Item {
   // 0 to 1.
   property real value: 0
 
+  property color tint: Theme.accent
+
   signal moved(real value)
 
   implicitHeight: Theme.sysSliderKnob
@@ -22,6 +24,7 @@ Item {
     anchors.verticalCenter: parent.verticalCenter
 
     value: root.value
+    tint: root.tint
   }
 
   // centred on the end of the fill, so at full it sits half outside the track --
@@ -33,7 +36,7 @@ Item {
     width: Theme.sysSliderKnob
     height: Theme.sysSliderKnob
     radius: width / 2
-    color: Theme.accent
+    color: root.tint
   }
 
   MouseArea {

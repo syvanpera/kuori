@@ -11,6 +11,10 @@ Rectangle {
 
   readonly property real fraction: Math.max(0, Math.min(1, root.value))
 
+  // what the fill is painted with. the accent everywhere except the colour
+  // temperature, which the design paints in the warm it is about to apply.
+  property color tint: Theme.accent
+
   implicitHeight: Theme.sysSliderTrack
   radius: Theme.sysSliderRadius
   color: Theme.sysSliderRail
@@ -19,6 +23,6 @@ Rectangle {
     width: parent.width * root.fraction
     height: parent.height
     radius: parent.radius
-    color: Theme.accent
+    color: root.tint
   }
 }

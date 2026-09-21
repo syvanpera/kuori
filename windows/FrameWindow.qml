@@ -65,6 +65,14 @@ PanelWindow {
   //
   // no size: this exists to hold focus, and an item filling the window would sit
   // over the tabs for no reason.
+  // an idle inhibitor is a property of a surface, not of a session, so it hangs
+  // off the one window this shell always has mapped. the flag it follows lives in
+  // the service, where the switch that sets it can reach it.
+  IdleInhibitor {
+    window: root
+    enabled: Display.awake
+  }
+
   Item {
     focus: true
 

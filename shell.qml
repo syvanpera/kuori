@@ -76,6 +76,24 @@ ShellRoot {
     }
   }
 
+  // the display's two switches are three folds deep in a panel, and both are the
+  // kind of thing a key should reach.
+  IpcHandler {
+    target: "display"
+
+    function night(): void {
+      Display.setNight(!Display.night)
+    }
+
+    function awake(): void {
+      Display.setAwake(!Display.awake)
+    }
+
+    function temperature(kelvin: int): void {
+      Display.setTemperature(kelvin)
+    }
+  }
+
   // notifications are the one thing here with no window of its own to click: a
   // toast is gone by the time you reach for it, and the switch is three folds deep
   // in a panel. so the two verbs worth binding a key to live here.
