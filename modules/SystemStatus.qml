@@ -4,9 +4,9 @@ import qs.services
 import qs.theme
 import qs.components
 
-// the right tab: wifi, bluetooth, volume and battery, then the three switches --
-// night light, stay awake, do not disturb -- which are always here whichever way
-// they are set, because a switch you cannot see is one you cannot throw.
+// the right tab: wifi, bluetooth, volume, notifications and battery. every one of
+// them reports something and opens the section of the panel that is about it. the
+// switches live in their own tab beside this one.
 Row {
   id: root
 
@@ -98,6 +98,23 @@ Row {
     }
   }
 
+  // what has arrived, and a way into it. it is the only one of the five that says
+  // something when its row is shut: accent while there is a history behind it, open
+  // or not, which is the design's own "hot".
+  StripButton {
+    active: root.showing("notifications")
+
+    onClicked: Notches.toggleRow("notifications")
+
+    Glyph {
+      icon: Notifications.history.length > 0 ? "notifications_active" : "notifications_none"
+      iconColor: {
+        if (root.showing("notifications") || Notifications.history.length > 0) return Theme.accent
+        return Theme.glyph
+      }
+    }
+  }
+
   // the glyph and the percentage are one target, the way the design has them.
   StripButton {
     active: root.showing("battery")
@@ -128,54 +145,6 @@ Row {
         font.family: Theme.monoFont
         font.pixelSize: Theme.labelSize
       }
-    }
-  }
-
-  // the three switches, which are always here now: what they look like is the
-  // whole of what says whether they are on. an off one is dimmer than anything
-  // else on the strip, because it is not reporting a state -- it is waiting to be
-  // pressed. the design fills these three and outlines the four reports.
-  StripButton {
-    onClicked: Display.setNight(!Display.night)
-
-    Glyph {
-      // one glyph either way, upright: the colour is what says whether it is on.
-      icon: "nightlight"
-      iconColor: Display.night ? Theme.accent : Theme.stripOff
-      filled: true
-    }
-  }
-
-  StripButton {
-    onClicked: Display.setAwake(!Display.awake)
-
-    Glyph {
-      icon: "coffee"
-      iconColor: Display.awake ? Theme.accent : Theme.stripOff
-      filled: true
-    }
-  }
-
-  // the bell has three states and a click means something different in each: muted
-  // is a thing to unmute, a bell with history behind it is a list to throw away,
-  // and an empty one is the way to mute in the first place.
-  StripButton {
-    onClicked: {
-      if (Notifications.dnd || Notifications.history.length === 0) {
-        Notifications.toggleDnd()
-        return
-      }
-
-      Notifications.clear()
-    }
-
-    Glyph {
-      icon: Notifications.dnd ? "notifications_off" : "notifications"
-      iconColor: {
-        if (Notifications.dnd) return Theme.stripOff
-        return Notifications.history.length > 0 ? Theme.accent : Theme.textDim
-      }
-      filled: true
     }
   }
 

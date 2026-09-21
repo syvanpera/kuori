@@ -128,6 +128,12 @@ Singleton {
   property int systemSpacing: 9
   property int batterySpacing: 5
 
+  // the toggles tab: how far clear of the system tab it floats, and how far apart
+  // its switches sit. both are the design's own, and the switches are further apart
+  // than the system tab's glyphs because each one is a button rather than a report.
+  property int togglesGap: 28
+  property int togglesSpacing: 11
+
   // the rule under the strip icon whose section the system panel is showing. the
   // design draws it as a text-decoration, 1.5px thick and 4px clear of the glyph;
   // it is a rectangle here because a font underline honours neither figure.

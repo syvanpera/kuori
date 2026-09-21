@@ -39,6 +39,7 @@ PanelWindow {
     Region { item: workspaces.hitArea }
     Region { item: clock.hitArea }
     Region { item: system.hitArea }
+    Region { item: toggles.hitArea }
   }
 
   WlrLayershell.layer: WlrLayer.Top
@@ -84,6 +85,13 @@ PanelWindow {
   NotchShadow { notch: workspaces }
   NotchShadow { notch: clock }
   NotchShadow { notch: system }
+
+  NotchShadow {
+    notch: toggles
+
+    visible: toggles.visible
+    opacity: toggles.opacity
+  }
 
   // the osd's shadow belongs here with the tabs' own, for the same reason: it is
   // flush against the side border, and a shadow drawn after the frame would smear
@@ -142,6 +150,30 @@ PanelWindow {
     ClockLabel {
       peeking: clock.hovered
     }
+  }
+
+  // the switches, in a tab of their own between the clock and the system tab. it
+  // has no panel: the three glyphs are the whole of it.
+  //
+  // it is placed from the system tab's *strip* rather than its body, so that it
+  // stays where it is when that tab grows a panel -- which it does towards the
+  // left, over this.
+  Notch {
+    id: toggles
+
+    x: root.width - Theme.borderWidth - system.stripWidth - Theme.togglesGap - width
+    y: Theme.borderWidth
+    placement: "center"
+    notchId: "toggles"
+
+    // centre-placed for its corners and its fillets, but padded like the tabs that
+    // carry glyphs rather than like the clock.
+    padding: Theme.notchPadding
+
+    // both of the things that would grow over it.
+    aside: Notches.open === "system" || Osd.shown
+
+    Toggles {}
   }
 
   Notch {

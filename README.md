@@ -181,10 +181,13 @@ click, and a click anywhere else closes them.
 **Clock** (centre) opens a calendar. The month arrows page; the date line is clickable to come back
 to today, but only when you have paged away from it. Clicking the time again closes the panel.
 
-**System** (right) shows Wi-Fi, Bluetooth, volume and battery, then three switches that are always
-there whichever way they are set — a moon for the night light, a cup for the idle inhibitor and a bell
-for notifications — and a red dot while a recording is running. It opens a panel of rows, one folded
-open at a time:
+**Toggles** (right, just left of the system tab) is three switches and nothing else — a moon for the
+night light, a cup for the idle inhibitor and a crossed circle for Do Not Disturb. Each is accent
+while on and dim while off, and a click toggles it. The tab steps out of the way while the system
+panel is open or the on-screen display is out, both of which grow over it.
+
+**System** (far right) shows Wi-Fi, Bluetooth, volume, notifications and battery, and a red dot while
+a recording is running. It opens a panel of rows, one folded open at a time:
 
 - **Wi-Fi** — known and available networks, signal, band, IPv4 and a latency reading. Clicking an
   open network joins it with **no confirmation**.
@@ -196,22 +199,17 @@ open at a time:
   while the night light is on.
 - **Notifications** — the Do Not Disturb switch and the history.
 
-**The strip's icons are buttons.** Clicking Wi-Fi, Bluetooth, volume or the battery opens the panel
-with that row already folded out, and the icon is accented and underlined for as long as it is the row
-you are looking at; clicking it again closes the panel.
+**Every icon on the system tab is a button.** Clicking one opens the panel with that row already
+folded out, and the icon is accented and underlined for as long as it is the row you are looking at;
+clicking it again closes the panel. A click on the gap between icons opens and closes the panel
+without choosing a row.
 
-The moon and the cup **toggle** the night light and stay awake, on or off, without opening anything.
-They are accent while on and dim while off.
+The bell is the exception in one way: it is accent whenever anything is in the history, whether or not
+its section is open, and its glyph changes with it. Clicking it opens the history — it does not
+silence anything and does not clear anything. Do Not Disturb is the switch on the toggles tab, and
+`CLEAR` in the notifications row is what empties the history.
 
-The bell has three states and a click means something different in each:
-
-| The bell | A click |
-|---|---|
-| Dim and crossed out — Do Not Disturb is on | Turns it off |
-| Accent — there are notifications in the history | **Clears them**, and takes any toast still on screen with them |
-| Dim — nothing in the history | Turns Do Not Disturb on |
-
-A click on the gap between icons still opens and closes the panel as before.
+The red recording dot reports only; it is the one thing on the tab that opens nothing.
 
 Panels only do work while they are open: the Wi-Fi scan and the latency probe both stop when their row
 folds away.
@@ -242,8 +240,8 @@ is down notifications are not merely undrawn — they are dropped.
 - The history keeps the last 50. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
   toast still on screen with it. Anything a sender marked *transient* — volume popups and the like —
   is never kept.
-- The bell on the system strip is accent while there is anything in the history, and clicking it is
-  the quickest way to empty it.
+- The bell on the system tab is accent while there is anything in the history. Clicking it opens the
+  history; `CLEAR` inside that section is what empties it.
 
 ## Wallpapers
 

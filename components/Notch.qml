@@ -65,8 +65,15 @@ Item {
   readonly property bool flushLeft: root.placement === "left"
   readonly property bool flushRight: root.placement === "right"
 
-  // the centre tab gets the wide padding variant in the design.
-  readonly property int padding: root.placement === "center" ? Theme.notchPaddingWide : Theme.notchPadding
+  // the clock gets the wide padding variant in the design. it is a property rather
+  // than a rule because the toggles tab is centre-placed and padded like the others.
+  property int padding: root.placement === "center" ? Theme.notchPaddingWide : Theme.notchPadding
+
+  // a tab that steps aside. the toggles tab gets out of the way while the system
+  // panel is open or the osd is out: both of those grow over the space it occupies,
+  // and a tab hidden under one would still be answering clicks through it, which is
+  // why the hit area goes with the picture.
+  property bool aside: false
 
   // the collapsed width, rounded up to an even number: the centre tab is
   // positioned by its own half width, and an odd width would park both its edges
@@ -84,6 +91,13 @@ Item {
   // centre tab's centre where they were.
   implicitWidth: body.width
   implicitHeight: body.height
+
+  opacity: root.aside ? 0 : 1
+  visible: root.opacity > 0
+
+  Behavior on opacity {
+    NumberAnimation { duration: Theme.notchFadeDuration }
+  }
 
   Rectangle {
     id: body
@@ -242,7 +256,10 @@ Item {
   Item {
     id: hit
 
-    width: body.width
-    height: body.height
+    // nothing while the tab is aside: the window's input region is a wayland
+    // property and knows nothing about opacity, so a faded tab left in the region
+    // would go on swallowing clicks meant for the desktop under it.
+    width: root.aside ? 0 : body.width
+    height: root.aside ? 0 : body.height
   }
 }
