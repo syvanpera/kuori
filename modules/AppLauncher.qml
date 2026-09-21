@@ -456,6 +456,14 @@ Rectangle {
         Keys.onEnterPressed: root.answer()
         Keys.onUpPressed: if (!root.pending) root.step(-1)
         Keys.onDownPressed: if (!root.pending) root.step(1)
+
+        // left and right move between the category chips, which is the only part of
+        // this panel actually laid out that way, and between the confirmation's two
+        // buttons while one is up. they cost the caret its own arrows: with the
+        // field always focused there is nowhere else to put them, and a launcher is
+        // a place you type a few letters rather than edit a sentence.
+        Keys.onLeftPressed: root.pending ? root.confirmChoice = false : root.stepCategory(-1)
+        Keys.onRightPressed: root.pending ? root.confirmChoice = true : root.stepCategory(1)
         Keys.onTabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.step(1)
         Keys.onBacktabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.step(-1)
 
@@ -465,11 +473,11 @@ Rectangle {
           // field nobody can see behind the card. the keys with handlers of their
           // own never reach here at all -- see above.
           if (root.pending) {
-            // the card's two buttons are laid out left to right, so the arrows pick
-            // one rather than toggling: pressing left twice should still leave you
-            // on Cancel. return and escape are handled above, where they arrive.
-            if (event.key === Qt.Key_Left || (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier))) root.confirmChoice = false
-            else if (event.key === Qt.Key_Right || (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier))) root.confirmChoice = true
+            // the card's two buttons are laid out left to right, so ctrl+h and
+            // ctrl+l pick one rather than toggling, the same way the arrows do above.
+            // return, escape and the arrows are all handled where they arrive.
+            if (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier)) root.confirmChoice = false
+            else if (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier)) root.confirmChoice = true
 
             event.accepted = true
             return
@@ -732,6 +740,19 @@ Rectangle {
         Text {
           anchors.verticalCenter: parent.verticalCenter
           text: "navigate"
+          color: Theme.launcherDimText
+          font.family: Theme.monoFont
+          font.pixelSize: Theme.launcherFooterSize
+        }
+
+        KeyCap {
+          anchors.verticalCenter: parent.verticalCenter
+          label: "←→"
+        }
+
+        Text {
+          anchors.verticalCenter: parent.verticalCenter
+          text: "category"
           color: Theme.launcherDimText
           font.family: Theme.monoFont
           font.pixelSize: Theme.launcherFooterSize
