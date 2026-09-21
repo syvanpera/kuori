@@ -103,4 +103,12 @@ Row {
     icon: Notifications.dnd ? "notifications_off" : "notifications"
     iconColor: Notifications.dnd ? Theme.notifDim : Theme.accent
   }
+
+  // not in the design, which gives a recording no indicator at all. a recording
+  // you cannot see is one you forget you started, and this is a laptop.
+  StripGlyph {
+    shown: Capture.recording
+    icon: "radio_button_checked"
+    iconColor: Theme.urgent
+  }
 }

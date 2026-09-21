@@ -76,6 +76,35 @@ ShellRoot {
     }
   }
 
+  // a screenshot is the thing a key is for. these take the target with them, so a
+  // bind does not depend on what the panel was last left set to.
+  IpcHandler {
+    target: "capture"
+
+    function region(): void {
+      Capture.shortcut("shot", "region")
+    }
+
+    function app(): void {
+      Capture.shortcut("shot", "app")
+    }
+
+    function monitor(): void {
+      Capture.shortcut("shot", "monitor")
+    }
+
+    // the target is an argument here, unlike the screenshot calls above, because a
+    // recording is the one a key would want to start on something other than
+    // whatever the panel was last left showing. empty means whatever that is.
+    function record(target: string): void {
+      Capture.shortcut("rec", target.length > 0 ? target : Capture.target)
+    }
+
+    function stop(): void {
+      Capture.stop()
+    }
+  }
+
   // the display's two switches are three folds deep in a panel, and both are the
   // kind of thing a key should reach.
   IpcHandler {

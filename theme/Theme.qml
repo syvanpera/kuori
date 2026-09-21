@@ -634,6 +634,52 @@ Singleton {
   readonly property color cfExecText: root.tint.alpha(0.45)
   readonly property color cfHintText: root.tint.alpha(0.32)
 
+  // the capture block at the foot of the system panel: two mode tiles, a target
+  // selector and one button. it is not a row and does not fold.
+  property int capGap: 9
+  property int capTileGap: 8
+  property int capTileTop: 9
+  property int capTileBottom: 8
+  property int capTileRadius: 12
+  property int capTileInnerGap: 6
+  property int capTileCircle: 26
+  property int capTileIcon: 15
+  property int capTileLabelSize: 10
+
+  property int capTargetGap: 8
+  property int capTrackPadding: 3
+  property int capTrackRadius: 9
+  property int capSegmentGap: 4
+  property int capSegmentRadius: 7
+  property int capSegmentPaddingV: 5
+  property int capSegmentSize: 10
+
+  property int capSwitchGap: 7
+  property int capSwitchLabelSize: 11
+
+  property int capButtonPaddingV: 9
+  property int capButtonRadius: 11
+  property real capButtonSize: 11.5
+  readonly property real capButtonSpacing: root.capButtonSize * 0.03
+
+  // how long the button says "Captured!" before going back to asking. the design
+  // holds it for 1.4s, which is long enough to read and short enough not to nag.
+  property int capFlash: 1400
+
+  // the panel has to be gone before the shutter, or it is in the picture -- and
+  // slurp cannot have the pointer while the panel is holding a focus grab.
+  readonly property int capSettle: root.notchExpandDuration + 60
+
+  readonly property color capTileOn: root.accent.alpha(0.12)
+  readonly property color capTileOff: root.sheen.alpha(0.04)
+  readonly property color capChipOff: root.sheen.alpha(0.07)
+  readonly property color capTileText: root.tint.alpha(0.62)
+  readonly property color capTrack: root.sheen.alpha(0.05)
+  readonly property color capSegmentOn: root.accent.alpha(0.16)
+  readonly property color capSegmentText: root.tint.alpha(0.55)
+  readonly property color capSwitchLabel: root.tint.alpha(0.72)
+  readonly property color capBusyFill: root.accent.alpha(0.22)
+
   // the display section: two toggles over the brightness slider, and a
   // temperature slider that appears with the night light.
   property int dispToggleGap: 8

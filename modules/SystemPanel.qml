@@ -71,4 +71,16 @@ Column {
       onToggled: root.toggle("notifications")
     }
   }
+
+  // ruled off from the rows above it, which is how the design separates the one
+  // block in this panel that is not a row.
+  Rectangle {
+    width: root.contentWidth
+    height: 1
+    color: Theme.sysLine
+  }
+
+  CaptureSection {
+    width: root.contentWidth
+  }
 }

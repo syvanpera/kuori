@@ -35,6 +35,9 @@ scanning if something looks dead.
 | Wallpapers | `awww`, and images in `~/Pictures/wallpapers` |
 | webp/tiff/jp2 thumbnails | `qt6.qtimageformats` |
 | Clipboard history | `cliphist` and `wl-clipboard` |
+| Screenshots | `grim`, `slurp`, `grimblast` |
+| Screen recording | `wf-recorder` |
+| Knowing where captures go | `xdg-user-dirs` |
 | Night light | `hyprsunset` |
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
@@ -53,6 +56,7 @@ rather than broken.
 | `awww-daemon` | Displays the wallpaper. Its `ExecStartPost` runs `awww restore`, which is what puts your wallpaper back at login. |
 | `cliphist-text`, `cliphist-image` | Record the clipboard. `cliphist` is a store, not a daemon — without these there is no history at all. The text one skips anything a password manager marked. |
 | `hyprsunset` | Runs with `-i` (identity: present, changing nothing) so the night light has something to talk to. |
+| `xdg-user-dirs-update` | Writes `~/.config/user-dirs.dirs` from `/etc/xdg/user-dirs.defaults`, which is how anything — kuori, grimblast, your file manager — knows where Pictures and Videos are. Oneshot at login. |
 
 ## Running it
 
@@ -128,6 +132,18 @@ different one while the launcher is open switches category without closing it.
 | `clear` | Throw away the history |
 | `dismiss` | Dismiss every toast currently on screen |
 
+### `capture`
+
+| Call | Does |
+|---|---|
+| `region` | Screenshot a region you drag out |
+| `app` | Screenshot the active window |
+| `monitor` | Screenshot the whole monitor |
+| `record <target>` | Start recording `region`, `app` or `monitor`; empty uses whatever the panel shows |
+| `stop` | Stop the recording and finalise the file |
+
+`Print` is the obvious bind for `region`.
+
 ### `display`
 
 | Call | Does |
@@ -196,6 +212,33 @@ hex code. Choosing one puts it back on the clipboard, ready to paste; it does no
 
 Anything a password manager marked with `x-kde-passwordManagerHint` is **never recorded**.
 
+## Capture
+
+The block at the foot of the system panel: pick **Screenshot** or **Record**, pick a target — Region,
+App or Monitor — and press **Capture!**. Recording adds two switches, Desktop sounds (on) and
+Microphone (off).
+
+- **Screenshots are saved and copied at once**, so the file is kept *and* ready to paste.
+- **Where they go is not kuori's decision**: `XDG_SCREENSHOTS_DIR` then `XDG_PICTURES_DIR` from
+  `~/.config/user-dirs.dirs`, which on this machine means `~/Pictures/Screenshots`. Recordings go to
+  `XDG_VIDEOS_DIR`. Change the file and everything follows, including other tools.
+- Every capture announces itself with a notification, and a screenshot's notification carries the
+  screenshot as its thumbnail.
+- **A recording shows a red dot** on the system strip until you stop it, and the button reads
+  `Recording…`. Press it again, or `qs ipc … call capture stop`, to finish.
+
+Three things worth knowing:
+
+**Both audio switches on records desktop sound only.** wf-recorder takes a single audio device, and
+mixing the microphone in needs a virtual source that nothing builds yet. The notification tells you
+which half it recorded rather than leaving you to find out later.
+
+**Recording uses software encoding**, because the Intel render node has no VAAPI driver installed —
+asking for hardware makes wf-recorder exit rather than fall back. Installing `intel-media-driver`
+would let this switch to hardware and cut the CPU cost noticeably at 2560×1600.
+
+**Restarting the shell ends a recording**, since the recorder is its child process.
+
 ## Configuration
 
 There is no config file: this is a shell you edit. Almost everything lives in `theme/Theme.qml` —
@@ -210,6 +253,7 @@ every colour, size, duration and font in one place.
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |
 | What the latency reading pings | `Network.pingTarget` in `services/Network.qml` |
 | How many clipboard entries the launcher shows | `cliphist`'s own `-max-items` |
+| Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
 State that has to survive a restart — currently only the night light — is written to
 `~/.local/state/quickshell/by-shell/<id>/`.
