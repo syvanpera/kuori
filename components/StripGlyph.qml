@@ -14,14 +14,6 @@ Item {
   property string icon: ""
   property color iconColor: Theme.accent
 
-  // whether a click on it does anything. the toggles here are things the strip can
-  // switch off -- night light, stay awake, do not disturb -- but the recording
-  // light is only a light, and it must let a click through to the tab underneath
-  // rather than swallow it.
-  property bool interactive: false
-
-  signal clicked()
-
   width: root.shown ? Theme.iconSize : 0
   height: Theme.iconSize
 
@@ -39,15 +31,6 @@ Item {
 
   Behavior on opacity {
     NumberAnimation { duration: Theme.notchFadeDuration }
-  }
-
-  MouseArea {
-    anchors.fill: parent
-
-    enabled: root.shown && root.interactive
-    visible: enabled
-
-    onClicked: root.clicked()
   }
 
   Glyph {

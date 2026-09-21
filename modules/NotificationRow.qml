@@ -23,10 +23,6 @@ PanelRow {
   // the collapsed row can show.
   lit: !Notifications.dnd
 
-  // opening the section is what counts as having seen it, and the bell on the
-  // strip goes out.
-  onExpandedChanged: if (root.expanded) Notifications.markSeen()
-
   Column {
     width: root.bodyWidth
     spacing: Theme.sysBodyGap

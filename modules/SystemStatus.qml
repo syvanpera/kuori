@@ -4,8 +4,9 @@ import qs.services
 import qs.theme
 import qs.components
 
-// the right tab: wifi, bluetooth, volume and battery, and a bell at the end when
-// something has arrived that nobody has looked at.
+// the right tab: wifi, bluetooth, volume and battery, then the three switches --
+// night light, stay awake, do not disturb -- which are always here whichever way
+// they are set, because a switch you cannot see is one you cannot throw.
 Row {
   id: root
 
@@ -130,42 +131,50 @@ Row {
     }
   }
 
-  // and then whatever is switched on that the strip cannot otherwise show, in the
-  // design's order. each of these is nothing at all until it has something to say
-  // -- so a click on one can only ever switch it off, which is what it is for.
-  StripGlyph {
-    shown: Display.night
-    icon: "nightlight"
-    interactive: true
+  // the three switches, which are always here now: what they look like is the
+  // whole of what says whether they are on. an off one is dimmer than anything
+  // else on the strip, because it is not reporting a state -- it is waiting to be
+  // pressed. the design fills these three and outlines the four reports.
+  StripButton {
+    onClicked: Display.setNight(!Display.night)
 
-    onClicked: Display.setNight(false)
+    Glyph {
+      icon: Display.night ? "nightlight" : "clear_night"
+      iconColor: Display.night ? Theme.accent : Theme.stripOff
+      filled: true
+    }
   }
 
-  StripGlyph {
-    shown: Display.awake
-    icon: "coffee"
-    interactive: true
+  StripButton {
+    onClicked: Display.setAwake(!Display.awake)
 
-    onClicked: Display.setAwake(false)
+    Glyph {
+      icon: "coffee"
+      iconColor: Display.awake ? Theme.accent : Theme.stripOff
+      filled: true
+    }
   }
 
-  // the only one of the three showing for two different reasons, so its click has
-  // two answers: a muted bell is a thing to switch off, and an unread one is the
-  // history asking to be read -- which is the section it opens, the way the four
-  // reports to its left open theirs.
-  StripGlyph {
-    shown: Notifications.dnd || Notifications.unread > 0
-    icon: Notifications.dnd ? "notifications_off" : "notifications"
-    iconColor: Notifications.dnd ? Theme.notifDim : Theme.accent
-    interactive: true
-
+  // the bell has three states and a click means something different in each: muted
+  // is a thing to unmute, a bell with history behind it is a list to throw away,
+  // and an empty one is the way to mute in the first place.
+  StripButton {
     onClicked: {
-      if (Notifications.dnd) {
+      if (Notifications.dnd || Notifications.history.length === 0) {
         Notifications.toggleDnd()
         return
       }
 
-      Notches.toggleRow("notifications")
+      Notifications.clear()
+    }
+
+    Glyph {
+      icon: Notifications.dnd ? "notifications_off" : "notifications"
+      iconColor: {
+        if (Notifications.dnd) return Theme.stripOff
+        return Notifications.history.length > 0 ? Theme.accent : Theme.textDim
+      }
+      filled: true
     }
   }
 

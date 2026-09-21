@@ -34,14 +34,6 @@ Singleton {
   // when the history was last looked at. the bell on the system strip is the only
   // sign that something arrived, so it has to be able to go out again -- and with
   // fifty entries kept, "is the history empty" would never turn it off.
-  property double seenAt: 0
-
-  readonly property int unread: root.history.filter(entry => entry.at > root.seenAt).length
-
-  function markSeen(): void {
-    root.seenAt = Date.now()
-  }
-
   // one entry, thrown away. the design hovers a history row like something you can
   // click, and this is the only thing clicking one could sensibly mean.
   function forget(key: int): void {
@@ -58,8 +50,12 @@ Singleton {
     if (root.dnd) root.dismissAll()
   }
 
+  // clearing means all of it: a toast still on screen is the same notification as
+  // the history entry behind it, and leaving it up after the list it belongs to is
+  // gone would be answering only half the request.
   function clear(): void {
     root.history = []
+    root.dismissAll()
   }
 
   function dismiss(key: int): void {

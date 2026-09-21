@@ -161,9 +161,10 @@ click, and a click anywhere else closes them.
 **Clock** (centre) opens a calendar. The month arrows page; the date line is clickable to come back
 to today, but only when you have paged away from it. Clicking the time again closes the panel.
 
-**System** (right) shows Wi-Fi, Bluetooth, volume and battery, plus a glyph for anything switched on
-that it cannot otherwise show — a moon for the night light, a cup for the idle inhibitor, and a bell
-when notifications are waiting or muted. It opens a panel of rows, one folded open at a time:
+**System** (right) shows Wi-Fi, Bluetooth, volume and battery, then three switches that are always
+there whichever way they are set — a moon for the night light, a cup for the idle inhibitor and a bell
+for notifications — and a red dot while a recording is running. It opens a panel of rows, one folded
+open at a time:
 
 - **Wi-Fi** — known and available networks, signal, band, IPv4 and a latency reading. Clicking an
   open network joins it with **no confirmation**.
@@ -177,11 +178,20 @@ when notifications are waiting or muted. It opens a panel of rows, one folded op
 
 **The strip's icons are buttons.** Clicking Wi-Fi, Bluetooth, volume or the battery opens the panel
 with that row already folded out, and the icon is accented and underlined for as long as it is the row
-you are looking at; clicking it again closes the panel. Clicking the moon, the cup or a muted bell
-switches that off where it stands, without opening anything — those glyphs are only there while they
-are on, so the strip can turn them off but never on. An **unread** bell is the exception: it opens the
-notifications row, which is also what marks the history seen. A click on the gap between icons still opens and
-closes the panel as before.
+you are looking at; clicking it again closes the panel.
+
+The moon and the cup **toggle** the night light and stay awake, on or off, without opening anything.
+They are accent while on and dim while off, and the moon changes shape with it.
+
+The bell has three states and a click means something different in each:
+
+| The bell | A click |
+|---|---|
+| Dim and crossed out — Do Not Disturb is on | Turns it off |
+| Accent — there are notifications in the history | **Clears them**, and takes any toast still on screen with them |
+| Dim — nothing in the history | Turns Do Not Disturb on |
+
+A click on the gap between icons still opens and closes the panel as before.
 
 Panels only do work while they are open: the Wi-Fi scan, the latency probe and the backlight poll all
 stop when their row folds away.
@@ -198,10 +208,11 @@ is down notifications are not merely undrawn — they are dropped.
 - Toasts stand aside while the system panel is open, since they share that corner.
 - **Do Not Disturb silences the toasts only.** A muted notification still lands in the history, which
   is the only place you would find out it arrived.
-- The history keeps the last 50. Clicking an entry forgets it; `CLEAR` empties the lot. Anything a
-  sender marked *transient* — volume popups and the like — is never kept.
-- The bell on the system strip tracks what you have **not looked at**. Opening the notifications row
-  marks the history seen.
+- The history keeps the last 50. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
+  toast still on screen with it. Anything a sender marked *transient* — volume popups and the like —
+  is never kept.
+- The bell on the system strip is accent while there is anything in the history, and clicking it is
+  the quickest way to empty it.
 
 ## Wallpapers
 

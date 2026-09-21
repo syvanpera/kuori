@@ -30,6 +30,10 @@ Singleton {
   readonly property color glyph: root.tint.alpha(0.85)
   readonly property color textDim: root.tint.alpha(0.55)
 
+  // a toggle on the system strip that is off. it is dimmer than textDim because it
+  // is not reporting anything -- it is a switch waiting to be pressed.
+  readonly property color stripOff: root.tint.alpha(0.38)
+
   readonly property color workspaceActive: root.accent
   readonly property color workspaceUrgent: root.urgent
   readonly property color workspaceOccupied: "#6f87a8"
