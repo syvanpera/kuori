@@ -22,7 +22,6 @@ Singleton {
 
   readonly property color accent: "#5aa2ff"
   readonly property color urgent: "#e4574f"
-  readonly property color warm: "#f0c674"
 
   // every neutral in the design is one tint at a different alpha, so derive them
   // instead of pasting four near-identical rgba values.
