@@ -28,12 +28,12 @@ Rectangle {
   readonly property var categories: [
     { id: "all", label: "ALL" },
     { id: "apps", label: "APPS" },
-    { id: "wallpapers", label: "WALLPAPERS" },
 
     // the one category kept out of ALL. it is a log of what you copied, and a log
     // interleaved with applications by name is noise in both directions.
     { id: "clipboard", label: "CLIPBOARD", inAll: false },
 
+    { id: "wallpapers", label: "WALLPAPERS" },
     { id: "windows", label: "WINDOWS" },
     { id: "power", label: "POWER" }
   ]
