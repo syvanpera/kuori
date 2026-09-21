@@ -53,6 +53,10 @@ Singleton {
   // has to be told, so the same file is read here.
   property string videos: `${root.home}/Videos`
 
+  // and where screenshots go, for the one target that does not go through
+  // grimblast. the same order it uses: the screenshots directory, then pictures.
+  property string shots: `${root.home}/Pictures`
+
   // the recording being written, so the notification afterwards can name it.
   property string file: ""
 
@@ -99,30 +103,45 @@ Singleton {
   readonly property bool manyMonitors: Hyprland.monitors.values.length > 1
 
   function shoot(): void {
-    // grimblast's `area` feeds slurp every window as a selectable box unless told
-    // otherwise, and takes SLURP_RECTS and SLURP_ARGS for exactly this. so the
-    // three targets are one grimblast verb with three different sets of boxes:
-    //
-    //   region   no boxes at all, so the selection is a free drag and the screen
-    //            is not covered in outlines nobody asked for
-    //   app      grimblast's own default, every window, restricted to them
-    //   monitor  one box per monitor -- or no picker at all when there is one
-    //            monitor, because asking which is silly when there is no choice
-    if (root.target === "app") {
-      shot.environment = ({ SLURP_ARGS: "-r" })
-    } else if (root.target === "monitor" && root.manyMonitors) {
-      shot.environment = ({ SLURP_RECTS: root.monitorRects(), SLURP_ARGS: "-r" })
-    } else if (root.target === "region") {
-      shot.environment = ({ SLURP_RECTS: "" })
-    } else {
-      shot.environment = ({})
+    // a free-form drag cannot go through grimblast, which always passes slurp -o
+    // -- "select a display output". with boxes to choose from that is harmless,
+    // but with none the whole output becomes the selection the moment the pointer
+    // moves, and slurp draws a selection by *not* dimming it: the veil vanishes
+    // and you are dragging blind. so region runs slurp itself, without -o.
+    if (root.target === "region") {
+      regionPicker.running = true
+      return
     }
+
+    // the others keep grimblast, which takes SLURP_RECTS and SLURP_ARGS from the
+    // environment for exactly this:
+    //
+    //   app      grimblast's own boxes, every window, restricted to them
+    //   monitor  one box per monitor -- or no picker at all when there is one,
+    //            because asking which is silly when there is no choice
+    shot.file = ""
+    shot.environment = root.target === "app"
+      ? ({ SLURP_ARGS: "-r" })
+      : ({ SLURP_RECTS: root.monitorRects(), SLURP_ARGS: "-r" })
 
     // no --notify: grimblast would announce itself as ".grimblast-wrapped", which
     // is the nix wrapper's filename. it prints the path it saved to instead, so
     // the notification below is ours and says kuori.
     shot.command = ["grimblast", "copysave",
       root.target === "monitor" && !root.manyMonitors ? "output" : "area"]
+    shot.running = true
+  }
+
+  // saved and copied in one pass: tee writes the file and hands the same bytes to
+  // wl-copy, so the two cannot disagree about what was captured. grimblast's own
+  // naming, so a screenshot taken this way sits beside the others.
+  function grabRegion(geometry: string): void {
+    const file = `${root.shots}/${Qt.formatDateTime(new Date(), "yyyyMMdd_HHmmss")}.png`
+
+    shot.file = file
+    shot.environment = ({})
+    shot.command = ["sh", "-c",
+      `mkdir -p '${root.shots}' && grim -g '${geometry}' - | tee '${file}' | wl-copy --type image/png`]
     shot.running = true
   }
 
@@ -156,8 +175,10 @@ Singleton {
 
     // a shell because the boxes reach slurp on its stdin, and free-form region
     // selection is the one case with no boxes to give it.
+    // both go through a shell, and for the same reason: slurp blocks forever on a
+    // stdin that is an open pipe (see regionPicker below).
     picker.command = root.target === "region"
-      ? ["slurp"]
+      ? ["sh", "-c", "exec slurp < /dev/null"]
       : ["sh", "-c", `printf '%s' '${rects}' | slurp -r -f '%x,%y %wx%h'`]
 
     picker.running = true
@@ -250,16 +271,50 @@ Singleton {
     printErrors: false
 
     onLoaded: {
-      const match = /^XDG_VIDEOS_DIR="(.*)"$/m.exec(dirs.text())
+      const text = dirs.text()
+      const videos = /^XDG_VIDEOS_DIR="(.*)"$/m.exec(text)
+      const shots = /^XDG_SCREENSHOTS_DIR="(.*)"$/m.exec(text) ?? /^XDG_PICTURES_DIR="(.*)"$/m.exec(text)
 
-      if (match) root.videos = match[1].replace("$HOME", root.home)
+      if (videos) root.videos = videos[1].replace("$HOME", root.home)
+      if (shots) root.shots = shots[1].replace("$HOME", root.home)
+    }
+  }
+
+  // plain slurp, and the one place -o must not appear.
+  Process {
+    id: regionPicker
+
+    // `slurp < /dev/null`, and the redirect is the whole point: slurp reads its
+    // list of selectable boxes from stdin, and Process hands it a pipe that is
+    // never written to and never closed, so it blocks in read() forever. The
+    // process runs, maps no surface, dims nothing, and the screen looks untouched
+    // while a capture is supposedly in progress. `stdinEnabled: false` does not
+    // help -- the pipe is still there. Every other caller here reaches slurp
+    // through a shell pipeline, which closes stdin for them, which is why this
+    // only appeared when region stopped going through grimblast.
+    command: ["sh", "-c", "exec slurp < /dev/null"]
+
+    stdout: StdioCollector { id: regionGeometry }
+    stderr: StdioCollector { id: regionError }
+
+    onExited: exitCode => {
+      if (exitCode !== 0) {
+        console.log(`capture: region selection cancelled, exit ${exitCode}, stderr: [${regionError.text.trim()}]`)
+        return
+      }
+
+      root.grabRegion(regionGeometry.text.trim())
     }
   }
 
   Process {
     id: shot
 
-    // the path it saved to, which is the last thing it prints.
+    // set when this shell built the file's name itself, empty when grimblast did
+    // and printed it instead.
+    property string file: ""
+
+    // the path grimblast saved to, which is the last thing it prints.
     stdout: StdioCollector { id: saved }
 
     stderr: StdioCollector { id: complaint }
@@ -284,7 +339,7 @@ Singleton {
         return
       }
 
-      const file = saved.text.trim().split("\n").pop()
+      const file = shot.file.length > 0 ? shot.file : saved.text.trim().split("\n").pop()
 
       root.flash()
       root.notify("Screenshot saved", root.shorten(file), file)
