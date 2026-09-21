@@ -21,6 +21,24 @@ Singleton {
   readonly property real level: root.known ? root.raw / root.max : 0
   readonly property int percent: Math.round(root.level * 100)
 
+  // one press of a brightness key. it is a flat share of the range rather than a
+  // share of a curve: brightnessctl's own `-e4` moves 5% along a gamma-4
+  // perceptual scale, which is twelve points of real brightness at the top of the
+  // range and five at the bottom, and the reading in the panel and the osd is the
+  // real one.
+  property real stepSize: 0.05
+
+  // and how dark a key may take it. the slider can still go to nothing, because
+  // that is a thing you do deliberately while looking at it; a key held down one
+  // press too long should not leave a black screen and no way to see the way back.
+  property real floorLevel: 0.01
+
+  function step(direction: int): void {
+    if (!root.known) return
+
+    root.set(Math.max(root.floorLevel, root.level + direction * root.stepSize))
+  }
+
   function set(level: real): void {
     if (!root.known) return
 

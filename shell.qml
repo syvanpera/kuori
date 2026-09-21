@@ -111,6 +111,25 @@ ShellRoot {
 
   // the display's two switches are three folds deep in a panel, and both are the
   // kind of thing a key should reach.
+  // the brightness keys, so one press is one step of the shell's own scale and the
+  // reading it shows. hyprland's binds ran brightnessctl, whose percentages are
+  // points on a perceptual curve rather than the level this shell reports.
+  IpcHandler {
+    target: "backlight"
+
+    function up(): void {
+      Backlight.step(1)
+    }
+
+    function down(): void {
+      Backlight.step(-1)
+    }
+
+    function level(): string {
+      return `${Backlight.percent}`
+    }
+  }
+
   IpcHandler {
     target: "display"
 

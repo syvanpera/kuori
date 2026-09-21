@@ -153,6 +153,26 @@ different one while the launcher is open switches category without closing it.
 | `awake` | Toggle the idle inhibitor |
 | `temperature <K>` | Set the colour temperature, 2500–6500 |
 
+### `backlight`
+
+| Call | Does |
+|---|---|
+| `up` / `down` | One step of the screen brightness, 5 points of the real range |
+| `level` | Print the current percentage |
+
+Bind these to the brightness keys and one press is one step of the scale the panel and the OSD show:
+
+```lua
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("qs ipc -p /home/tuomo/work/personal/kuori call backlight up"),   { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc -p /home/tuomo/work/personal/kuori call backlight down"), { locked = true, repeating = true })
+```
+
+`brightnessctl`'s own percentages are **not** this scale. Its `-e4` moves 5% along a gamma-4
+perceptual curve, which from 56% steps to 44, 34, 26, 19, 14 — each press a different amount of the
+range the readings report. A bare `brightnessctl set 5%-` is linear and would agree with these
+readings too; going through kuori also writes sysfs directly instead of starting a process per press,
+and stops at 1% so a key held one press too long cannot leave a dark screen.
+
 ## The notches
 
 **Workspaces** (left) opens on hover, since it has nothing to click. The others latch open on a
