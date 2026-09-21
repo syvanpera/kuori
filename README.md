@@ -96,9 +96,9 @@ hl.bind(mainMod .. " + C", hl.dsp.exec_cmd(kuori .. "launcher clipboard"))
 | Keys | Does |
 |---|---|
 | `↑` `↓`, `Tab` / `Shift+Tab`, `Ctrl+n` / `Ctrl+p`, `Ctrl+j` / `Ctrl+k` | Move through the results, one at a time, wrapping at both ends |
-| `←` `→`, `Ctrl+h` / `Ctrl+l` | Move between category chips, wrapping at both ends |
+| `Ctrl+h` / `Ctrl+l` | Move between category chips |
 | `Page Up` / `Page Down` | Move by whole rows |
-| `Ctrl+Home` / `Ctrl+End` | First and last result (bare `Home`/`End` belong to the text caret, which no longer has the arrows) |
+| `Ctrl+Home` / `Ctrl+End` | First and last result (bare `Home`/`End` belong to the text caret) |
 | `Enter` | Run the selected row |
 | `Escape` | Close |
 
