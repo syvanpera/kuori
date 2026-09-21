@@ -156,10 +156,19 @@ Singleton {
     "opsz": 24
   })
 
-  // only the do-not-disturb lamp is filled. a second frozen map beats mutating
-  // iconAxes, which would change every glyph at once and emit no notify.
+  // a second frozen map beats mutating iconAxes, which would change every glyph at
+  // once and emit no notify.
+  //
+  // **FILL is 0.99 and must not be 1.** At the axis maximum qt rasterises these
+  // outlines wrong: the glyph comes back speckled and eaten away, as though the
+  // inner contour were being XORed out of the outer one -- a filled moon becomes a
+  // moon with holes in it. 0.999 is already broken; everything from 0 to 0.99 is
+  // clean, and at the sizes this shell draws 0.99 is the filled glyph. Verified by
+  // rendering a ramp of FILL values through qt and the same glyphs through chromium
+  // from the very same font file, where FILL 1 is correct -- so this is qt, not the
+  // font, and not the design asking for something the font cannot do.
   property var iconAxesFilled: ({
-    "FILL": 1,
+    "FILL": 0.99,
     "wght": 400,
     "GRAD": 0,
     "opsz": 24
