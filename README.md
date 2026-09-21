@@ -223,6 +223,7 @@ App or Monitor — and press **Capture!**. Recording adds two switches, Desktop 
 Microphone (off).
 
 - **Screenshots are saved and copied at once**, so the file is kept *and* ready to paste.
+- The pointer becomes a **crosshair** while you are selecting, for every target.
 - **Region** drags a rectangle. **App** dims the screen and lets you click the window you want, not
   whichever happens to be focused. **Monitor** does the same for screens — and skips the picker when
   there is only one, since there is nothing to choose.
