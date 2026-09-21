@@ -179,7 +179,10 @@ Column {
             if (Capture.flashing) return "hyprpicker · copied to clipboard"
             if (Capture.picked.length === 0) return "hyprpicker"
 
-            return `hyprpicker · last pick ${Time.ago(Capture.pickedAt, Time.date)} ago`
+            // "now ago" is not a thing anyone says.
+            const when = Time.ago(Capture.pickedAt, Time.date)
+
+            return `hyprpicker · last pick ${when === "now" ? "just now" : `${when} ago`}`
           }
           elide: Text.ElideRight
           color: Theme.clipPreviewMeta

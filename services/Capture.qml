@@ -407,10 +407,44 @@ Singleton {
     }
   }
 
+  // hyprpicker only learns where the pointer is from motion events it receives
+  // after its own surface is up. click without moving first -- to take the colour
+  // already under the cursor, which is a reasonable thing to want -- and it has no
+  // position at all and reports #000000. so the pointer is nudged one pixel once
+  // the overlay exists, which is imperceptible and is a real motion event.
+  Timer {
+    id: nudge
+
+    interval: 400
+
+    onTriggered: wake.running = true
+  }
+
+  Process {
+    id: wake
+
+    // out one pixel and straight back: the move away is the event hyprpicker needs,
+    // and the move back is what makes the colour the one that was under the
+    // pointer rather than its neighbour.
+    command: ["sh", "-c",
+      "pos=$(hyprctl cursorpos); x=${pos%%,*}; y=${pos##*, };"
+      + " hyprctl dispatch \"hl.dsp.cursor.move({ x = $((x + 1)), y = $y })\";"
+      + " hyprctl dispatch \"hl.dsp.cursor.move({ x = $x, y = $y })\""]
+  }
+
   Process {
     id: picker2
 
-    command: ["hyprpicker", "-f", "hex", "-q"]
+    onStarted: nudge.restart()
+
+    // -b is not cosmetic: without it hyprpicker wraps the value in ANSI truecolor
+    // escapes to print it in its own colour, and what arrives is
+    // "\e[38;2;122;162;247m#7aa2f7\e[0m" rather than a hex.
+    //
+    // and -q is deliberately absent, however tempting "disable most logs" sounds:
+    // the colour is printed through the same logger, so quiet means it prints
+    // nothing at all and the pick silently does nothing. its logs go to stderr.
+    command: ["hyprpicker", "-f", "hex", "-b"]
 
     stdout: StdioCollector { id: colour }
 
@@ -418,9 +452,16 @@ Singleton {
       // right-click or escape, which is how you change your mind about a colour.
       if (exitCode !== 0) return
 
-      const hex = colour.text.trim()
+      // and the hex is dug out rather than trimmed, so any decoration hyprpicker
+      // grows later cannot turn the swatch into an invalid colour again.
+      const found = /#[0-9a-fA-F]{6}/.exec(colour.text)
 
-      if (hex.length === 0) return
+      if (!found) {
+        root.notify("Colour picker", `hyprpicker said something unexpected: ${colour.text.trim()}`, "")
+        return
+      }
+
+      const hex = found[0].toLowerCase()
 
       root.picked = hex
       root.pickedAt = Date.now()
