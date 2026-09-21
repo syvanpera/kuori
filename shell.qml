@@ -12,12 +12,22 @@ ShellRoot {
     DesktopShell {}
   }
 
+  // this is a read, and it is here for the side effect of being one: a QML
+  // singleton is not constructed until something reads it, and mentioning it
+  // inside a function body does not count. the notification server has to be
+  // holding org.freedesktop.Notifications from startup -- not from whenever a
+  // panel first opens -- or every notification before that is lost.
+  readonly property int notificationCount: Notifications.history.length
+
   // one launcher for the whole session, on whichever monitor has focus, so it
   // hangs off the root instead of off Variants.
   LauncherLoader {}
 
   // and one authentication dialog, for the same reason.
   PolkitLoader {}
+
+  // and one stack of toasts, which exists only while something is in it.
+  ToastLoader {}
 
   // the shell's only external entry point. hyprland cannot talk to a quickshell
   // window, so the keybind shells out to `qs ipc call`. it lives here rather than
@@ -63,6 +73,25 @@ ShellRoot {
 
     function power(): void {
       Launcher.toggle("power")
+    }
+  }
+
+  // notifications are the one thing here with no window of its own to click: a
+  // toast is gone by the time you reach for it, and the switch is three folds deep
+  // in a panel. so the two verbs worth binding a key to live here.
+  IpcHandler {
+    target: "notifications"
+
+    function dnd(): void {
+      Notifications.toggleDnd()
+    }
+
+    function clear(): void {
+      Notifications.clear()
+    }
+
+    function dismiss(): void {
+      Notifications.dismissAll()
     }
   }
 }

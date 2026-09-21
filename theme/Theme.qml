@@ -622,6 +622,79 @@ Singleton {
   readonly property color cfExecText: root.tint.alpha(0.45)
   readonly property color cfHintText: root.tint.alpha(0.32)
 
+  // notifications. the toasts hang off the top right, clear of the band and the
+  // notches; the design writes their offsets from the screen edge, not the frame.
+  property int toastTop: 50
+  property int toastRight: 14
+  property int toastWidth: 308
+  property int toastGap: 8
+  property int toastPaddingH: 14
+  property int toastPaddingV: 13
+  property int toastRadius: 14
+  property int toastRowGap: 11
+  property int toastChipSize: 30
+  property int toastChipRadius: 9
+  property int toastChipIcon: 16
+  property int toastTextGap: 5
+  property int toastAppSize: 11
+  property real toastTimeSize: 9.5
+  property int toastBodySize: 11
+  readonly property int toastBodyLine: 15
+  property int toastActionsTop: 3
+  property int toastActionsGap: 6
+  property int toastActionPaddingH: 11
+  property int toastActionPaddingV: 6
+  property int toastActionRadius: 8
+  property int toastActionSize: 10
+  property real toastDismissSize: 9.5
+  property int toastDismissPaddingH: 11
+  property int toastDismissPaddingV: 6
+  readonly property real toastDismissSpacing: root.toastDismissSize * 0.07
+
+  // four on screen, and the ones behind the first sit back a little further with
+  // every card, which is how the design says a stack rather than a list.
+  property int toastMax: 4
+  property real toastFadeStep: 0.04
+  property int toastSlide: 20
+  property int toastEnter: 260
+
+  // 5.2 seconds is the design's. a client asking for its own timeout gets it, and
+  // a critical notification gets none at all.
+  property int toastTimeout: 5200
+
+  readonly property color toastFill: root.notch.alpha(0.94)
+  readonly property color toastShadow: root.ink.alpha(0.45)
+  readonly property color toastChipFill: root.sheen.alpha(0.06)
+  readonly property color toastTime: root.tint.alpha(0.35)
+  readonly property color toastBody: root.tint.alpha(0.66)
+  readonly property color toastActionFill: root.sheen.alpha(0.06)
+  readonly property color toastActionHover: root.sheen.alpha(0.12)
+  readonly property color toastActionText: root.tint.alpha(0.7)
+  readonly property color toastPrimaryFill: root.accent.alpha(0.16)
+  readonly property color toastPrimaryHover: root.accent.alpha(0.26)
+  readonly property color toastDismissText: root.tint.alpha(0.55)
+
+  // and the history, inside the system panel
+  property int notifListMax: 186
+  property int notifEntryGap: 2
+  property int notifEntryPaddingH: 8
+  property int notifEntryPaddingV: 7
+  property int notifEntryRadius: 9
+  property int notifEntryGlyph: 14
+  property int notifEntryTextGap: 4
+  property int notifAppSize: 11
+  property real notifTimeSize: 9.5
+  property real notifBodySize: 10.5
+  readonly property int notifBodyLine: 14
+  property int notifEmptySize: 11
+
+  readonly property color notifEntryHover: root.sheen.alpha(0.12)
+  readonly property color notifBody: root.tint.alpha(0.6)
+  readonly property color notifEmpty: root.tint.alpha(0.4)
+  readonly property color notifDim: root.tint.alpha(0.45)
+  readonly property color notifClear: root.tint.alpha(0.45)
+  readonly property color notifClearHover: root.tint.alpha(0.85)
+
   property string uiFont: "Manrope"
 
   // Manrope is one variable file whose default named instance is ExtraLight, so

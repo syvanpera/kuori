@@ -57,6 +57,15 @@ Column {
       onToggled: root.toggle("battery")
     }
 
+    // where the design puts it: after the display row, which is still the
+    // brightness row until that section is built.
+    NotificationRow {
+      width: parent.width
+      expanded: root.open === "notifications"
+
+      onToggled: root.toggle("notifications")
+    }
+
     // last in the same section as the rows, which is where the design puts it:
     // close enough to be one list, without pretending to fold open.
     BrightnessRow {

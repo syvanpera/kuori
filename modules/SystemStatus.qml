@@ -4,9 +4,8 @@ import qs.services
 import qs.theme
 import qs.components
 
-// the right tab: wifi, bluetooth, volume and battery. the do-not-disturb lamp
-// moved out with the design that gave the toggles a tab of their own, and this
-// strip shows only what it cannot toggle.
+// the right tab: wifi, bluetooth, volume and battery, and a bell at the end when
+// something has arrived that nobody has looked at.
 Row {
   id: root
 
@@ -84,6 +83,42 @@ Row {
       color: Theme.textDim
       font.family: Theme.monoFont
       font.pixelSize: Theme.labelSize
+    }
+  }
+
+  // the bell, last, and only when there is something to say: the design grows it
+  // out of nothing rather than dimming one that is always there.
+  //
+  // the width is what animates, and `visible` follows it, because a Row still puts
+  // its spacing either side of a child that has shrunk to nothing -- so an
+  // invisible bell would leave a gap where it used to be.
+  Item {
+    readonly property bool shown: Notifications.dnd || Notifications.unread > 0
+
+    width: shown ? Theme.iconSize : 0
+    height: Theme.iconSize
+
+    visible: width > 0.5
+    opacity: shown ? 1 : 0
+    clip: true
+
+    Behavior on width {
+      NumberAnimation {
+        duration: Theme.notchExpandDuration
+        easing.type: Easing.Bezier
+        easing.bezierCurve: Theme.easeStandard
+      }
+    }
+
+    Behavior on opacity {
+      NumberAnimation { duration: Theme.notchFadeDuration }
+    }
+
+    Glyph {
+      anchors.right: parent.right
+
+      icon: Notifications.dnd ? "notifications_off" : "notifications"
+      iconColor: Notifications.dnd ? Theme.notifDim : Theme.accent
     }
   }
 }
