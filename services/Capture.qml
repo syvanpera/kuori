@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import Qt.labs.folderlistmodel
 import qs.services
 import qs.theme
 
@@ -22,8 +23,9 @@ Singleton {
   property string mode: "shot"
   property string target: "region"
 
-  // the design's defaults: desktop sound on, microphone off.
-  property bool sounds: true
+  // the design's only recording option, off by default. desktop sound was a
+  // second switch until the design dropped it: wf-recorder takes one audio device
+  // and mixing two needs a virtual source nothing here builds.
   property bool mic: false
 
   readonly property bool recording: recorder.running
@@ -39,6 +41,13 @@ Singleton {
   ]
 
   readonly property string home: Quickshell.env("HOME") ?? ""
+
+  readonly property string renderNode: "/dev/dri/renderD128"
+
+  // listing one directory rather than running a process, and it answers the only
+  // question worth asking: not whether the package is installed, but whether libva
+  // can find a driver where it looks.
+  readonly property bool accelerated: drivers.count > 0
 
   // where recordings go. grimblast answers this question for itself; wf-recorder
   // has to be told, so the same file is read here.
@@ -122,12 +131,12 @@ Singleton {
     const file = `${root.videos}/recording-${root.stamp()}.mp4`
     const argv = ["wf-recorder", "-f", file]
 
-    // software encoding, deliberately. the iris xe has a render node but no usable
-    // VAAPI driver installed -- `-c h264_vaapi -d /dev/dri/renderD128` answers
-    // "Failed to initialise VAAPI connection" and wf-recorder then **exits**
-    // rather than falling back, so asking for hardware would mean no recording at
-    // all. installing intel-media-driver is what would make the hardware path
-    // available; until then libx264 is the one that works.
+    // hardware encoding only when libva can actually load a driver. wf-recorder
+    // asks for h264_vaapi and **exits** if the connection fails rather than
+    // falling back, so asking blindly is the difference between a recording and
+    // none at all -- and a driver that is merely installed is not enough, it has
+    // to be in /run/opengl-driver/lib/dri, which is what `accelerated` looks for.
+    if (root.accelerated) argv.push("-c", "h264_vaapi", "-d", root.renderNode)
 
     if (geometry.length > 0) argv.push("-g", geometry)
     else if (root.target === "monitor") {
@@ -145,16 +154,8 @@ Singleton {
     recorder.running = true
   }
 
-  // one device, because wf-recorder takes one. both switches together needs a
-  // source that does not exist until something makes one; until that is built,
-  // the desktop wins and the notification says so rather than silently dropping
-  // half of what was asked for.
   function audioDevice(): string {
-    if (root.sounds && root.mic) return `${Audio.sink?.name ?? ""}.monitor`
-    if (root.sounds) return `${Audio.sink?.name ?? ""}.monitor`
-    if (root.mic) return Audio.source?.name ?? ""
-
-    return ""
+    return root.mic ? (Audio.source?.name ?? "") : ""
   }
 
   // through notify-send rather than into the history directly: this shell is the
@@ -174,6 +175,14 @@ Singleton {
 
   function shorten(path: string): string {
     return path.replace(root.home, "~")
+  }
+
+  FolderListModel {
+    id: drivers
+
+    folder: "file:///run/opengl-driver/lib/dri"
+    nameFilters: ["iHD_drv_video.so", "i965_drv_video.so"]
+    showDirs: false
   }
 
   Timer {
@@ -249,13 +258,7 @@ Singleton {
   Process {
     id: recorder
 
-    onStarted: {
-      const where = root.videos.replace(root.home, "~")
-
-      root.notify("Recording", root.sounds && root.mic
-        ? `Desktop audio only — the microphone is not mixed in yet. Saving to ${where}`
-        : `Saving to ${where}`, "")
-    }
+    onStarted: root.notify("Recording", `${root.accelerated ? "Hardware encoding" : "Software encoding"} · ${root.shorten(root.file)}`, "")
 
     onExited: exitCode => {
       if (exitCode === 0) root.notify("Recording saved", root.shorten(root.file), "")

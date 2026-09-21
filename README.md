@@ -227,15 +227,16 @@ Microphone (off).
 - **A recording shows a red dot** on the system strip until you stop it, and the button reads
   `Recording…`. Press it again, or `qs ipc … call capture stop`, to finish.
 
-Three things worth knowing:
+Recording adds one switch, **Record microphone**, off by default. Desktop sound is not offered:
+wf-recorder takes a single audio device and mixing two needs a virtual source nothing here builds.
 
-**Both audio switches on records desktop sound only.** wf-recorder takes a single audio device, and
-mixing the microphone in needs a virtual source that nothing builds yet. The notification tells you
-which half it recorded rather than leaving you to find out later.
+Two things worth knowing:
 
-**Recording uses software encoding**, because the Intel render node has no VAAPI driver installed —
-asking for hardware makes wf-recorder exit rather than fall back. Installing `intel-media-driver`
-would let this switch to hardware and cut the CPU cost noticeably at 2560×1600.
+**Encoding is hardware when a VAAPI driver is loadable, software otherwise**, and the notification
+says which you got. The check is whether a driver sits in `/run/opengl-driver/lib/dri` — a driver
+merely installed into `environment.systemPackages` is invisible to libva; it has to be in
+`hardware.graphics.extraPackages`. wf-recorder exits rather than falling back, so the shell only asks
+for hardware when it can see a driver.
 
 **Restarting the shell ends a recording**, since the recorder is its child process.
 

@@ -71,29 +71,14 @@ Column {
   }
 
   // only recording has anything to say about sound.
-  Column {
+  CaptureSwitch {
     width: parent.width
-    spacing: Theme.capSwitchGap
 
     visible: Capture.mode === "rec"
+    label: "Record microphone"
+    checked: Capture.mic
 
-    CaptureSwitch {
-      width: parent.width
-
-      label: "Desktop sounds"
-      checked: Capture.sounds
-
-      onToggled: Capture.sounds = !Capture.sounds
-    }
-
-    CaptureSwitch {
-      width: parent.width
-
-      label: "Microphone"
-      checked: Capture.mic
-
-      onToggled: Capture.mic = !Capture.mic
-    }
+    onToggled: Capture.mic = !Capture.mic
   }
 
   Rectangle {
