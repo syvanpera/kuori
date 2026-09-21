@@ -114,7 +114,7 @@ Rectangle {
 
           // re-read every minute, which is what a toast's whole life is. passing
           // the clock in is what makes this a binding rather than a one-off.
-          text: Notifications.ago(root.popup?.at ?? 0, Time.date)
+          text: Time.ago(root.popup?.at ?? 0, Time.date)
           color: Theme.toastTime
           font.family: Theme.monoFont
           font.pixelSize: Theme.toastTimeSize

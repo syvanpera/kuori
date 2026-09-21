@@ -12,6 +12,10 @@ Rectangle {
   property var model: []
   property var current: null
 
+  // the design labels TARGET in the ui font and FORMAT in the mono one, which is
+  // the difference between naming a thing and naming a notation.
+  property bool mono: false
+
   signal picked(var value)
 
   readonly property real cell: {
@@ -64,7 +68,7 @@ Rectangle {
 
           text: segment.modelData.label
           color: segment.chosen ? Theme.text : Theme.capSegmentText
-          font.family: Theme.uiFont
+          font.family: root.mono ? Theme.monoFont : Theme.uiFont
           font.pixelSize: Theme.capSegmentSize
           font.weight: Font.Medium
         }

@@ -103,6 +103,10 @@ ShellRoot {
     function stop(): void {
       Capture.stop()
     }
+
+    function color(): void {
+      Capture.shortcut("pick", Capture.target)
+    }
   }
 
   // the display's two switches are three folds deep in a panel, and both are the

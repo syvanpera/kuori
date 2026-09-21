@@ -141,6 +141,7 @@ different one while the launcher is open switches category without closing it.
 | `monitor` | Screenshot the whole monitor |
 | `record <target>` | Start recording `region`, `app` or `monitor`; empty uses whatever the panel shows |
 | `stop` | Stop the recording and finalise the file |
+| `color` | Pick a colour off the screen and copy it |
 
 `Print` is the obvious bind for `region`.
 
@@ -234,6 +235,10 @@ Microphone (off).
   screenshot as its thumbnail.
 - **A recording shows a red dot** on the system strip until you stop it, and the button reads
   `Recording…`. Press it again, or `qs ipc … call capture stop`, to finish.
+
+**Color** freezes the screen, magnifies whatever is under the pointer, and copies the colour you click
+in the format you chose — HEX, RGB or HSL. The panel keeps the last one with a swatch, and it lands in
+the clipboard history as a colour entry too.
 
 Recording adds one switch, **Record microphone**, off by default. Desktop sound is not offered:
 wf-recorder takes a single audio device and mixing two needs a virtual source nothing here builds.

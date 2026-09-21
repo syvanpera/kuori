@@ -697,6 +697,16 @@ Singleton {
   property int capSegmentPaddingV: 5
   property int capSegmentSize: 10
 
+  // the picked colour, in the same sunken well the panel's rows fold into.
+  property int capPickGap: 10
+  property int capPickPaddingH: 10
+  property int capPickPaddingV: 9
+  property int capPickRadius: 10
+  property int capPickSwatch: 30
+  property int capPickSwatchRadius: 8
+  property real capPickValueSize: 11.5
+  property int capPickTextGap: 4
+
   property int capSwitchGap: 7
   property int capSwitchLabelSize: 11
 

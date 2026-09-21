@@ -34,6 +34,15 @@ Singleton {
   // feedback a screenshot gives from inside the panel.
   property bool flashing: false
 
+  // hex whatever the chosen format, because the swatch needs a colour QML can
+  // parse and one pick has to answer both. Qt's colour carries its own HSL, so
+  // the other two formats are arithmetic rather than a second invocation.
+  property string format: "hex"
+  property string picked: ""
+  property double pickedAt: 0
+
+  readonly property var formats: ["hex", "rgb", "hsl"]
+
   readonly property var targets: [
     { id: "region", label: "Region", shot: "area" },
     { id: "app", label: "App", shot: "active" },
@@ -67,8 +76,8 @@ Singleton {
       return
     }
 
-    // the panel is in the picture otherwise, and slurp cannot have the pointer
-    // while the notch is holding a focus grab.
+    // the panel is in the picture otherwise, and neither slurp nor hyprpicker can
+    // have the pointer while the notch is holding a focus grab.
     Notches.close()
     settle.restart()
   }
@@ -80,6 +89,22 @@ Singleton {
     root.target = target
     root.fire()
   }
+
+  // the design's own strings: "#7aa2f7", "rgb(122, 162, 247)", "hsl(219, 88%, 72%)".
+  function formatted(hex: string, format: string): string {
+    if (hex.length === 0) return ""
+    if (format === "hex") return hex
+
+    const c = Qt.color(hex)
+
+    if (format === "rgb") {
+      return `rgb(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)})`
+    }
+
+    return `hsl(${Math.round(c.hslHue * 360)}, ${Math.round(c.hslSaturation * 100)}%, ${Math.round(c.hslLightness * 100)}%)`
+  }
+
+  readonly property string pickedText: root.formatted(root.picked, root.format)
 
   function stop(): void {
     // SIGINT, not kill: it is what makes wf-recorder finalise the file instead of
@@ -222,6 +247,12 @@ Singleton {
   //
   // an icon path is passed as the notification's image, which is how a screenshot
   // gets to be its own thumbnail.
+  // hyprpicker freezes the screen, magnifies what is under the pointer and prints
+  // the colour. -q because its logs are chatty and go to the journal otherwise.
+  function pick(): void {
+    picker2.running = true
+  }
+
   function notify(summary: string, body: string, image: string): void {
     const argv = ["notify-send", "-a", "kuori"]
 
@@ -250,6 +281,7 @@ Singleton {
 
     onTriggered: {
       if (root.mode === "rec") root.record()
+      else if (root.mode === "pick") root.pick()
       else root.shoot()
     }
   }
@@ -373,6 +405,41 @@ Singleton {
 
       root.launch(region.text.trim())
     }
+  }
+
+  Process {
+    id: picker2
+
+    command: ["hyprpicker", "-f", "hex", "-q"]
+
+    stdout: StdioCollector { id: colour }
+
+    onExited: exitCode => {
+      // right-click or escape, which is how you change your mind about a colour.
+      if (exitCode !== 0) return
+
+      const hex = colour.text.trim()
+
+      if (hex.length === 0) return
+
+      root.picked = hex
+      root.pickedAt = Date.now()
+      root.flash()
+
+      // copied here rather than with hyprpicker's own -a, because the format on
+      // the clipboard has to be the one the panel is showing, and that conversion
+      // happens on this side.
+      const value = root.formatted(hex, root.format)
+
+      copy.command = ["wl-copy", "--", value]
+      copy.running = true
+
+      root.notify("Colour picked", value, "")
+    }
+  }
+
+  Process {
+    id: copy
   }
 
   Process {

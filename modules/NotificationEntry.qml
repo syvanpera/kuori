@@ -74,7 +74,7 @@ Rectangle {
 
           anchors.right: parent.right
 
-          text: Notifications.ago(root.entry?.at ?? 0, Time.date)
+          text: Time.ago(root.entry?.at ?? 0, Time.date)
           color: Theme.toastTime
           font.family: Theme.monoFont
           font.pixelSize: Theme.notifTimeSize
