@@ -19,6 +19,31 @@ provides an application launcher, a notification daemon, and an authentication a
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
 - **A focus indicator** on the active window, either a corner wedge or a strip along one edge.
 
+## Screenshots
+
+![The desktop, with the frame and the four notches](docs/desktop.webp)
+
+At rest: the frame around the desktop and the four tabs on the top edge — workspaces on the left, the
+clock in the middle, and the switches beside the system tab on the right.
+
+![The launcher, on the applications category](docs/launcher.webp)
+
+The launcher, on applications, with a toast in the corner behind it.
+
+![The system panel, with the display row folded out](docs/system-panel.webp)
+
+The system tab open, with the display row folded out and the capture block underneath. One row folds
+out at a time.
+
+![A toast and the on-screen display](docs/notifications.webp)
+
+The on-screen display dropping out of the system tab on a volume key, with a toast moving down out of
+its way.
+
+![The clock tab, showing the calendar](docs/calendar.webp)
+
+The clock tab.
+
 ## Requirements
 
 kuori talks to a number of things and degrades quietly when they are missing, so this list is worth
