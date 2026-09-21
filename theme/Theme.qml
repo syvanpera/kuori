@@ -589,12 +589,48 @@ Singleton {
   readonly property color pkCancelText: root.tint.alpha(0.7)
   readonly property color pkDoneFill: root.success.alpha(0.2)
 
+  // the confirmation in front of a power action. it borrows the polkit card's
+  // width, shadow and entry animation -- the design draws them identically -- and
+  // differs in its type and its buttons: pills that hug their labels, centred,
+  // rather than two half-width ones.
+  property int cfPaddingTop: 26
+  property int cfPaddingH: 24
+  property int cfPaddingBottom: 20
+  property int cfGap: 14
+  property int cfTitleGap: 7
+  property int cfChipSize: 56
+  property int cfChipRadius: 15
+  property int cfChipIcon: 26
+  property int cfTitleSize: 17
+  property real cfExecSize: 11.5
+  property int cfButtonsTop: 2
+  property int cfButtonsGap: 10
+  property int cfButtonPaddingH: 22
+  property int cfButtonPaddingV: 10
+  property int cfButtonSize: 12
+  property int cfHintSize: 10
+  readonly property real cfHintSpacing: root.cfHintSize * 0.02
+
+  // a hair darker than the polkit scrim, which the design writes as .62 against
+  // that card's .6. it sits over the launcher rather than over the desktop.
+  readonly property color cfScrim: root.shade.alpha(0.62)
+  readonly property color cfChipFill: root.accent.alpha(0.12)
+
+  // the design hovers the confirm button with filter:brightness(1.08), which has
+  // no equivalent here -- a lighter accent is the same idea at the same strength.
+  readonly property color accentLift: Qt.lighter(root.accent, 1.08)
+  readonly property color cfExecText: root.tint.alpha(0.45)
+  readonly property color cfHintText: root.tint.alpha(0.32)
+
   property string uiFont: "Manrope"
 
   // Manrope is one variable file whose default named instance is ExtraLight, so
   // font.weight alone leaves a 600 heading looking like a hairline. pinning the
   // axis is the same fix the symbol font already needs.
   property var uiAxesSemiBold: ({ "wght": 600 })
+
+  // and the same again for the one place the design asks for 700.
+  property var uiAxesBold: ({ "wght": 700 })
 
   // css line-height:1.2 in a box. Text.implicitHeight follows the font's own line
   // spacing, which is taller, and would make every chip a few pixels fat.

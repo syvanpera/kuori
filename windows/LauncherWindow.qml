@@ -174,4 +174,63 @@ PanelWindow {
       NumberAnimation { duration: Theme.launcherFade }
     }
   }
+  // over the panel and its own scrim, because it is a question about the row that
+  // was just chosen and nothing behind it should answer first. the launcher stays
+  // up underneath: cancelling puts you back where you were.
+  MouseArea {
+    id: confirmScrim
+
+    anchors.fill: parent
+    visible: opacity > 0
+    opacity: panel.pending ? 1 : 0
+
+    // the design dismisses on a click outside the card, unlike the polkit dialog,
+    // which has a caller waiting on an answer.
+    onClicked: panel.resolve(false)
+
+    Behavior on opacity {
+      NumberAnimation { duration: Theme.pkFade }
+    }
+
+    Rectangle {
+      anchors.fill: parent
+      color: Theme.cfScrim
+    }
+
+    ConfirmDialog {
+      anchors.centerIn: parent
+
+      // kept alive through the fade out: reading the row's name off a row that
+      // has already gone would empty the card while it is still on screen.
+      action: panel.pending ?? lastPending.row
+
+      scale: panel.pending ? 1 : Theme.pkScaleFrom
+
+      Behavior on scale {
+        NumberAnimation {
+          duration: Theme.pkRise
+          easing.type: Easing.Bezier
+          easing.bezierCurve: Theme.easeStandard
+        }
+      }
+
+      onAccepted: panel.resolve(true)
+      onRejected: panel.resolve(false)
+    }
+  }
+
+  // the last row asked about, held one frame longer than the question itself.
+  QtObject {
+    id: lastPending
+
+    property var row: null
+  }
+
+  Connections {
+    target: panel
+
+    function onPendingChanged(): void {
+      if (panel.pending) lastPending.row = panel.pending
+    }
+  }
 }

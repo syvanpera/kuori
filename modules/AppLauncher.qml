@@ -13,6 +13,11 @@ Rectangle {
 
   property int selectedIndex: 0
 
+  // the row waiting on a yes or no, or null. the design confirms every POWER row
+  // and nothing else, so the category is what decides -- a row does not carry a
+  // flag saying it is dangerous.
+  property var pending: null
+
   // hovering selects, but only once the pointer has actually moved. the arrow keys
   // slide the list under a stationary pointer, and the hover that produces is not
   // a choice anyone made.
@@ -274,6 +279,22 @@ Rectangle {
   function activate(row: var): void {
     if (!row) return
 
+    if (row.cat === "power") {
+      root.pending = row
+      return
+    }
+
+    row.run()
+    Launcher.close()
+  }
+
+  function resolve(confirmed: bool): void {
+    const row = root.pending
+
+    root.pending = null
+
+    if (!confirmed || !row) return
+
     row.run()
     Launcher.close()
   }
@@ -356,6 +377,19 @@ Rectangle {
         Keys.onBacktabPressed: root.step(-1)
 
         Keys.onPressed: event => {
+          // a confirmation owns the keyboard while it is up: return answers it,
+          // escape takes it back, and everything else is swallowed rather than
+          // typed into a field nobody can see behind the card. this is the first
+          // handler to see a key, so accepting here is what stops the specific
+          // Keys.onReturnPressed and Keys.onEscapePressed below from firing too.
+          if (root.pending) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.resolve(true)
+            else if (event.key === Qt.Key_Escape) root.resolve(false)
+
+            event.accepted = true
+            return
+          }
+
           // bare home and end belong to the caret: the field always has focus, and
           // a text box that ignores them is more surprising than a launcher that
           // needs a modifier to jump to the ends.
