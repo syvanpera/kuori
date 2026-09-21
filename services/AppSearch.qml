@@ -115,6 +115,10 @@ Singleton {
   function byName(a: var, b: var): int {
     if (!!a.last !== !!b.last) return a.last ? 1 : -1
 
+    // a source that has an order of its own says so, and it wins over the name.
+    // a clipboard history sorted alphabetically is not a history.
+    if (a.order !== undefined && b.order !== undefined) return a.order - b.order
+
     return (a.name ?? "").localeCompare(b.name ?? "")
   }
 }

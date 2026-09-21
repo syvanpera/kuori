@@ -23,6 +23,11 @@ Rectangle {
   readonly property string image: root.row?.image ?? ""
   readonly property string glyph: root.row?.glyph ?? ""
 
+  // a colour that is itself the content, which is the design's own idea: a hex
+  // code on the clipboard shows as the colour rather than as a glyph. it paints
+  // the tile and nothing is drawn on top.
+  readonly property string swatch: root.row?.swatch ?? ""
+
   // a desktop entry's icon is a NAME, not a path, and iconPath with check:true
   // answers "" instead of a broken image when the theme has nothing under it,
   // which is the only way to know the fallback is needed. some entries ship an
@@ -64,7 +69,12 @@ Rectangle {
 
     // a picture fills the tile, so the tile's own colour would only show at the
     // corners it is already clipping away.
-    color: root.image !== "" ? "transparent" : (root.selected ? Theme.accent : Theme.launcherRaise)
+    color: {
+      if (root.swatch !== "") return root.swatch
+      if (root.image !== "") return "transparent"
+
+      return root.selected ? Theme.accent : Theme.launcherRaise
+    }
 
     Behavior on color {
       ColorAnimation { duration: 150 }
@@ -90,7 +100,7 @@ Rectangle {
     Glyph {
       anchors.centerIn: parent
 
-      visible: root.image === "" && root.glyph !== ""
+      visible: root.image === "" && root.swatch === "" && root.glyph !== ""
       icon: root.glyph
       size: Theme.launcherIconInner
       iconColor: root.selected ? Theme.notch : Theme.launcherNameText
@@ -99,7 +109,7 @@ Rectangle {
     IconImage {
       anchors.centerIn: parent
 
-      visible: root.image === "" && root.glyph === "" && root.iconSource !== ""
+      visible: root.image === "" && root.swatch === "" && root.glyph === "" && root.iconSource !== ""
       source: root.iconSource
       implicitSize: Theme.launcherIconInner
       asynchronous: true
@@ -110,7 +120,7 @@ Rectangle {
 
       // the fallback for an icon the theme does not have. a letter says which app
       // this is; a generic placeholder glyph says nothing at all.
-      visible: root.image === "" && root.glyph === "" && root.iconSource === ""
+      visible: root.image === "" && root.swatch === "" && root.glyph === "" && root.iconSource === ""
       text: (root.row?.name ?? "?").charAt(0).toUpperCase()
       color: root.selected ? Theme.notch : Theme.launcherNameText
       font.family: Theme.uiFont

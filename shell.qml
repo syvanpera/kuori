@@ -52,5 +52,9 @@ ShellRoot {
     function wallpapers(): void {
       Launcher.toggle("wallpapers")
     }
+
+    function clipboard(): void {
+      Launcher.toggle("clipboard")
+    }
   }
 }

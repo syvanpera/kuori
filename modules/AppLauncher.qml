@@ -23,7 +23,11 @@ Rectangle {
   readonly property var categories: [
     { id: "all", label: "ALL" },
     { id: "apps", label: "APPS" },
-    { id: "wallpapers", label: "WALLPAPERS" }
+    { id: "wallpapers", label: "WALLPAPERS" },
+
+    // the one category kept out of ALL. it is a log of what you copied, and a log
+    // interleaved with applications by name is noise in both directions.
+    { id: "clipboard", label: "CLIPBOARD", inAll: false }
   ]
 
   // every result is one of these, whatever produced it:
@@ -101,10 +105,64 @@ Rectangle {
     return rows
   }
 
-  readonly property var rows: root.appRows.concat(root.wallpaperRows)
-  readonly property var pool: Launcher.category === "all"
-    ? root.rows
-    : root.rows.filter(row => row.cat === Launcher.category)
+  readonly property var clipboardRows: {
+    // the design's own icon per kind of entry.
+    const glyphs = { text: "terminal", link: "link", image: "image", color: "palette" }
+
+    const rows = Clipboard.entries.map((entry, index) => ({
+      cat: "clipboard",
+      name: entry.text,
+      detail: entry.detail,
+      icon: "",
+      image: "",
+      glyph: entry.swatch === "" ? (glyphs[entry.kind] ?? "terminal") : "",
+      swatch: entry.swatch,
+
+      // cliphist hands them over newest first, and there is no timestamp anywhere
+      // in its store, so the listing's own order is the only recency there is.
+      order: index,
+
+      // not shown: it is what makes typing "clip" in this category find anything
+      // at all, since the rows are named after their contents.
+      genericName: "Clipboard",
+      keywords: [],
+      comment: "",
+      command: [],
+      run: () => Clipboard.copy(entry.id)
+    }))
+
+    // nothing to clear when there is nothing there, and an empty category should
+    // say it is empty rather than offer one useless row.
+    if (rows.length === 0) return rows
+
+    rows.push({
+      cat: "clipboard",
+      name: "Clear clipboard history",
+      detail: "Throws away every entry",
+      icon: "",
+      image: "",
+      glyph: "delete_sweep",
+      swatch: "",
+      last: true,
+      genericName: "Clipboard",
+      keywords: ["wipe"],
+      comment: "",
+      command: [],
+      run: () => Clipboard.wipe()
+    })
+
+    return rows
+  }
+
+  readonly property var rows: root.appRows.concat(root.wallpaperRows, root.clipboardRows)
+
+  readonly property var pool: {
+    if (Launcher.category !== "all") return root.rows.filter(row => row.cat === Launcher.category)
+
+    const shown = root.categories.filter(category => category.inAll !== false).map(category => category.id)
+
+    return root.rows.filter(row => shown.indexOf(row.cat) !== -1)
+  }
 
   readonly property var matches: AppSearch.rank(root.pool, root.query)
   readonly property int count: root.matches.length
@@ -466,7 +524,10 @@ Rectangle {
       topPadding: Theme.launcherGridTop
       bottomPadding: Theme.launcherEmptyBottom
 
-      text: `No matches for “${root.query}”`
+      // with no query there is nothing to have failed to match: the category is
+      // simply empty, which is what a clipboard history looks like before
+      // anything has been copied.
+      text: root.query.length > 0 ? `No matches for “${root.query}”` : "Nothing here yet"
       elide: Text.ElideRight
       color: Theme.launcherDimText
       font.family: Theme.monoFont
