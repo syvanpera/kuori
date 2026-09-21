@@ -168,6 +168,15 @@ Rectangle {
     root.mouseArmed = false
   }
 
+  // the chips, in the order they are drawn. it wraps for the same reason the list
+  // does: three chips and a key that dies at each end reads as a bug.
+  function stepCategory(delta: int): void {
+    const at = root.categories.findIndex(category => category.id === Launcher.category)
+    const next = (at + delta + root.categories.length) % root.categories.length
+
+    Launcher.category = root.categories[next].id
+  }
+
   // every row carries what it does, so this stays the same whatever the list is
   // showing. closing afterwards is the design's behaviour for every row, wallpaper
   // rows included -- picking one is an answer, not a browse.
@@ -264,11 +273,23 @@ Rectangle {
           // ctrl+n and ctrl+p as well as the arrows, the readline pair every shell
           // and editor here already answers to. they keep the hands on the home row
           // while typing a query, which is the whole point of a launcher.
-          if (event.key === Qt.Key_N && jump) {
+          //
+          // ctrl+hjkl is the same idea for vim hands, with one difference: j and k
+          // step the results like everything else, but h and l move between the
+          // category chips. left and right have no meaning in a ranked list folded
+          // into two columns -- the chips are the only thing on this panel actually
+          // laid out that way.
+          if ((event.key === Qt.Key_N || event.key === Qt.Key_J) && jump) {
             root.step(1)
             event.accepted = true
-          } else if (event.key === Qt.Key_P && jump) {
+          } else if ((event.key === Qt.Key_P || event.key === Qt.Key_K) && jump) {
             root.step(-1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_H && jump) {
+            root.stepCategory(-1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_L && jump) {
+            root.stepCategory(1)
             event.accepted = true
           } else if (event.key === Qt.Key_Home && jump) {
             root.selectedIndex = 0
