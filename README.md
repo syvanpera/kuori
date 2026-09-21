@@ -236,7 +236,8 @@ Two things worth knowing:
 says which you got. The check is whether a driver sits in `/run/opengl-driver/lib/dri` — a driver
 merely installed into `environment.systemPackages` is invisible to libva; it has to be in
 `hardware.graphics.extraPackages`. wf-recorder exits rather than falling back, so the shell only asks
-for hardware when it can see a driver.
+for hardware when it can see a driver. It looks once at startup, so a driver installed while kuori is
+running is picked up after `systemctl --user restart kuori`.
 
 **Restarting the shell ends a recording**, since the recorder is its child process.
 
