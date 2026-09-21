@@ -4,16 +4,16 @@ A desktop shell for Hyprland, written in [Quickshell](https://quickshell.org) an
 Finnish for shell, husk, envelope.
 
 It draws a border around the whole desktop with tabs — "notches" — hanging off the top edge, and
-provides an application launcher, a notification daemon, and an authentication agent. It is built
-from a Claude Design mockup, and `CLAUDE.md` records every place the implementation departs from it
-and why.
+provides an application launcher, a notification daemon, and an authentication agent.
 
 ## What it does
 
 - **A frame** around the desktop, with the rounded opening your windows live in.
-- **Three notches** on the top edge: workspaces (left), clock and calendar (centre), system (right).
-- **A launcher** with six categories — applications, clipboard history, wallpapers, windows, power —
-  each openable straight from a keybind.
+- **Four notches** on the top edge: workspaces (left), clock and calendar (centre), then the switches
+  and the system tab (right).
+- **A launcher** with six categories: everything, applications, clipboard history, wallpapers,
+  windows and power, each openable straight from a keybind.
+- **An on-screen display** for the volume and brightness keys, dropping out of the system tab.
 - **Notifications**: kuori *is* the session's notification daemon. Toasts appear top-right, and the
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
@@ -37,6 +37,8 @@ scanning if something looks dead.
 | Clipboard history | `cliphist` and `wl-clipboard` |
 | Screenshots | `grim`, `slurp`, `grimblast` |
 | Screen recording | `wf-recorder` |
+| Picking a colour off the screen | `hyprpicker` |
+| Every capture's notification | `libnotify` (`notify-send`) |
 | Knowing where captures go | `xdg-user-dirs` |
 | Night light | `hyprsunset` |
 | Focusing a window, colour temperature | `hyprctl` |
@@ -78,17 +80,19 @@ The launcher is bound in `~/.config/hypr/hyprland.lua`:
 | Keys | Does |
 |---|---|
 | `ALT` + `SPACE` | Open the launcher |
-| `SUPER` + `R` | Open the launcher |
+| `ALT` + `SHIFT` + `C` | Open it on the clipboard history |
+| `SUPER` + `SHIFT` + `S` | Screenshot a region |
+| Brightness up / down | One step of the backlight, through kuori itself |
 
-Every other entry point is an IPC call, so binding one is a line in your Hyprland config. The `-p` is
+Every entry point is an IPC call, so binding another is a line in your Hyprland config. The `-p` is
 **not optional** — without it `qs ipc` may resolve a different Quickshell config:
 
 ```lua
 local kuori = "qs ipc -p /home/tuomo/work/personal/kuori call "
 
+hl.bind(altMod .. " + SPACE", hl.dsp.exec_cmd(kuori .. "launcher toggle"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd(kuori .. "notifications dnd"))
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(kuori .. "launcher wallpapers"))
-hl.bind(mainMod .. " + C", hl.dsp.exec_cmd(kuori .. "launcher clipboard"))
 ```
 
 ### Inside the launcher
@@ -227,10 +231,14 @@ Press a volume or brightness key and a box drops out of the system tab with the 
 percentage and a bar. It follows further presses and takes itself away 1.7 seconds after the last one.
 Muted says `Muted` and `—`, with the bar at nothing in grey rather than accent.
 
-kuori is not what your keys are bound to — they still run `wpctl` and `brightnessctl` — it watches the
-values instead. So the display also answers a change made from a terminal or by anything else on the
-machine, and nothing about your Hyprland config needs to change. Toasts move down while it is out, and
-it stays away entirely while the system panel is open, since the panel is showing those same sliders.
+**It does not need to be what your keys are bound to.** kuori watches the two values rather than the
+keys: pipewire reports volume, udev reports the backlight. So the display answers a change made by
+`wpctl` from a volume key, by `brightnessctl` in a terminal, or by anything else on the machine — and
+it would work with no change to your Hyprland config at all. (The brightness keys here do go through
+kuori, but for a different reason: see `backlight` above.)
+
+Toasts move down while it is out, and it stays away entirely while the system panel is open, since the
+panel is showing those same sliders.
 
 ## Notifications
 
@@ -275,8 +283,7 @@ Anything a password manager marked with `x-kde-passwordManagerHint` is **never r
 ## Capture
 
 The block at the foot of the system panel: pick **Screenshot** or **Record**, pick a target — Region,
-App or Monitor — and press **Capture!**. Recording adds two switches, Desktop sounds (on) and
-Microphone (off).
+App or Monitor — and press **Capture!**.
 
 - **Screenshots are saved and copied at once**, so the file is kept *and* ready to paste.
 - The pointer becomes a **crosshair** while you are selecting, for every target.
@@ -325,8 +332,10 @@ every colour, size, duration and font in one place.
 | How many clipboard entries the launcher shows | `cliphist`'s own `-max-items` |
 | Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
-State that has to survive a restart — currently only the night light — is written to
-`~/.local/state/quickshell/by-shell/<id>/`.
+State that has to survive a restart — currently the night light and its colour temperature — is
+written to `~/.local/state/quickshell/by-shell/<id>/display.json`. Stay awake deliberately does not:
+an idle inhibitor is invisible, and one silently restored after a restart is a flat battery nobody can
+explain.
 
 ## Layout
 
@@ -338,6 +347,3 @@ modules/        the contents of a tab, a panel or a dialog
 services/       singletons: shared state, and everything that talks to the system
 theme/Theme.qml every colour, size, duration and font
 ```
-
-`CLAUDE.md` in this repo documents the architecture, the traps behind a lot of the code, and every
-deliberate departure from the design.
