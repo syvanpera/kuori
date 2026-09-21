@@ -295,6 +295,17 @@ Singleton {
   // way out.
   property int launcherRise: 12
 
+  // how the free space above and below the launcher is split. 0.5 is centred;
+  // this sits it in the optical upper third, where a panel reads as placed rather
+  // than as floating -- and where the clipboard's preview has somewhere to grow
+  // into without crowding the bottom of the screen.
+  //
+  // it applies to every category, not only the ones that are tall. the panel is
+  // positioned on the height it would have with the grid full, so the top never
+  // moves between categories, and that is worth more than the perfect balance of
+  // any one of them.
+  property real launcherBias: 0.38
+
   property int launcherPadding: 16
   property int launcherRowGap: 11
   property int launcherSearchPadding: 14
