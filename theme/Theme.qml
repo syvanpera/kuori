@@ -374,16 +374,22 @@ Singleton {
 
   property int sysRowRadius: 11
   property int sysRowPaddingH: 9
-  property int sysRowPaddingV: 7
+  property int sysRowPaddingV: 8
   property int sysRowGap: 10
   property int sysRowIcon: 17
-  property int sysRowLabelSize: 12
+  // the design sets a row's title apart from its contents by weight and size as
+  // well as by the well below: 600 at 12.5 against the 12 of everything inside.
+  property real sysRowLabelSize: 12.5
   property int sysRowValueSize: 12
   property int sysChevron: 15
 
-  property int sysBodyPaddingH: 9
-  property int sysBodyTop: 2
-  property int sysBodyBottom: 10
+  // what folds out of a row sits in a sunken well, inset from the row's own edges,
+  // so the title above it reads as a title rather than as the first line of it.
+  property int sysWellMargin: 6
+  property int sysWellRadius: 9
+  property int sysWellPaddingH: 10
+  property int sysWellTop: 10
+  property int sysWellBottom: 11
   property int sysBodyGap: 9
 
   // the small all-caps headings inside a folded-open row.
@@ -483,6 +489,12 @@ Singleton {
   readonly property color sysError: "#e06c75"
 
   readonly property color sysRowOpen: root.sheen.alpha(0.05)
+
+  // sunk into the row rather than lifted off it. the design writes .42 against its
+  // own lighter #0f1726, where that darkens the open row by about 27%; over this
+  // shell's darker surface the same value only reaches 23%, so it is deepened to
+  // land on the same step. the shadows above are adjusted for the same reason.
+  readonly property color sysWell: Qt.rgba(8 / 255, 13 / 255, 24 / 255, 0.52)
   readonly property color sysNetActive: root.sheen.alpha(0.06)
   readonly property color sysLine: root.sheen.alpha(0.07)
   readonly property color switchTrack: root.sheen.alpha(0.13)

@@ -18,8 +18,9 @@ Rectangle {
   property bool expanded: false
 
   // what the children of the fold have to fit into, since a Column does not
-  // stretch what it stacks.
-  readonly property real bodyWidth: root.width - Theme.sysBodyPaddingH * 2
+  // stretch what it stacks. the well is inset from the row and padded again
+  // inside, so a child clears both.
+  readonly property real bodyWidth: root.width - Theme.sysWellMargin * 2 - Theme.sysWellPaddingH * 2
 
   // what drops out of the row. one child, measured by the column it lands in, so
   // the fold animates to a height nothing had to write down.
@@ -67,10 +68,15 @@ Rectangle {
       anchors.verticalCenter: parent.verticalCenter
 
       text: root.label
-      color: Theme.text
+
+      // brighter and heavier than anything in the fold below it. Manrope's default
+      // instance is its lightest, so the weight has to be pinned on the axis as
+      // well as asked for by name.
+      color: Theme.tintBright
       font.family: Theme.uiFont
       font.pixelSize: Theme.sysRowLabelSize
-      font.weight: Font.Medium
+      font.weight: Font.DemiBold
+      font.variableAxes: Theme.uiAxesSemiBold
     }
 
     Glyph {
@@ -120,7 +126,8 @@ Rectangle {
     anchors.left: parent.left
     anchors.right: parent.right
     anchors.top: header.bottom
-    height: root.expanded ? body.implicitHeight : 0
+    // the well's own bottom inset is part of what the fold has to open to.
+    height: root.expanded ? well.implicitHeight + Theme.sysWellMargin : 0
 
     Behavior on height {
       NumberAnimation {
@@ -130,17 +137,28 @@ Rectangle {
       }
     }
 
-    Column {
-      id: body
+    Rectangle {
+      id: well
 
-      anchors.left: parent.left
-      anchors.right: parent.right
+      x: Theme.sysWellMargin
+      width: parent.width - Theme.sysWellMargin * 2
+      implicitHeight: body.implicitHeight
 
-      leftPadding: Theme.sysBodyPaddingH
-      rightPadding: Theme.sysBodyPaddingH
-      topPadding: Theme.sysBodyTop
-      bottomPadding: Theme.sysBodyBottom
-      spacing: Theme.sysBodyGap
+      radius: Theme.sysWellRadius
+      color: Theme.sysWell
+
+      Column {
+        id: body
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        leftPadding: Theme.sysWellPaddingH
+        rightPadding: Theme.sysWellPaddingH
+        topPadding: Theme.sysWellTop
+        bottomPadding: Theme.sysWellBottom
+        spacing: Theme.sysBodyGap
+      }
     }
   }
 }
