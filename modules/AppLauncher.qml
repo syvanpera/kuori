@@ -119,6 +119,8 @@ Rectangle {
 
     const rows = Clipboard.entries.map((entry, index) => ({
       cat: "clipboard",
+      id: entry.id,
+      kind: entry.kind,
       name: entry.text,
       detail: entry.detail,
       icon: "",
@@ -251,6 +253,13 @@ Rectangle {
   readonly property int count: root.matches.length
   readonly property var selected: root.matches[root.selectedIndex] ?? null
 
+  // the preview pane only has anything to say about a clipboard entry. decoding
+  // is asked for here rather than in the pane, because the pane does not exist
+  // until there is something for it to show.
+  readonly property var selectedClip: root.selected?.cat === "clipboard" ? root.selected : null
+
+  onSelectedClipChanged: Clipboard.preview(root.selectedClip?.id ?? "")
+
   implicitWidth: Theme.launcherWidth
   implicitHeight: layout.implicitHeight
 
@@ -263,6 +272,12 @@ Rectangle {
   readonly property int fullHeight: layout.implicitHeight
     - (resultsBox.visible ? resultsBox.implicitHeight : 0)
     - (emptyLabel.visible ? emptyLabel.implicitHeight : 0)
+
+    // the preview is left out on purpose: counted in, switching to the clipboard
+    // would lift the whole panel to re-centre it. left out, the top stays where
+    // it is and the pane extends the panel downwards, which is what the grid
+    // shrinking already does.
+    - (previewBox.visible ? previewBox.implicitHeight : 0)
     + Theme.launcherGridMax
 
   color: Theme.notch
@@ -625,6 +640,24 @@ Rectangle {
             onClicked: root.activate(cell.modelData)
           }
         }
+      }
+    }
+
+    Item {
+      id: previewBox
+
+      width: parent.width
+
+      visible: root.selectedClip !== null
+      implicitHeight: preview.implicitHeight + Theme.clipPreviewBottom
+
+      ClipboardPreview {
+        id: preview
+
+        x: Theme.clipPreviewMargin
+        width: parent.width - Theme.clipPreviewMargin * 2
+
+        row: root.selectedClip
       }
     }
 

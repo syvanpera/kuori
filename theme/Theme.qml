@@ -634,6 +634,38 @@ Singleton {
   readonly property color cfExecText: root.tint.alpha(0.45)
   readonly property color cfHintText: root.tint.alpha(0.32)
 
+  // the clipboard preview under the launcher's list: the same sunken well the
+  // system panel's rows fold into, since it is the same idea -- contents set
+  // apart from the thing that named them.
+  property int clipPreviewMargin: 10
+  property int clipPreviewBottom: 12
+  property int clipPreviewPaddingH: 12
+  property int clipPreviewTop: 11
+  property int clipPreviewGap: 9
+  property int clipPreviewRadius: 11
+  property int clipPreviewTextMax: 104
+  property int clipPreviewTextSize: 11
+  readonly property real clipPreviewTextLine: root.clipPreviewTextSize * 1.55
+  property int clipPreviewSwatch: 52
+  property int clipPreviewSwatchRadius: 10
+  property int clipPreviewSwatchGap: 11
+  property int clipPreviewValueSize: 13
+  property int clipPreviewImageHeight: 120
+  property int clipPreviewImageRadius: 10
+  property int clipPreviewImageGlyph: 24
+  property int clipPreviewNameSize: 10
+  property real clipPreviewMetaSize: 9.5
+  property int clipPreviewFootGap: 8
+
+  readonly property color clipPreviewFill: root.sysWell
+  readonly property color clipPreviewText: root.tint.alpha(0.86)
+  readonly property color clipPreviewMeta: root.tint.alpha(0.35)
+  readonly property color clipPreviewHint: root.tint.alpha(0.38)
+  readonly property color clipPreviewName: root.tint.alpha(0.6)
+  readonly property color clipPreviewRing: root.sheen.alpha(0.12)
+  readonly property color clipPreviewImageRing: root.sheen.alpha(0.07)
+  readonly property color clipPreviewChecker: root.sheen.alpha(0.045)
+
   // the capture block at the foot of the system panel: two mode tiles, a target
   // selector and one button. it is not a row and does not fold.
   property int capGap: 9

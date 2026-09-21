@@ -210,6 +210,10 @@ an icon for the kind of entry — text, a link, an image, or a swatch of the col
 hex code. Choosing one puts it back on the clipboard, ready to paste; it does not type it for you.
 `Clear clipboard history` at the bottom wipes the store.
 
+Selecting an entry shows a **preview** under the list: the whole text rather than the truncated line,
+an image drawn on a chequerboard so transparency reads as transparency, or a colour as a swatch beside
+its value. The footer gives the size, and the dimensions and format for an image.
+
 Anything a password manager marked with `x-kde-passwordManagerHint` is **never recorded**.
 
 ## Capture

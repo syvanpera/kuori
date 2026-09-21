@@ -26,8 +26,66 @@ Singleton {
   readonly property var colorPattern: /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i
   readonly property var linkPattern: /^[a-z][a-z0-9+.-]*:\/\//i
 
+  // the entry the preview pane is showing, decoded in full -- the list only ever
+  // carries cliphist's own 100-character preview, and the pane's whole point is
+  // what the entry actually is.
+  property string previewId: ""
+  property string previewText: ""
+  property int previewBytes: 0
+  property string previewImage: ""
+
   function refresh(): void {
     list.running = true
+  }
+
+  // arrowing through the list would decode once per keystroke, so the work waits
+  // until the selection settles. asking for the same entry twice is free.
+  function preview(id: string): void {
+    if (id === root.previewId) return
+
+    root.previewId = id
+    root.previewText = ""
+    root.previewBytes = 0
+    root.previewImage = ""
+
+    if (id.length === 0) return
+
+    settle.restart()
+  }
+
+  function decode(): void {
+    const entry = root.entries.find(e => e.id === root.previewId)
+
+    if (!entry) return
+
+    // an image is bytes, and bytes must not pass through a QML string: it goes to
+    // a file the Image element can load, named for the entry so the same one is
+    // never decoded twice.
+    if (entry.kind === "image") {
+      const path = `${Quickshell.cachePath(`clip-${entry.id}`)}`
+
+      toFile.command = ["sh", "-c", `cliphist decode ${entry.id} > '${path}'`]
+      toFile.target = path
+      toFile.running = true
+      return
+    }
+
+    toText.command = ["cliphist", "decode", entry.id]
+    toText.running = true
+  }
+
+  // what the design's meta line counts. JS strings are UTF-16, and a byte count
+  // that calls "ä" one byte would be wrong about most of what gets copied.
+  function utf8Bytes(text: string): int {
+    let n = 0
+
+    for (const character of text) {
+      const point = character.codePointAt(0)
+
+      n += point < 0x80 ? 1 : point < 0x800 ? 2 : point < 0x10000 ? 3 : 4
+    }
+
+    return n
   }
 
   // back onto the clipboard, not into the focused window: pasting for someone is
@@ -106,6 +164,50 @@ Singleton {
 
   Process {
     id: restore
+  }
+
+  // every previewed image is decoded to a file of its own, so that switching back
+  // to one costs nothing and QML never has to notice a file changing under a URL
+  // it has already cached. they are droppings, but they are in the cache
+  // directory, and the session starts with none of them.
+  Process {
+    id: sweepCache
+
+    command: ["sh", "-c", `rm -f '${Quickshell.cachePath("clip-")}'*`]
+    running: true
+  }
+
+  Timer {
+    id: settle
+
+    interval: 120
+
+    onTriggered: root.decode()
+  }
+
+  Process {
+    id: toText
+
+    stdout: StdioCollector { id: decoded }
+
+    onExited: exitCode => {
+      if (exitCode !== 0) return
+
+      root.previewText = decoded.text
+      root.previewBytes = root.utf8Bytes(decoded.text)
+    }
+  }
+
+  Process {
+    id: toFile
+
+    property string target: ""
+
+    onExited: exitCode => {
+      if (exitCode !== 0) return
+
+      root.previewImage = `file://${toFile.target}`
+    }
   }
 
   Process {
