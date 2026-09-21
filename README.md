@@ -181,7 +181,7 @@ with that row already folded out, and the icon is accented and underlined for as
 you are looking at; clicking it again closes the panel.
 
 The moon and the cup **toggle** the night light and stay awake, on or off, without opening anything.
-They are accent while on and dim while off, and the moon changes shape with it.
+They are accent while on and dim while off.
 
 The bell has three states and a click means something different in each:
 

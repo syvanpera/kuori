@@ -139,7 +139,8 @@ Row {
     onClicked: Display.setNight(!Display.night)
 
     Glyph {
-      icon: Display.night ? "nightlight" : "clear_night"
+      // one glyph either way, upright: the colour is what says whether it is on.
+      icon: "nightlight"
       iconColor: Display.night ? Theme.accent : Theme.stripOff
       filled: true
     }
