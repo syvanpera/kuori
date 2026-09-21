@@ -27,7 +27,9 @@ Rectangle {
 
     // the one category kept out of ALL. it is a log of what you copied, and a log
     // interleaved with applications by name is noise in both directions.
-    { id: "clipboard", label: "CLIPBOARD", inAll: false }
+    { id: "clipboard", label: "CLIPBOARD", inAll: false },
+
+    { id: "power", label: "POWER" }
   ]
 
   // every result is one of these, whatever produced it:
@@ -154,7 +156,38 @@ Rectangle {
     return rows
   }
 
-  readonly property var rows: root.appRows.concat(root.wallpaperRows, root.clipboardRows)
+  // static, and the command is the whole of what each one does, so there is no
+  // service behind these: the design's three rows with the design's own commands.
+  //
+  // they keep the design's order rather than taking the ranking's alphabetical
+  // one, and that is not cosmetic: sorted by name "Power off" comes first, so
+  // opening this category and pressing return -- the one gesture the launcher
+  // teaches -- would shut the machine down. safest first.
+  readonly property var powerRows: [
+    { name: "Suspend", glyph: "bedtime", command: ["systemctl", "suspend"] },
+    { name: "Reboot", glyph: "restart_alt", command: ["systemctl", "reboot"] },
+    { name: "Power off", glyph: "power_settings_new", command: ["systemctl", "poweroff"] }
+  ].map((action, index) => ({
+    cat: "power",
+    name: action.name,
+
+    // the command itself, which is the design's second line here. for an app
+    // "Web Browser" says more than "chromium", but there is nothing to say about
+    // Reboot that `systemctl reboot` does not say better.
+    detail: action.command.join(" "),
+    icon: "",
+    image: "",
+    glyph: action.glyph,
+    swatch: "",
+    order: index,
+    genericName: "Power",
+    keywords: ["power"],
+    comment: "",
+    command: action.command,
+    run: () => Quickshell.execDetached(action.command)
+  }))
+
+  readonly property var rows: root.appRows.concat(root.wallpaperRows, root.clipboardRows, root.powerRows)
 
   readonly property var pool: {
     if (Launcher.category !== "all") return root.rows.filter(row => row.cat === Launcher.category)

@@ -56,5 +56,9 @@ ShellRoot {
     function clipboard(): void {
       Launcher.toggle("clipboard")
     }
+
+    function power(): void {
+      Launcher.toggle("power")
+    }
   }
 }
