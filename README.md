@@ -175,6 +175,14 @@ when notifications are waiting or muted. It opens a panel of rows, one folded op
   while the night light is on.
 - **Notifications** — the Do Not Disturb switch and the history.
 
+**The strip's icons are buttons.** Clicking Wi-Fi, Bluetooth, volume or the battery opens the panel
+with that row already folded out, and the icon is accented and underlined for as long as it is the row
+you are looking at; clicking it again closes the panel. Clicking the moon, the cup or a muted bell
+switches that off where it stands, without opening anything — those glyphs are only there while they
+are on, so the strip can turn them off but never on. An **unread** bell is the exception: it opens the
+notifications row, which is also what marks the history seen. A click on the gap between icons still opens and
+closes the panel as before.
+
 Panels only do work while they are open: the Wi-Fi scan, the latency probe and the backlight poll all
 stop when their row folds away.
 

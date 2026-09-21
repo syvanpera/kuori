@@ -122,6 +122,12 @@ Item {
   Item {
     id: contentItem
 
+    // above the strip's own toggle below, which is declared after this and would
+    // otherwise take every click first -- among siblings at the same z, qt delivers
+    // to the later one. the strip's glyphs answer clicks of their own, and only the
+    // gaps between them should reach the toggle.
+    z: 1
+
     // a flush tab keeps its contents against its own outer edge, so a body that
     // grows inward leaves them where they were. while the body is only as wide as
     // the strip this is exactly where centring put them.

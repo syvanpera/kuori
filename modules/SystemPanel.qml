@@ -1,14 +1,11 @@
 import QtQuick
+import qs.services
 import qs.theme
 
 // what the system tab becomes while it is open: a stack of rows, each one a
 // thing the bar was only showing a glyph for.
 Column {
   id: root
-
-  // which row is folded open, "" for none. one place rather than a flag per row,
-  // because opening one has to shut whichever was already out.
-  property string open: ""
 
   // the design fixes the panel's width and everything inside divides it.
   readonly property real contentWidth: Theme.sysPanelWidth - Theme.sysPanelPadding * 2
@@ -17,58 +14,53 @@ Column {
   padding: Theme.sysPanelPadding
   spacing: Theme.sysSectionGap
 
-  // the loader keeps this alive while the tab is shut, so closing is the only
-  // moment there is to fold the rows back up.
-  onEnabledChanged: if (!root.enabled) root.open = ""
-
-  function toggle(id: string): void {
-    root.open = root.open === id ? "" : id
-  }
-
+  // which row is folded open lives in Notches, not here: the strip above this
+  // panel opens a row too, and it has to be able to say so before the loader has
+  // built any of this. Notches clears it when the tab closes.
   Column {
     width: root.contentWidth
     spacing: Theme.sysRowSpacing
 
     NetworkRow {
       width: parent.width
-      expanded: root.open === "wifi"
+      expanded: Notches.row === "wifi"
 
-      onToggled: root.toggle("wifi")
+      onToggled: Notches.foldRow("wifi")
     }
 
     BluetoothRow {
       width: parent.width
-      expanded: root.open === "bluetooth"
+      expanded: Notches.row === "bluetooth"
 
-      onToggled: root.toggle("bluetooth")
+      onToggled: Notches.foldRow("bluetooth")
     }
 
     AudioRow {
       width: parent.width
-      expanded: root.open === "audio"
+      expanded: Notches.row === "audio"
 
-      onToggled: root.toggle("audio")
+      onToggled: Notches.foldRow("audio")
     }
 
     BatteryRow {
       width: parent.width
-      expanded: root.open === "battery"
+      expanded: Notches.row === "battery"
 
-      onToggled: root.toggle("battery")
+      onToggled: Notches.foldRow("battery")
     }
 
     DisplayRow {
       width: parent.width
-      expanded: root.open === "display"
+      expanded: Notches.row === "display"
 
-      onToggled: root.toggle("display")
+      onToggled: Notches.foldRow("display")
     }
 
     NotificationRow {
       width: parent.width
-      expanded: root.open === "notifications"
+      expanded: Notches.row === "notifications"
 
-      onToggled: root.toggle("notifications")
+      onToggled: Notches.foldRow("notifications")
     }
   }
 

@@ -124,6 +124,12 @@ Singleton {
   property int systemSpacing: 9
   property int batterySpacing: 5
 
+  // the rule under the strip icon whose section the system panel is showing. the
+  // design draws it as a text-decoration, 1.5px thick and 4px clear of the glyph;
+  // it is a rectangle here because a font underline honours neither figure.
+  property real stripUnderline: 1.5
+  property int stripUnderlineGap: 4
+
   // "JetBrains Mono" does not resolve on this machine, it falls back to DejaVu.
   // the nerd font patch is the only build installed and keeps the upstream
   // metrics, so the design's advance widths still land where the mockup put them.
