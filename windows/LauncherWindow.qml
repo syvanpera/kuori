@@ -205,6 +205,8 @@ PanelWindow {
       // has already gone would empty the card while it is still on screen.
       action: panel.pending ?? lastPending.row
 
+      confirming: panel.confirmChoice
+
       scale: panel.pending ? 1 : Theme.pkScaleFrom
 
       Behavior on scale {

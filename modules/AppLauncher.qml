@@ -13,6 +13,11 @@ Rectangle {
 
   property int selectedIndex: 0
 
+  // which button the keyboard is on while a confirmation is up: true for the
+  // action, false for Cancel. it starts on the action because the card says "ENTER
+  // to confirm" and because getting here took a deliberate return already.
+  property bool confirmChoice: true
+
   // the row waiting on a yes or no, or null. the design confirms every POWER row
   // and nothing else, so the category is what decides -- a row does not carry a
   // flag saying it is dangerous.
@@ -341,11 +346,24 @@ Rectangle {
 
     if (row.cat === "power") {
       root.pending = row
+      root.confirmChoice = true
       return
     }
 
     row.run()
     Launcher.close()
+  }
+
+  // return, whatever is on screen: the answer to a confirmation, or the selected
+  // row. it is a function because the two keys that mean it -- return and the
+  // numpad's enter -- each have their own handler.
+  function answer(): void {
+    if (root.pending) {
+      root.resolve(root.confirmChoice)
+      return
+    }
+
+    root.activate(root.selected)
   }
 
   function resolve(confirmed: bool): void {
@@ -426,25 +444,32 @@ Rectangle {
         font.weight: Font.Medium
         selectByMouse: true
 
-        Keys.onEscapePressed: Launcher.close()
-        Keys.onReturnPressed: root.activate(root.selected)
+        // every one of these has to answer the confirmation itself when one is up.
+        // **the specific Keys handlers fire before Keys.onPressed and default to
+        // accepted**, so the branch down there never sees return, escape, up, down
+        // or tab -- which is exactly how a confirmation ended up re-activating the
+        // row behind it and escape closed the whole launcher.
+        Keys.onEscapePressed: root.pending ? root.resolve(false) : Launcher.close()
+        Keys.onReturnPressed: root.answer()
 
         // the numpad's enter is a different key.
-        Keys.onEnterPressed: root.activate(root.selected)
-        Keys.onUpPressed: root.step(-1)
-        Keys.onDownPressed: root.step(1)
-        Keys.onTabPressed: root.step(1)
-        Keys.onBacktabPressed: root.step(-1)
+        Keys.onEnterPressed: root.answer()
+        Keys.onUpPressed: if (!root.pending) root.step(-1)
+        Keys.onDownPressed: if (!root.pending) root.step(1)
+        Keys.onTabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.step(1)
+        Keys.onBacktabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.step(-1)
 
         Keys.onPressed: event => {
-          // a confirmation owns the keyboard while it is up: return answers it,
-          // escape takes it back, and everything else is swallowed rather than
-          // typed into a field nobody can see behind the card. this is the first
-          // handler to see a key, so accepting here is what stops the specific
-          // Keys.onReturnPressed and Keys.onEscapePressed below from firing too.
+          // a confirmation owns the keyboard while it is up: the arrows move between
+          // its buttons and everything else is swallowed rather than typed into a
+          // field nobody can see behind the card. the keys with handlers of their
+          // own never reach here at all -- see above.
           if (root.pending) {
-            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.resolve(true)
-            else if (event.key === Qt.Key_Escape) root.resolve(false)
+            // the card's two buttons are laid out left to right, so the arrows pick
+            // one rather than toggling: pressing left twice should still leave you
+            // on Cancel. return and escape are handled above, where they arrive.
+            if (event.key === Qt.Key_Left || (event.key === Qt.Key_H && (event.modifiers & Qt.ControlModifier))) root.confirmChoice = false
+            else if (event.key === Qt.Key_Right || (event.key === Qt.Key_L && (event.modifiers & Qt.ControlModifier))) root.confirmChoice = true
 
             event.accepted = true
             return

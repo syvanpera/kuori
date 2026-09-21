@@ -102,8 +102,15 @@ hl.bind(mainMod .. " + C", hl.dsp.exec_cmd(kuori .. "launcher clipboard"))
 | `Enter` | Run the selected row |
 | `Escape` | Close |
 
-A power row does not run on `Enter` — it raises a confirmation, where `Enter` confirms and `Escape`
-goes back.
+A power row does not run on `Enter` — it raises a confirmation, and while that card is up it owns the
+keyboard: the launcher behind it stops answering keys entirely.
+
+| Keys | In the confirmation |
+|---|---|
+| `←` / `→`, `Ctrl+h` / `Ctrl+l` | Pick Cancel or the action — the one the keyboard is on is lit |
+| `Tab` / `Shift+Tab` | The same, toggling |
+| `Enter` | Answer with whichever is lit. It starts on the action, as the card says |
+| `Escape` | Cancel, leaving the launcher where it was |
 
 ## IPC
 

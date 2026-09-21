@@ -11,6 +11,11 @@ Rectangle {
 
   required property var action
 
+  // which button the keyboard is on. it wears the hover look, because that is
+  // already the shell's way of saying "this is the one you are about to press" and
+  // a second vocabulary for the same statement would be one too many.
+  property bool confirming: true
+
   signal accepted()
   signal rejected()
 
@@ -98,7 +103,7 @@ Rectangle {
         // a pill is its own height, not a number: the design writes 999 for the
         // radius, which is css for "as round as it goes".
         radius: height / 2
-        color: cancelHover.containsMouse ? Theme.pkCancelHover : Theme.pkCancelFill
+        color: cancelHover.containsMouse || !root.confirming ? Theme.pkCancelHover : Theme.pkCancelFill
 
         Behavior on color {
           ColorAnimation { duration: Theme.pkFade }
@@ -130,7 +135,7 @@ Rectangle {
         width: confirmLabel.implicitWidth + Theme.cfButtonPaddingH * 2
         height: confirmLabel.implicitHeight + Theme.cfButtonPaddingV * 2
         radius: height / 2
-        color: confirmHover.containsMouse ? Theme.accentLift : Theme.accent
+        color: confirmHover.containsMouse || root.confirming ? Theme.accentLift : Theme.accent
 
         Behavior on color {
           ColorAnimation { duration: Theme.pkFade }
