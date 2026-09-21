@@ -57,6 +57,10 @@ ShellRoot {
       Launcher.toggle("clipboard")
     }
 
+    function windows(): void {
+      Launcher.toggle("windows")
+    }
+
     function power(): void {
       Launcher.toggle("power")
     }

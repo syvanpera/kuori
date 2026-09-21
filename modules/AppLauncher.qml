@@ -34,6 +34,7 @@ Rectangle {
     // interleaved with applications by name is noise in both directions.
     { id: "clipboard", label: "CLIPBOARD", inAll: false },
 
+    { id: "windows", label: "WINDOWS" },
     { id: "power", label: "POWER" }
   ]
 
@@ -161,6 +162,50 @@ Rectangle {
     return rows
   }
 
+  readonly property var windowRows: {
+    // read the list, do not just call the lookup. DesktopEntries fills in
+    // asynchronously -- it climbs from 0 one entry at a time -- and an imperative
+    // heuristicLookup() creates no binding dependency, so rows built during the
+    // scan would keep their fallback names and glyphs for the life of the panel.
+    // this line is what makes them rebuild as the entries arrive.
+    const known = DesktopEntries.applications.values
+
+    return Windows.entries.map(entry => {
+      // the class is what hyprland knows; the desktop entry is what has a name
+      // fit to read and an icon. heuristicLookup exists for exactly this mapping.
+      const app = known.length > 0 ? DesktopEntries.heuristicLookup(entry.cls) : null
+      const label = app?.name || entry.cls
+
+      return {
+        cat: "windows",
+
+        // the design's "kitty — ~/dotfiles". a window with no title is just its
+        // application, rather than a name with a dangling dash.
+        name: entry.title.length > 0 ? `${label} — ${entry.title}` : label,
+        detail: `workspace ${entry.workspace}`,
+        icon: app?.icon ?? "",
+        image: "",
+
+        // the design draws every window with the same tab glyph. this reaches for
+        // the real application icon first and only falls back to that, because a
+        // list of identical glyphs is a list you have to read rather than scan.
+        glyph: app ? "" : "tab",
+        swatch: "",
+
+        // hyprland's own focus order, so the window you were last in is at the
+        // top and the one you are in now is first of all.
+        order: entry.history,
+        marked: entry.history === 0,
+
+        genericName: "Window",
+        keywords: [entry.cls],
+        comment: "",
+        command: [],
+        run: () => Windows.focus(entry)
+      }
+    })
+  }
+
   // static, and the command is the whole of what each one does, so there is no
   // service behind these: the design's three rows with the design's own commands.
   //
@@ -192,7 +237,7 @@ Rectangle {
     run: () => Quickshell.execDetached(action.command)
   }))
 
-  readonly property var rows: root.appRows.concat(root.wallpaperRows, root.clipboardRows, root.powerRows)
+  readonly property var rows: root.appRows.concat(root.wallpaperRows, root.clipboardRows, root.windowRows, root.powerRows)
 
   readonly property var pool: {
     if (Launcher.category !== "all") return root.rows.filter(row => row.cat === Launcher.category)
@@ -559,7 +604,10 @@ Rectangle {
 
             row: cell.modelData
             selected: cell.index === root.selectedIndex
-            marked: cell.modelData.path !== undefined && cell.modelData.path === Wallpapers.current
+            // a row either knows it is the current one when it is built, or is a
+            // wallpaper, whose current-ness changes under a list already on screen.
+            marked: cell.modelData.marked === true
+              || (cell.modelData.path !== undefined && cell.modelData.path === Wallpapers.current)
           }
 
           MouseArea {
