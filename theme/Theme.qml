@@ -170,8 +170,9 @@ Singleton {
   // field, rather than a gaussian sigma, so css blur radii transfer at about 1.2x.
   // the alphas are dials like the blurs and offsets below, not literals buried in
   // a colour expression: darkening the shadow is the one adjustment worth making
-  // without enlarging it. the design writes .34 and .28, but it was drawn against
-  // its own lighter #0f1726 surface and reads weaker over the #0b0f16 this runs.
+  // without enlarging it. these were .34 and .28 in the design, deepened here
+  // because it was drawn against a lighter surface than this shell runs -- and the
+  // design has since taken these values back.
   property real notchShadowAmbientAlpha: 0.45
   property real notchShadowContactAlpha: 0.38
 
@@ -184,9 +185,9 @@ Singleton {
   property real notchShadowContactOffset: 1
 
   // spread grows the silhouette before the falloff is applied, so it thickens the
-  // dark core rather than reaching further with the same fade. the design writes
-  // no spread at all; this is deliberately past it, and it is the dial with the
-  // most effect per unit if the shadow still wants more weight.
+  // dark core rather than reaching further with the same fade. the design had none
+  // at all until it adopted these, and it is the dial with the most effect per
+  // unit if the shadow ever wants more weight.
   property real notchShadowAmbientSpread: 2
   property real notchShadowContactSpread: 1
 
@@ -490,10 +491,10 @@ Singleton {
 
   readonly property color sysRowOpen: root.sheen.alpha(0.05)
 
-  // sunk into the row rather than lifted off it. the design writes .42 against its
-  // own lighter #0f1726, where that darkens the open row by about 27%; over this
-  // shell's darker surface the same value only reaches 23%, so it is deepened to
-  // land on the same step. the shadows above are adjusted for the same reason.
+  // sunk into the row rather than lifted off it. .42 in the design at first, where
+  // that darkened an open row by 27% against its lighter surface and only 23%
+  // against this one; deepened here to land on the same step, and the design has
+  // since taken this value back.
   readonly property color sysWell: Qt.rgba(8 / 255, 13 / 255, 24 / 255, 0.52)
   readonly property color sysNetActive: root.sheen.alpha(0.06)
   readonly property color sysLine: root.sheen.alpha(0.07)
