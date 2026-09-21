@@ -102,21 +102,6 @@ Singleton {
 
   readonly property bool manyMonitors: Hyprland.monitors.values.length > 1
 
-  // slurp asks its cursor theme for "crosshair" and shows whatever the compositor
-  // was already using if it cannot find one. XCURSOR_THEME is unset in this
-  // session -- hyprland draws its own built-in cursor and needs no theme -- so
-  // slurp looked for a theme called "default", which does not exist here, and got
-  // no crosshair.
-  //
-  // named rather than detected: Adwaita is the only installed theme with cursors
-  // in it, and it has the crosshair. setting this session-wide would change every
-  // application's cursor, which is a bigger answer than the question.
-  readonly property var cursorEnv: ({ XCURSOR_THEME: "Adwaita" })
-
-  function withCursor(extra: var): var {
-    return Object.assign({}, root.cursorEnv, extra)
-  }
-
   function shoot(): void {
     // a free-form drag cannot go through grimblast, which always passes slurp -o
     // -- "select a display output". with boxes to choose from that is harmless,
@@ -136,8 +121,8 @@ Singleton {
     //            because asking which is silly when there is no choice
     shot.file = ""
     shot.environment = root.target === "app"
-      ? root.withCursor({ SLURP_ARGS: "-r" })
-      : root.withCursor({ SLURP_RECTS: root.monitorRects(), SLURP_ARGS: "-r" })
+      ? ({ SLURP_ARGS: "-r" })
+      : ({ SLURP_RECTS: root.monitorRects(), SLURP_ARGS: "-r" })
 
     // no --notify: grimblast would announce itself as ".grimblast-wrapped", which
     // is the nix wrapper's filename. it prints the path it saved to instead, so
@@ -309,7 +294,6 @@ Singleton {
     // through a shell pipeline, which closes stdin for them, which is why this
     // only appeared when region stopped going through grimblast.
     command: ["sh", "-c", "exec slurp < /dev/null"]
-    environment: root.cursorEnv
 
     stdout: StdioCollector { id: regionGeometry }
     stderr: StdioCollector { id: regionError }
@@ -378,8 +362,6 @@ Singleton {
   // wants. a cancelled selection exits non-zero and records nothing.
   Process {
     id: picker
-
-    environment: root.cursorEnv
 
     stdout: StdioCollector { id: region }
 
