@@ -352,7 +352,7 @@ Singleton {
       id: addrOut
 
       onStreamFinished: {
-        // "IP4.ADDRESS[1]:10.0.0.110/24". the prefix length belongs to the subnet
+        // "IP4.ADDRESS[1]:192.0.2.10/24". the prefix length belongs to the subnet
         // rather than to this machine, and the design shows the address alone.
         const line = addrOut.text.split("\n").find(l => l.startsWith("IP4.ADDRESS"))
 

@@ -92,7 +92,7 @@ Singleton {
   }
 
   // the design's second line is one sentence, and a real notification arrives as
-  // two fields: "ops@asteroid.fi" and "Build 2411 passed" are the summary and the
+  // two fields: "ops@example.com" and "Build 2411 passed" are the summary and the
   // body of the same message, which is how the mockup writes it.
   function textOf(notification: var): string {
     if (!notification) return ""
