@@ -25,13 +25,8 @@ Column {
     color: Theme.sysLine
   }
 
-  Text {
+  Caption {
     text: root.heading
-    color: Theme.sysCap
-    font.family: Theme.monoFont
-    font.pixelSize: Theme.sysCapSize
-    font.weight: Font.Medium
-    font.letterSpacing: Theme.sysCapSpacing
   }
 
   Column {

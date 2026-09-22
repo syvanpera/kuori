@@ -54,18 +54,13 @@ Column {
 
     visible: Capture.mode !== "pick"
 
-    Text {
+    Caption {
       id: targetLabel
 
       anchors.left: parent.left
       anchors.verticalCenter: parent.verticalCenter
 
       text: "TARGET"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
     }
 
     Segmented {
@@ -93,18 +88,13 @@ Column {
       width: parent.width
       height: Math.max(formatLabel.implicitHeight, formats.implicitHeight)
 
-      Text {
+      Caption {
         id: formatLabel
 
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
 
         text: "FORMAT"
-        color: Theme.sysCap
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysCapSize
-        font.weight: Font.Medium
-        font.letterSpacing: Theme.sysCapSpacing
       }
 
       Segmented {

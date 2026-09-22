@@ -46,13 +46,8 @@ PanelRow {
       color: Theme.sysLine
     }
 
-    Text {
+    Caption {
       text: "BRIGHTNESS"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
     }
 
     DisplaySlider {
@@ -69,15 +64,10 @@ PanelRow {
     }
 
     // the design only offers a temperature while there is one being applied.
-    Text {
+    Caption {
       visible: Display.night
 
       text: "TEMPERATURE"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
     }
 
     DisplaySlider {

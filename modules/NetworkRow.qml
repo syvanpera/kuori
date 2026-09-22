@@ -26,34 +26,11 @@ PanelRow {
     value: root.expanded
   }
 
-  Item {
+  SectionSwitch {
     width: root.bodyWidth
-    height: Math.max(enabledLabel.implicitHeight, radio.height)
+    checked: Network.enabled
 
-    Text {
-      id: enabledLabel
-
-      anchors.left: parent.left
-      anchors.verticalCenter: parent.verticalCenter
-
-      text: "ENABLED"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
-    }
-
-    Switch {
-      id: radio
-
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-
-      checked: Network.enabled
-
-      onToggled: Network.setEnabled(!Network.enabled)
-    }
+    onToggled: Network.setEnabled(!Network.enabled)
   }
 
   // the readings describe an association, so there is nothing to say without one.

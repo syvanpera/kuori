@@ -72,13 +72,8 @@ PanelRow {
       color: Theme.sysLine
     }
 
-    Text {
+    Caption {
       text: "POWER PROFILE"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
     }
 
     Row {

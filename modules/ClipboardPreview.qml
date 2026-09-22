@@ -27,16 +27,13 @@ Rectangle {
 
     spacing: Theme.clipPreviewGap
 
-    Text {
+    Caption {
       // the design puts the entry's age on the right of this line. cliphist keeps
       // no timestamps -- its ids are a counter -- so there is nothing true to put
       // there, the same reason the rows themselves carry no age.
       text: "PREVIEW"
       color: Theme.clipPreviewMeta
-      font.family: Theme.monoFont
       font.pixelSize: Theme.clipPreviewMetaSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
     }
 
     // text and links: the whole content, scrollable when it does not fit.

@@ -391,7 +391,7 @@ Rectangle {
           }
         }
 
-        Text {
+        Caption {
           id: caption
 
           anchors.left: chevron.right
@@ -400,10 +400,7 @@ Rectangle {
 
           text: "DETAILS"
           color: Theme.pkDetailsCap
-          font.family: Theme.monoFont
           font.pixelSize: Theme.pkDetailsCapSize
-          font.weight: Font.Medium
-          font.letterSpacing: Theme.sysCapSpacing
         }
 
         MouseArea {

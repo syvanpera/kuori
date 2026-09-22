@@ -21,45 +21,17 @@ PanelRow {
     value: root.expanded
   }
 
-  Item {
+  // the only thing here that can be switched off is the sound itself, so the
+  // design's ENABLED is mute read the right way up.
+  SectionSwitch {
     width: root.bodyWidth
-    height: Math.max(enabledLabel.implicitHeight, unmuted.height)
+    checked: Audio.sinkReady && !Audio.muted
 
-    Text {
-      id: enabledLabel
-
-      anchors.left: parent.left
-      anchors.verticalCenter: parent.verticalCenter
-
-      text: "ENABLED"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
-    }
-
-    // the only thing here that can be switched off is the sound itself, so the
-    // design's ENABLED is mute read the right way up.
-    Switch {
-      id: unmuted
-
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-
-      checked: Audio.sinkReady && !Audio.muted
-
-      onToggled: Audio.setMuted(!Audio.muted)
-    }
+    onToggled: Audio.setMuted(!Audio.muted)
   }
 
-  Text {
+  Caption {
     text: "OUTPUT"
-    color: Theme.sysCap
-    font.family: Theme.monoFont
-    font.pixelSize: Theme.sysCapSize
-    font.weight: Font.Medium
-    font.letterSpacing: Theme.sysCapSpacing
   }
 
   VolumeSlider {
@@ -93,13 +65,8 @@ PanelRow {
     color: Theme.sysLine
   }
 
-  Text {
+  Caption {
     text: "INPUT"
-    color: Theme.sysCap
-    font.family: Theme.monoFont
-    font.pixelSize: Theme.sysCapSize
-    font.weight: Font.Medium
-    font.letterSpacing: Theme.sysCapSpacing
   }
 
   VolumeSlider {

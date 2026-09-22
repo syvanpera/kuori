@@ -1,7 +1,6 @@
 import QtQuick
 import qs.components
 import qs.services
-import qs.theme
 
 // the bluetooth row of the system panel: what is on at a glance, and underneath
 // it the radio switch, what is connected, and what else is around.
@@ -20,34 +19,11 @@ PanelRow {
     value: root.expanded
   }
 
-  Item {
+  SectionSwitch {
     width: root.bodyWidth
-    height: Math.max(enabledLabel.implicitHeight, radio.height)
+    checked: Bluez.enabled
 
-    Text {
-      id: enabledLabel
-
-      anchors.left: parent.left
-      anchors.verticalCenter: parent.verticalCenter
-
-      text: "ENABLED"
-      color: Theme.sysCap
-      font.family: Theme.monoFont
-      font.pixelSize: Theme.sysCapSize
-      font.weight: Font.Medium
-      font.letterSpacing: Theme.sysCapSpacing
-    }
-
-    Switch {
-      id: radio
-
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-
-      checked: Bluez.enabled
-
-      onToggled: Bluez.setEnabled(!Bluez.enabled)
-    }
+    onToggled: Bluez.setEnabled(!Bluez.enabled)
   }
 
   // no rule above this one: it sits directly under the switch, which the design

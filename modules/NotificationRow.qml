@@ -27,34 +27,12 @@ PanelRow {
     width: root.bodyWidth
     spacing: Theme.sysBodyGap
 
-    Item {
+    SectionSwitch {
       width: parent.width
-      height: Math.max(dndLabel.implicitHeight, dnd.height)
+      label: "DO NOT DISTURB"
+      checked: Notifications.dnd
 
-      Text {
-        id: dndLabel
-
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-
-        text: "DO NOT DISTURB"
-        color: Theme.sysCap
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysCapSize
-        font.weight: Font.Medium
-        font.letterSpacing: Theme.sysCapSpacing
-      }
-
-      Switch {
-        id: dnd
-
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-
-        checked: Notifications.dnd
-
-        onToggled: Notifications.toggleDnd()
-      }
+      onToggled: Notifications.toggleDnd()
     }
 
     Rectangle {
@@ -67,21 +45,16 @@ PanelRow {
       width: parent.width
       height: Math.max(historyLabel.implicitHeight, clear.implicitHeight)
 
-      Text {
+      Caption {
         id: historyLabel
 
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
 
         text: "HISTORY"
-        color: Theme.sysCap
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysCapSize
-        font.weight: Font.Medium
-        font.letterSpacing: Theme.sysCapSpacing
       }
 
-      Text {
+      Caption {
         id: clear
 
         anchors.right: parent.right
@@ -92,10 +65,6 @@ PanelRow {
         visible: Notifications.history.length > 0
         text: "CLEAR"
         color: clearHover.containsMouse ? Theme.notifClearHover : Theme.notifClear
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysCapSize
-        font.weight: Font.Medium
-        font.letterSpacing: Theme.sysCapSpacing
 
         Behavior on color {
           ColorAnimation { duration: Theme.notchFadeDuration }
