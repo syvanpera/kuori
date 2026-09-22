@@ -432,7 +432,8 @@ Column {
   }
 
   // what is on the shown day: the design's header row, then a row per event with
-  // its time in its calendar's colour, indented under the header's text.
+  // its time in its calendar's colour, flush with the header's icon rather than
+  // indented under its text -- the design widened them to give titles room.
   Column {
     width: root.contentWidth
     spacing: Theme.eventRowGap
@@ -462,7 +463,6 @@ Column {
 
     Text {
       visible: root.shownEvents.length === 0
-      leftPadding: Theme.eventIcon + Theme.eventGap
 
       text: root.emptyText
       color: Theme.eventEmptyText
@@ -478,7 +478,6 @@ Column {
 
         required property var modelData
 
-        leftPadding: Theme.eventIcon + Theme.eventGap
         spacing: Theme.eventBarGap
 
         // the calendar's colour, as a bar the height of the row.
@@ -504,7 +503,7 @@ Column {
         }
 
         Text {
-          width: root.contentWidth - eventRow.leftPadding - Theme.eventBarWidth - Theme.eventTimeWidth - eventRow.spacing * 2
+          width: root.contentWidth - Theme.eventBarWidth - Theme.eventTimeWidth - eventRow.spacing * 2
           height: Theme.eventLineHeight
 
           text: eventRow.modelData.title
@@ -519,7 +518,6 @@ Column {
 
     Text {
       visible: root.shownEvents.length > Theme.eventMax
-      leftPadding: Theme.eventIcon + Theme.eventGap
 
       text: `+${root.shownEvents.length - Theme.eventMax} more`
       color: Theme.eventEmptyText
@@ -541,7 +539,6 @@ Column {
 
         y: Theme.legendTop
         width: root.contentWidth
-        leftPadding: Theme.eventIcon + Theme.eventGap
         spacing: Theme.legendItemGap
 
         Repeater {
