@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
+import Quickshell.Widgets
 import QtQuick
 import qs.components
 import qs.modules
@@ -78,6 +79,24 @@ PanelWindow {
     focus: true
 
     Keys.onEscapePressed: Notches.close()
+  }
+
+  // the launcher's window is built and thrown away on every open, and the decoded
+  // icons go with it: measured at ~600ms to decode eleven theme svgs, paid again
+  // on every single open. these hold the same images at the same size for the life
+  // of the session, so the launcher's own IconImages find them already decoded.
+  // nothing draws them -- they exist to be a reference qt's pixmap cache respects.
+  Repeater {
+    model: DesktopEntries.applications.values
+
+    IconImage {
+      required property var modelData
+
+      visible: false
+      asynchronous: true
+      implicitSize: Theme.launcherIconInner
+      source: Icons.path(modelData.icon ?? "")
+    }
   }
 
   // before the frame on purpose: the band is drawn over the top of these, so a
