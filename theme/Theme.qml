@@ -497,11 +497,9 @@ Singleton {
 
   readonly property color sysSliderRail: root.sheen.alpha(0.1)
 
-  // the brightness row, which sits under the accordion and is not part of it.
-  property int sysBrightPadding: 9
-  property int sysBrightGap: 10
-  property int sysBrightIcon: 17
-
+  // the glyph beside a slider in the display section. it outlived the brightness
+  // row it was named for: the design folded that row into display, and what is left
+  // of it is components/DisplaySlider.qml.
   readonly property color sysBrightGlyph: root.tint.alpha(0.6)
 
   // the power profile buttons: three of them sharing the width.
@@ -750,7 +748,6 @@ Singleton {
   property real capPickValueSize: 11.5
   property int capPickTextGap: 4
 
-  property int capSwitchGap: 7
   property int capSwitchLabelSize: 11
 
   property int capButtonPaddingV: 9
@@ -842,7 +839,6 @@ Singleton {
   property int toastTimeout: 5200
 
   readonly property color toastFill: root.notch.alpha(0.94)
-  readonly property color toastShadow: root.ink.alpha(0.45)
   readonly property color toastChipFill: root.sheen.alpha(0.06)
   readonly property color toastTime: root.tint.alpha(0.35)
   readonly property color toastBody: root.tint.alpha(0.66)

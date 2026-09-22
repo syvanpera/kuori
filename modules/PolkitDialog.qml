@@ -1,6 +1,5 @@
 import QtQuick
 import qs.components
-import qs.services
 import qs.theme
 
 // the card polkit puts in front of everything: what is being asked, who is being

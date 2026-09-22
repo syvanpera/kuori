@@ -31,10 +31,6 @@ Singleton {
     return agent.isActive ? agent.flow : null
   }
 
-  // whether the session's authentication agent is us. only one can register at a
-  // time, so this is false whenever something else got there first.
-  readonly property bool registered: agent.isRegistered
-
   // whether the mock is standing in for a real request. driven over ipc so every
   // state can be walked from the command line without touching anyone's password.
   property bool mocking: false

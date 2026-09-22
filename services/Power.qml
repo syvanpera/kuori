@@ -94,17 +94,19 @@ Singleton {
   }
 
   readonly property int profile: PowerProfiles.profile
-  readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile
 
-  // whether anything is listening. PowerProfiles exposes no flag for that --
-  // profile reads Balanced whether or not a daemon answered -- and this shell ran
-  // for a while on a machine with no power-profiles-daemon at all, offering three
-  // buttons that quietly did nothing. hasPerformanceProfile comes from the
-  // daemon's own list of profiles, so it is false when nothing answered, which
-  // makes it the closest proxy available. a laptop running the daemon with no
-  // performance profile would lose the section wrongly; that is rarer than the
-  // case this is here to catch.
-  readonly property bool profilesAvailable: PowerProfiles.hasPerformanceProfile
+  // two questions with one answer, which is the whole reason this is one property
+  // and not two: whether this machine offers a performance profile, and whether
+  // any daemon is listening at all.
+  //
+  // PowerProfiles has no flag for the second -- profile reads Balanced whether or
+  // not anything answered -- and this shell ran for a while on a machine with no
+  // power-profiles-daemon, offering three buttons that quietly did nothing.
+  // hasPerformanceProfile comes from the daemon's own list, so it is false when
+  // nothing answered, which makes it the closest proxy available. a laptop running
+  // the daemon with no performance profile would lose the section wrongly; that is
+  // rarer than the case this is here to catch.
+  readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile
 
   function setProfile(which: int): void {
     PowerProfiles.profile = which

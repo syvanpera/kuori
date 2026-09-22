@@ -63,7 +63,7 @@ PanelRow {
   // buttons that quietly do nothing.
   Column {
     width: root.bodyWidth
-    visible: Power.profilesAvailable
+    visible: Power.hasPerformance
     spacing: Theme.sysBodyGap
 
     Rectangle {
