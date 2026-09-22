@@ -85,14 +85,72 @@ rather than broken.
 | `hyprsunset` | Runs with `-i` (identity: present, changing nothing) so the night light has something to talk to. |
 | `xdg-user-dirs-update` | Writes `~/.config/user-dirs.dirs` from `/etc/xdg/user-dirs.defaults`, which is how anything — kuori, grimblast, your file manager — knows where Pictures and Videos are. Oneshot at login. |
 
-## Running it
+## Installing
 
-kuori runs as a systemd user unit:
+kuori is a Quickshell config rather than a program you build, so installing it is putting the files
+somewhere and pointing Quickshell at them. Everything below assumes `~/.config/kuori`:
+
+```sh
+git clone https://github.com/syvanpera/kuori.git ~/.config/kuori
+qs -p ~/.config/kuori
+```
+
+The second line runs it in the foreground, which is the quickest way to find out whether anything from
+*Requirements* is missing — its complaints go to the terminal, and `Ctrl+C` stops it.
+
+**`-p` names the config for every command**, and it is not optional. Quickshell's own default
+directory is `~/.config/quickshell`, so a bare `qs` or `qs ipc` talks to whatever lives there — which
+is a different shell, or a stale copy of this one. Keeping kuori outside that directory means nothing
+resolves by accident.
+
+### As a systemd user unit
+
+Running it from a terminal is fine for a look, but the shell is also this session's notification
+daemon and authentication agent, so it wants to start at login and come back if it dies:
+
+```ini
+# ~/.config/systemd/user/kuori.service
+[Unit]
+Description=kuori desktop shell
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+
+# the absolute path to the binary -- `command -v quickshell` gives it. a bare
+# name is resolved against systemd's own compiled-in search path, /usr/bin and
+# friends, which on NixOS is not where quickshell lives.
+ExecStart=/usr/bin/quickshell -p %h/.config/kuori
+
+# a unit gets systemd's own minimal PATH, not your login shell's. everything in
+# Requirements has to be on this one, or it fails silently: the launcher simply
+# stops launching, with nothing in the log.
+Environment=PATH=/run/wrappers/bin:/run/current-system/sw/bin:/usr/local/bin:/usr/bin:/bin
+
+Slice=session.slice
+TimeoutStopSec=5s
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target
+```
+
+```sh
+systemctl --user daemon-reload
+systemctl --user enable --now kuori
+```
+
+On NixOS the same thing belongs in your configuration as a `systemd.user.services` block rather than
+a file — that is how this machine runs it — but the fields are the ones above, `Environment` included.
+
+## Running it
 
 ```sh
 systemctl --user restart kuori      # restart it — never launch a second copy by hand
 journalctl --user -u kuori -f       # follow its output
-qs log -p /path/to/kuori            # or quickshell's own log
+qs log -p ~/.config/kuori           # or quickshell's own log
 ```
 
 Starting a second instance by hand while the unit is running gives you two shells, each claiming its
@@ -100,7 +158,8 @@ own exclusive zone, and a border that reserves twice the space it should.
 
 ## Keyboard
 
-The launcher is bound in `~/.config/hypr/hyprland.lua`:
+Nothing is bound by kuori itself — every entry point is an IPC call, so the binds live in your
+Hyprland config. These are the ones this machine uses, from `~/.config/hypr/hyprland.lua`:
 
 | Keys | Does |
 |---|---|
@@ -109,11 +168,10 @@ The launcher is bound in `~/.config/hypr/hyprland.lua`:
 | `SUPER` + `SHIFT` + `S` | Screenshot a region |
 | Brightness up / down | One step of the backlight, through kuori itself |
 
-Every entry point is an IPC call, so binding another is a line in your Hyprland config. The `-p` is
-**not optional** — without it `qs ipc` may resolve a different Quickshell config:
+Binding anything else is one more line, and the `-p` goes in every one of them:
 
 ```lua
-local kuori = "qs ipc -p /home/tuomo/work/personal/kuori call "
+local kuori = "qs ipc -p ~/.config/kuori call "
 
 hl.bind(altMod .. " + SPACE", hl.dsp.exec_cmd(kuori .. "launcher toggle"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd(kuori .. "notifications dnd"))
@@ -143,7 +201,8 @@ keyboard: the launcher behind it stops answering keys entirely.
 
 ## IPC
 
-Every call is `qs ipc -p <path-to-kuori> call <target> <function>`. `qs ipc -p . show` lists them.
+Every call is `qs ipc -p ~/.config/kuori call <target> <function>`. `qs ipc -p ~/.config/kuori show`
+lists them, and `-p .` works from inside the directory.
 
 ### `launcher`
 
@@ -199,8 +258,8 @@ different one while the launcher is open switches category without closing it.
 Bind these to the brightness keys and one press is one step of the scale the panel and the OSD show:
 
 ```lua
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("qs ipc -p /home/tuomo/work/personal/kuori call backlight up"),   { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc -p /home/tuomo/work/personal/kuori call backlight down"), { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("qs ipc -p ~/.config/kuori call backlight up"),   { locked = true, repeating = true })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc -p ~/.config/kuori call backlight down"), { locked = true, repeating = true })
 ```
 
 `brightnessctl`'s own percentages are **not** this scale. Its `-e4` moves 5% along a gamma-4
