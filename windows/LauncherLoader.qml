@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
 import QtQuick
 import qs.services
 
@@ -9,19 +8,6 @@ import qs.services
 // launcher at all.
 Scope {
   id: root
-
-  // hyprland names its focused monitor and quickshell's screens carry the same
-  // name. that name is the only link between the two: HyprlandMonitor has no
-  // handle back onto a ShellScreen.
-  readonly property var focusedScreen: {
-    const name = Hyprland.focusedMonitor?.name ?? ""
-
-    // Quickshell.screens is a qml list, not a js array. copying it once is
-    // cheaper than being wrong about which array methods a sequence carries.
-    const screens = Array.from(Quickshell.screens)
-
-    return screens.find(screen => screen.name === name) ?? screens[0] ?? null
-  }
 
   // captured when the launcher opens rather than bound live. writing
   // PanelWindow.screen destroys and rebuilds the wayland surface, so a live
@@ -37,7 +23,7 @@ Scope {
     // and calls back when there is nothing left to draw.
     function onOpenedChanged(): void {
       if (Launcher.opened) {
-        root.openScreen = root.focusedScreen
+        root.openScreen = Screens.focused
         loader.active = true
       }
     }

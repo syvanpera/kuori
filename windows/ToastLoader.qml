@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
 import QtQuick
 import qs.services
 
@@ -7,15 +6,6 @@ import qs.services
 // show, so an idle desktop carries no extra layer surface at all.
 Scope {
   id: root
-
-  // the same trick the launcher uses: hyprland names its focused monitor, and
-  // quickshell's screens carry the same name.
-  readonly property var focusedScreen: {
-    const name = Hyprland.focusedMonitor?.name ?? ""
-    const screens = Array.from(Quickshell.screens)
-
-    return screens.find(screen => screen.name === name) ?? screens[0] ?? null
-  }
 
   // captured when the first toast appears rather than bound live: writing
   // PanelWindow.screen rebuilds the wayland surface, and a toast that flickers
@@ -31,7 +21,7 @@ Scope {
         return
       }
 
-      if (!loader.active) root.openScreen = root.focusedScreen
+      if (!loader.active) root.openScreen = Screens.focused
 
       loader.active = true
     }

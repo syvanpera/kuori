@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Hyprland
 import QtQuick
 import qs.services
 
@@ -8,13 +7,6 @@ import qs.services
 // because a layershell surface holds the keyboard for as long as it is mapped.
 Scope {
   id: root
-
-  readonly property var focusedScreen: {
-    const name = Hyprland.focusedMonitor?.name ?? ""
-    const screens = Array.from(Quickshell.screens)
-
-    return screens.find(screen => screen.name === name) ?? screens[0] ?? null
-  }
 
   // captured when the request arrives rather than bound live: writing
   // PanelWindow.screen rebuilds the wayland surface, which would throw away a
@@ -27,7 +19,7 @@ Scope {
     function onFlowChanged(): void {
       if (Polkit.flow === null) return
 
-      root.openScreen = root.focusedScreen
+      root.openScreen = Screens.focused
       loader.active = true
     }
   }
