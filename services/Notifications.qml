@@ -57,10 +57,15 @@ Singleton {
     root.dismissAll()
   }
 
+  // a click on a toast, or on one of its buttons. that is the notification being
+  // read, so it leaves the history too: a history is for what you missed, and the
+  // bell staying lit for something you just answered was the user's complaint.
+  // expiry and dismiss-all go the other way -- nothing was read -- and keep it.
   function dismiss(key: int): void {
     const popup = root.popups.find(p => p.key === key)
 
     root.popups = root.popups.filter(p => p.key !== key)
+    root.forget(key)
     root.schedule()
 
     // untracking is what tells the client we are done with it; the object is gone

@@ -377,13 +377,15 @@ kuori answers `org.freedesktop.Notifications`. **Nothing else on the machine doe
 is down notifications are not merely undrawn — they are dropped.
 
 - Up to four toasts, newest at the top, each gone after about five seconds.
-- **Clicking a toast dismisses it.** Buttons on it are the sender's own actions; the first is
+- **Clicking a toast dismisses it and drops it from the history**: you read it, so there is nothing
+  to come back to. Buttons on it are the sender's own actions and do the same; the first is
   accented because it is the one the sender listed first.
 - **Critical notifications do not time out.** They stay until dismissed.
 - Toasts stand aside while the system panel is open, since they share that corner.
 - **Do Not Disturb silences the toasts only.** A muted notification still lands in the history, which
   is the only place you would find out it arrived.
-- The history keeps the last 50. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
+- The history keeps the last 50: what expired unread, what arrived under Do Not Disturb, and what
+  `DISMISS ALL` swept away. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
   toast still on screen with it. Anything a sender marked *transient* — volume popups and the like —
   is never kept.
 - The bell on the system tab is accent while there is anything in the history. Clicking it opens the
