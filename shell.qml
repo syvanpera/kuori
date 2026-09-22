@@ -153,6 +153,16 @@ ShellRoot {
     }
   }
 
+  // the calendar is a click on the clock, and now that it says something a key
+  // may as well reach it. toggles, like every other latched thing here.
+  IpcHandler {
+    target: "calendar"
+
+    function toggle(): void {
+      Notches.toggle("clock")
+    }
+  }
+
   // notifications are the one thing here with no window of its own to click: a
   // toast is gone by the time you reach for it, and the switch is three folds deep
   // in a panel. so the two verbs worth binding a key to live here.

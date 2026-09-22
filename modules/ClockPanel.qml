@@ -3,8 +3,9 @@ import qs.components
 import qs.services
 import qs.theme
 
-// what the clock tab becomes while hovered: the time large, the date under it, a
-// month you can page through, and what is on today.
+// what the clock tab becomes while open: the time large, the date under it, a
+// month you can page through with a dot on every day that has something on, and
+// what is on the day you picked -- today, until you pick one.
 Column {
   id: root
 
@@ -17,6 +18,40 @@ Column {
   // closes, so it always opens on the current month rather than wherever it was
   // left the last time.
   property int monthOffset: 0
+
+  // the day whose events are listed, as a number in the month being shown, or 0.
+  // only a day with events can be picked, which is the design's rule: a click on
+  // an empty day would only ever say "no events" about a day you can already see
+  // is empty.
+  property int selectedDay: 0
+
+  // the design's resolution: a picked day that still has events, else today while
+  // this is the current month, else nothing -- an off-month opens on its name.
+  readonly property int shownDay: {
+    if (root.selectedDay > 0 && root.eventsOn(root.selectedDay).length > 0) return root.selectedDay
+    if (!root.offMonth) return root.now.getDate()
+
+    return 0
+  }
+
+  readonly property var shownEvents: root.shownDay > 0 ? root.eventsOn(root.shownDay) : []
+
+  readonly property string shownTitle: {
+    if (root.shownDay === 0) return Qt.formatDateTime(root.view, "MMMM yyyy")
+    if (root.isToday(root.shownDay)) return "Today"
+
+    return Qt.formatDateTime(root.dateOf(root.shownDay), "dddd d MMM")
+  }
+
+  // what stands where the rows would be when there are none. the first two are
+  // not in the design, which has a calendar by construction; here "no events" is
+  // only true once a file has been read and reaches the month on screen.
+  readonly property string emptyText: {
+    if (!Calendar.ready) return "Not synced yet"
+    if (!Calendar.inWindow(root.view)) return "Not synced this far"
+
+    return "No events"
+  }
 
   // the design fixes the panel's width, and the grid divides what is left of it.
   readonly property real contentWidth: Theme.clockPanelWidth - Theme.clockPanelPaddingH * 2
@@ -63,7 +98,24 @@ Column {
 
   // the loader keeps this alive while the tab is shut, so closing is the only
   // moment there is to put the month back.
-  onEnabledChanged: if (!root.enabled) root.monthOffset = 0
+  onEnabledChanged: {
+    if (root.enabled) return
+
+    root.monthOffset = 0
+    root.selectedDay = 0
+  }
+
+  // paging the month drops the pick, the way the design does: a "23" carried
+  // into another month would be a different day.
+  onMonthOffsetChanged: root.selectedDay = 0
+
+  function dateOf(day: int): date {
+    return new Date(root.view.getFullYear(), root.view.getMonth(), day)
+  }
+
+  function eventsOn(day: int): var {
+    return Calendar.eventsOn(root.dateOf(day))
+  }
 
   // iso weeks belong to the year holding their thursday, which is the whole reason
   // this is not just "days since january the first over seven".
@@ -79,6 +131,13 @@ Column {
 
   function isToday(day: int): bool {
     return root.monthOffset === 0 && day === root.now.getDate()
+  }
+
+  // the fetcher runs when the tab opens on a stale file, and never while shut.
+  Binding {
+    target: Calendar
+    property: "watching"
+    value: root.enabled
   }
 
   Text {
@@ -289,20 +348,66 @@ Column {
             required property var modelData
 
             readonly property bool today: cell.modelData !== null && root.isToday(cell.modelData)
+            readonly property var events: cell.modelData !== null ? root.eventsOn(cell.modelData) : []
+            readonly property var calendars: cell.modelData !== null ? Calendar.calendarsOn(root.dateOf(cell.modelData)) : []
+            readonly property bool busy: cell.events.length > 0
+
+            // today is already lit, so the pick only shows on any other day.
+            readonly property bool selected: cell.busy && !cell.today && cell.modelData === root.shownDay
 
             width: root.dayWidth
             height: Theme.calCellHeight
             radius: Theme.calCellRadius
-            color: cell.today ? Theme.accent : "transparent"
+            color: cell.today ? Theme.accent : cell.selected ? Theme.calSelectedBg : "transparent"
 
-            Text {
+            Behavior on color {
+              ColorAnimation { duration: Theme.notchFadeDuration }
+            }
+
+            Column {
               anchors.centerIn: parent
+              spacing: Theme.calDotGap
 
-              text: cell.modelData ?? ""
-              color: cell.today ? Theme.litText : Theme.calDayText
-              font.family: Theme.monoFont
-              font.pixelSize: Theme.calDaySize
-              font.weight: Font.Medium
+              Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                text: cell.modelData ?? ""
+                color: cell.today ? Theme.litText : cell.selected ? Theme.text : Theme.calDayText
+                font.family: Theme.monoFont
+                font.pixelSize: Theme.calDaySize
+                font.weight: Font.Medium
+              }
+
+              // a dot per calendar with something on, in its colour; on today's lit
+              // cell they all go dark like the number. the row keeps its height
+              // with nothing in it, so an empty day's number sits where a busy
+              // day's does.
+              Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                height: Theme.calDotSize
+                spacing: Theme.calDotSpacing
+
+                Repeater {
+                  model: cell.calendars
+
+                  Rectangle {
+                    required property var modelData
+
+                    width: Theme.calDotSize
+                    height: Theme.calDotSize
+                    radius: width / 2
+                    color: cell.today ? Theme.litText : modelData.color
+                  }
+                }
+              }
+            }
+
+            MouseArea {
+              anchors.fill: parent
+              enabled: cell.busy
+
+              onClicked: root.selectedDay = cell.modelData
             }
           }
         }
@@ -326,38 +431,152 @@ Column {
     height: 11
   }
 
-  // what is on today. static until something on this machine keeps a calendar:
-  // there is no khal, no vdirsyncer, no evolution store, so "no events" is not a
-  // placeholder here, it is the answer.
-  Row {
-    spacing: Theme.eventGap
+  // what is on the shown day: the design's header row, then a row per event with
+  // its time in its calendar's colour, indented under the header's text.
+  Column {
+    width: root.contentWidth
+    spacing: Theme.eventRowGap
 
-    Glyph {
-      anchors.verticalCenter: parent.verticalCenter
+    Row {
+      spacing: Theme.eventGap
 
-      icon: "calendar_month"
-      iconColor: Theme.accent
-      size: Theme.eventIcon
-    }
+      Glyph {
+        anchors.verticalCenter: parent.verticalCenter
 
-    Column {
-      anchors.verticalCenter: parent.verticalCenter
-      spacing: 2
+        icon: "calendar_month"
+        iconColor: Theme.accent
+        size: Theme.eventIcon
+      }
 
       Text {
-        text: "Today"
+        anchors.verticalCenter: parent.verticalCenter
+
+        text: root.shownTitle
         color: Theme.text
         font.family: Theme.uiFont
         font.pixelSize: Theme.eventTitleSize
         font.weight: Font.DemiBold
         font.variableAxes: Theme.uiAxesSemiBold
       }
+    }
 
-      Text {
-        text: "No events"
-        color: Theme.eventEmptyText
-        font.family: Theme.uiFont
-        font.pixelSize: Theme.eventDetailSize
+    Text {
+      visible: root.shownEvents.length === 0
+      leftPadding: Theme.eventIcon + Theme.eventGap
+
+      text: root.emptyText
+      color: Theme.eventEmptyText
+      font.family: Theme.uiFont
+      font.pixelSize: Theme.eventDetailSize
+    }
+
+    Repeater {
+      model: root.shownEvents.slice(0, Theme.eventMax)
+
+      Row {
+        id: eventRow
+
+        required property var modelData
+
+        leftPadding: Theme.eventIcon + Theme.eventGap
+        spacing: Theme.eventBarGap
+
+        // the calendar's colour, as a bar the height of the row.
+        Rectangle {
+          width: Theme.eventBarWidth
+          height: Theme.eventLineHeight
+          radius: width / 2
+          color: Calendar.colorOf(eventRow.modelData.calendar)
+        }
+
+        // the design's 32px column fits "09:30"; an all-day event has no time
+        // and gets a dash in the same colour rather than a word that would not.
+        Text {
+          width: Theme.eventTimeWidth
+          height: Theme.eventLineHeight
+
+          text: eventRow.modelData.allDay ? "—" : Qt.formatTime(new Date(eventRow.modelData.start), "hh:mm")
+          verticalAlignment: Text.AlignVCenter
+          color: Calendar.colorOf(eventRow.modelData.calendar)
+          font.family: Theme.monoFont
+          font.pixelSize: Theme.eventTimeSize
+          font.weight: Font.Medium
+        }
+
+        Text {
+          width: root.contentWidth - eventRow.leftPadding - Theme.eventBarWidth - Theme.eventTimeWidth - eventRow.spacing * 2
+          height: Theme.eventLineHeight
+
+          text: eventRow.modelData.title
+          elide: Text.ElideRight
+          verticalAlignment: Text.AlignVCenter
+          color: Theme.eventText
+          font.family: Theme.uiFont
+          font.pixelSize: Theme.eventDetailSize
+        }
+      }
+    }
+
+    Text {
+      visible: root.shownEvents.length > Theme.eventMax
+      leftPadding: Theme.eventIcon + Theme.eventGap
+
+      text: `+${root.shownEvents.length - Theme.eventMax} more`
+      color: Theme.eventEmptyText
+      font.family: Theme.uiFont
+      font.pixelSize: Theme.eventDetailSize
+    }
+
+    // which colour is which: every calendar the file knows, wrapping as it must.
+    // a Flow has one spacing for both axes and the design wants 11 across and 4
+    // down, so each item carries the row gap under it and this wrapper takes the
+    // last one back off, plus the 3 the design puts above the whole legend.
+    Item {
+      width: root.contentWidth
+      height: legend.implicitHeight + Theme.legendTop - Theme.legendRowGap
+      visible: Calendar.list.length > 0
+
+      Flow {
+        id: legend
+
+        y: Theme.legendTop
+        width: root.contentWidth
+        leftPadding: Theme.eventIcon + Theme.eventGap
+        spacing: Theme.legendItemGap
+
+        Repeater {
+          model: Calendar.list
+
+          Row {
+            id: legendItem
+
+            required property var modelData
+
+            bottomPadding: Theme.legendRowGap
+            spacing: Theme.legendDotGap
+
+            Rectangle {
+              anchors.verticalCenter: name.verticalCenter
+
+              width: Theme.legendDot
+              height: Theme.legendDot
+              radius: width / 2
+              color: legendItem.modelData.color
+            }
+
+            Text {
+              id: name
+
+              text: legendItem.modelData.name
+              color: Theme.legendText
+              font.family: Theme.uiFont
+              font.pixelSize: Theme.legendSize
+              font.weight: Font.Medium
+              font.variableAxes: Theme.uiAxesMedium
+              font.letterSpacing: Theme.legendSpacing
+            }
+          }
+        }
       }
     }
   }

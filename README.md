@@ -10,7 +10,7 @@ provides an application launcher, a notification daemon, and an authentication a
 
 - **A frame** around the desktop, with the rounded opening your windows live in.
 - **Four notches** on the top edge: workspaces (left), clock and calendar (centre), then the switches
-  and the system tab (right).
+  and the system tab (right). The calendar shows your Google Calendar events.
 - **A launcher** with six categories: everything, applications, clipboard history, wallpapers,
   windows and power, each openable straight from a keybind.
 - **An on-screen display** for the volume and brightness keys, dropping out of the system tab.
@@ -77,6 +77,7 @@ scanning if something looks dead.
 | Every capture's notification | `libnotify` (`notify-send`) |
 | Knowing where captures go | `xdg-user-dirs` |
 | Night light | `hyprsunset` |
+| Calendar events | `python3`, and a Google OAuth client — see *Calendar* |
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
 | Text | `JetBrainsMono Nerd Font` and `Manrope` |
@@ -96,6 +97,7 @@ rather than broken.
 | `cliphist-text`, `cliphist-image` | Record the clipboard. `cliphist` is a store, not a daemon — without these there is no history at all. The text one skips anything a password manager marked. |
 | `hyprsunset` | Runs with `-i` (identity: present, changing nothing) so the night light has something to talk to. |
 | `xdg-user-dirs-update` | Writes `~/.config/user-dirs.dirs` from `/etc/xdg/user-dirs.defaults`, which is how anything — kuori, grimblast, your file manager — knows where Pictures and Videos are. Oneshot at login. |
+| `kuori-calendar.service`, `.timer` | Runs `scripts/kuori-calendar sync` every 15 minutes, which writes `~/.cache/kuori/calendar.json` from Google. The clock panel reads that file and nothing else; without the timer it shows whatever was last synced, or "Not synced yet". |
 
 ## Installing
 
@@ -231,6 +233,12 @@ lists them, and `-p .` works from inside the directory.
 The category calls **toggle**: pressing the same one twice opens and closes, while pressing a
 different one while the launcher is open switches category without closing it.
 
+### `calendar`
+
+| Call | Does |
+|---|---|
+| `toggle` | Open or close the clock tab's calendar |
+
 ### `notifications`
 
 | Call | Does |
@@ -303,6 +311,18 @@ click, and a click anywhere else closes them.
 **Clock** (centre) opens a calendar. The month arrows page; the date line is clickable to come back
 to today, but only when you have paged away from it. Clicking the time again closes the panel.
 
+A day with something on carries a dot per calendar, in each calendar's colour, and clicking it lists
+that day's events under the grid — a bar and the time in the calendar's colour, all-day events first
+with a dash for a time, and `+N more` past four. A legend under the list says which colour is which;
+an account's primary calendar is named after the account. It opens on today. Paging the month drops the pick, and an
+empty day cannot be picked. Under the header, "No events" means exactly that; "Not synced yet" means
+no sync has ever run, and "Not synced this far" means the month on screen is outside what the last
+sync fetched (the month before this one to three months ahead).
+
+Opening the tab re-reads the file, and if it is older than five minutes starts the sync unit as
+well, so what you see is at most a few minutes behind Google while you are looking and costs
+nothing while you are not.
+
 **Toggles** (right, just left of the system tab) is three switches and nothing else — a moon for the
 night light, a cup for the idle inhibitor and a crossed circle for Do Not Disturb. Each is accent
 while on and dim while off, and a click toggles it. The tab steps out of the way while the system
@@ -368,6 +388,37 @@ is down notifications are not merely undrawn — they are dropped.
   is never kept.
 - The bell on the system tab is accent while there is anything in the history. Clicking it opens the
   history; `CLEAR` inside that section is what empties it.
+
+## Calendar
+
+The events come from Google Calendar, from every calendar you have ticked in Google's own sidebar,
+across as many Google accounts as you sign in. Working-location entries and events you have declined
+are left out. A calendar shared into two of your accounts appears once.
+
+Nothing in the shell talks to Google. `scripts/kuori-calendar` does, on the `kuori-calendar.timer`
+(see *Companion services*), and writes `~/.cache/kuori/calendar.json`. Setting it up once:
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), create a project, enable the
+   **Google Calendar API**, and under *Credentials* create an **OAuth client ID** of type **Desktop
+   app**. Note the client ID and secret, or download the client JSON.
+2. For each Google account, run the consent once, signing in as that account when the browser asks:
+
+   ```sh
+   scripts/kuori-calendar auth personal            # prompts for the client id and secret
+   scripts/kuori-calendar auth work client.json    # or reads them from the downloaded file
+   ```
+
+   The account names are yours to choose; they only label the token. The refresh tokens land in
+   `~/.local/state/kuori/google-oauth.json`, mode 0600. Keep that file out of any repository.
+3. `scripts/kuori-calendar sync`, or `systemctl --user start kuori-calendar`, and open the clock tab.
+
+**A Google Workspace account** may be barred by its admin from apps that are unverified or still in
+"testing". If the consent page says so, create the OAuth client in a project owned by *that* account
+and mark it **Internal** under *OAuth consent screen* — internal apps need no verification — and use
+that client for that account. Each account keeps its own client, so mixing is fine.
+
+`journalctl --user -u kuori-calendar` is where a failed sync explains itself. One account failing
+does not stop the others; the file is only left untouched when every account fails.
 
 ## Wallpapers
 
@@ -440,6 +491,9 @@ every colour, size, duration and font in one place.
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |
 | What the latency reading pings | `Network.pingTarget` in `services/Network.qml` |
+| How far the calendar fetches, how often | `MONTHS_BACK` / `MONTHS_AHEAD` in `scripts/kuori-calendar`; `OnUnitActiveSec` in the timer |
+| How old the calendar may be when the tab opens before it re-syncs | `Theme.calSyncStale` |
+| How many events a day lists before `+N more` | `Theme.eventMax` |
 | How many clipboard entries the launcher shows | `cliphist`'s own `-max-items` |
 | Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
@@ -458,4 +512,5 @@ components/     reusable pieces with no domain knowledge
 modules/        the contents of a tab, a panel or a dialog
 services/       singletons: shared state, and everything that talks to the system
 theme/Theme.qml every colour, size, duration and font
+scripts/        what runs outside the shell: the calendar fetcher
 ```

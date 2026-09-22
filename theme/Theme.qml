@@ -291,14 +291,51 @@ Singleton {
   readonly property color calDayText: root.tint.alpha(0.72)
   readonly property color calNavText: root.tint.alpha(0.55)
 
+  // the event dots under a day number, one per calendar with something on that
+  // day, and the wash a selected day sits on.
+  property int calDotSize: 3
+  property int calDotGap: 2
+  property real calDotSpacing: 1.5
+  readonly property color calSelectedBg: root.accent.alpha(0.16)
+
   property int eventIcon: 18
   property int eventTitleSize: 12
   property int eventDetailSize: 11
   property int eventGap: 10
+  property int eventRowGap: 8
 
-  // what "No events" is drawn in, which is the only event line there is until
-  // something on this machine keeps a calendar.
+  // the time column of an event row: the design's 9.5px, which pixelSize takes
+  // as a real the same way sysRowLabelSize does.
+  property real eventTimeSize: 9.5
+  property int eventTimeWidth: 32
+  property int eventLineHeight: 15
+
+  // the bar at the start of a row, in its calendar's colour, and the gap between
+  // it, the time and the title.
+  property int eventBarWidth: 2
+  property int eventBarGap: 8
+
+  // the legend of calendars under the list: a dot and a name per calendar.
+  property int legendDot: 5
+  property int legendDotGap: 5
+  property int legendItemGap: 11
+  property int legendRowGap: 4
+  property int legendTop: 3
+  property real legendSize: 9.5
+  readonly property real legendSpacing: root.legendSize * 0.03
+  readonly property color legendText: root.tint.alpha(0.45)
+
+  // rows past this fold into "+N more": the panel is a glance, not a diary.
+  property int eventMax: 4
+
+  readonly property color eventText: root.tint.alpha(0.72)
+
+  // "No events" and its siblings, and the "+N more" line.
   readonly property color eventEmptyText: root.tint.alpha(0.5)
+
+  // how old the calendar file may be when the tab opens before the fetcher is
+  // asked to run again. ms.
+  property int calSyncStale: 300000
 
   // dark text for anything sitting on a lit accent surface: a workspace pill, the
   // calendar's today. the rest are a wash over the surface, the same sheen the
