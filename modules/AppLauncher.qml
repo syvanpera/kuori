@@ -28,8 +28,8 @@ Rectangle {
   // a choice anyone made.
   property bool mouseArmed: false
 
-  // adding a category is adding a line here and a source below. the design has
-  // seven; these are the ones with something to show.
+  // adding a category is adding a line here and a source below. these are all six
+  // the design has, in its order -- it dropped ACTIONS before that one was built.
   readonly property var categories: [
     { id: "all", label: "ALL" },
     { id: "apps", label: "APPS" },

@@ -1,7 +1,7 @@
 pragma Singleton
 import Quickshell
 
-// resolving a desktop entry's icon NAME to a file, once per name per session.
+// resolving a desktop entry's icon name to a file, once per name per session.
 //
 // `Quickshell.iconPath` caches what it finds and nothing of what it does not: a
 // hit costs ~8ms the first time and nothing after, but every miss walks the icon

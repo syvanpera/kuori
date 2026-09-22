@@ -7,11 +7,11 @@ import qs.theme
 Item {
   id: root
 
-  implicitHeight: Theme.sysFieldHeight
-
   // the design pads this row unevenly, so the two controls are centred on what is
   // left rather than on the row.
   readonly property real midline: (Theme.sysFieldTop + root.height - Theme.sysFieldBottom) / 2
+
+  implicitHeight: Theme.sysFieldHeight
 
   Rectangle {
     id: join

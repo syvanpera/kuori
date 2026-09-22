@@ -28,7 +28,7 @@ Item {
   property real bottomRightRadius: root.notch.flushRight ? 0 : Theme.notchRadius
 
   // the shadow is cast by the notch's body, so it tracks the body's box rather
-  // than the notch item, which is taller than the body once a stage 2 panel opens.
+  // than the notch item, which is taller than the body once a panel opens.
   x: root.notch.x
   y: root.notch.y
   width: root.notch.width

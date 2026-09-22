@@ -24,8 +24,8 @@ Shape {
 
   // the bar's outer corners, clamped twice: two of them can no more meet in the
   // middle than the horns can, and one taller than the strip's outer edge would
-  // fold that side back on itself. the default is the window's radius, for which
-  // Theme.focusStripEndRadius carries the reasoning.
+  // fold that side back on itself. Theme.focusStripEndRadius carries the reasoning
+  // for the value itself, and why it is not scaled to the thickness.
   readonly property real endRadius: Math.min(Theme.focusStripEndRadius, root.width / 2, root.thickness + root.corner)
 
   // width and height, not their implicit versions: Shape derives its own implicit

@@ -31,16 +31,15 @@ Singleton {
 
   readonly property int maxHistory: 50
 
-  // when the history was last looked at. the bell on the system strip is the only
-  // sign that something arrived, so it has to be able to go out again -- and with
-  // fifty entries kept, "is the history empty" would never turn it off.
+  // the id every popup and history entry is found by. a notification object can be
+  // withdrawn out from under a toast, so this is the only handle safe to keep.
+  property int nextKey: 1
+
   // one entry, thrown away. the design hovers a history row like something you can
   // click, and this is the only thing clicking one could sensibly mean.
   function forget(key: int): void {
     root.history = root.history.filter(entry => entry.key !== key)
   }
-
-  property int nextKey: 1
 
   function toggleDnd(): void {
     root.dnd = !root.dnd

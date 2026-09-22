@@ -29,6 +29,9 @@ Singleton {
 
   readonly property var devices: root.enabled ? Bluetooth.devices.values : []
 
+  // the device `pending` names, for whatever is drawing the attempt.
+  readonly property var pendingDevice: root.devices.find(d => d.address === root.pending) ?? null
+
   readonly property var connected: root.devices.filter(d => d.connected)
 
   // everything the adapter knows about that is not currently on: devices paired
@@ -110,8 +113,6 @@ Singleton {
     if (!device?.batteryAvailable) return ""
     return `${Math.round(device.battery * 100)}%`
   }
-
-  readonly property var pendingDevice: root.devices.find(d => d.address === root.pending) ?? null
 
   function giveUp(): void {
     if (root.pending === "") return

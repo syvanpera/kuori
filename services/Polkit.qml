@@ -7,9 +7,10 @@ import Quickshell.Services.Polkit
 // what the shell is being asked to authenticate, if anything.
 //
 // the dialog never imports Quickshell.Services.Polkit. it draws whatever
-// flow-shaped object this hands it, which is what lets the whole card be built
-// and checked against a mock while hyprpolkitagent is still doing the real work.
-// the real PolkitAgent goes in here and nowhere else.
+// flow-shaped object this hands it, which is what let the whole card be built and
+// checked against a mock before this shell took the agent role over -- and still
+// lets every state be walked without anyone's password. the real PolkitAgent goes
+// in here and nowhere else.
 Singleton {
   id: root
 

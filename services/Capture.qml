@@ -12,8 +12,8 @@ import qs.theme
 // the screenshot half is grimblast, which already knows how to select a region,
 // find the active window, copy and save at once, and where the file belongs -- it
 // reads ~/.config/user-dirs.dirs itself, so a capture lands wherever every other
-// tool on the machine would put it. its --notify goes through notify-send, which
-// comes back to this shell's own notification server.
+// tool on the machine would put it. its own --notify is not used, for the reason
+// given over shoot(); the notification is sent from here instead.
 //
 // the recording half is wf-recorder, which knows none of that and is told
 // everything: the geometry, the output, the file and the audio device.
@@ -39,9 +39,15 @@ Singleton {
   // the other two formats are arithmetic rather than a second invocation.
   property string format: "hex"
   property string picked: ""
-  property double pickedAt: 0
+  property real pickedAt: 0
 
   readonly property var formats: ["hex", "rgb", "hsl"]
+
+  // the picked colour written the way the panel is showing it, which is also what
+  // reaches the clipboard.
+  readonly property string pickedText: root.formatted(root.picked, root.format)
+
+  readonly property bool manyMonitors: Hyprland.monitors.values.length > 1
 
   readonly property var targets: [
     { id: "region", label: "Region", shot: "area" },
@@ -104,8 +110,6 @@ Singleton {
     return `hsl(${Math.round(c.hslHue * 360)}, ${Math.round(c.hslSaturation * 100)}%, ${Math.round(c.hslLightness * 100)}%)`
   }
 
-  readonly property string pickedText: root.formatted(root.picked, root.format)
-
   function stop(): void {
     // SIGINT, not kill: it is what makes wf-recorder finalise the file instead of
     // leaving an unplayable one.
@@ -124,8 +128,6 @@ Singleton {
       .map(m => `${m.x},${m.y} ${Math.round(m.width / m.scale)}x${Math.round(m.height / m.scale)}`)
       .join("\n")
   }
-
-  readonly property bool manyMonitors: Hyprland.monitors.values.length > 1
 
   function shoot(): void {
     // a free-form drag cannot go through grimblast, which always passes slurp -o
@@ -241,18 +243,18 @@ Singleton {
     return root.mic ? (Audio.source?.name ?? "") : ""
   }
 
+  // hyprpicker freezes the screen, magnifies what is under the pointer and prints
+  // the colour. what it is invoked with, and why, is over picker2 below.
+  function pick(): void {
+    picker2.running = true
+  }
+
   // through notify-send rather than into the history directly: this shell is the
   // notification server, so the message comes back through the same door every
   // other application's does, and gets a toast and a history entry for free.
   //
   // an icon path is passed as the notification's image, which is how a screenshot
   // gets to be its own thumbnail.
-  // hyprpicker freezes the screen, magnifies what is under the pointer and prints
-  // the colour. -q because its logs are chatty and go to the journal otherwise.
-  function pick(): void {
-    picker2.running = true
-  }
-
   function notify(summary: string, body: string, image: string): void {
     const argv = ["notify-send", "-a", "kuori"]
 
@@ -319,10 +321,10 @@ Singleton {
 
     // `slurp < /dev/null`, and the redirect is the whole point: slurp reads its
     // list of selectable boxes from stdin, and Process hands it a pipe that is
-    // never written to and never closed, so it blocks in read() forever. The
+    // never written to and never closed, so it blocks in read() forever. the
     // process runs, maps no surface, dims nothing, and the screen looks untouched
     // while a capture is supposedly in progress. `stdinEnabled: false` does not
-    // help -- the pipe is still there. Every other caller here reaches slurp
+    // help -- the pipe is still there. every other caller here reaches slurp
     // through a shell pipeline, which closes stdin for them, which is why this
     // only appeared when region stopped going through grimblast.
     command: ["sh", "-c", "exec slurp < /dev/null"]

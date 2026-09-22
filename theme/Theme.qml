@@ -15,7 +15,7 @@ Singleton {
   // merged them, so this is one token with two names rather than two values that
   // have to be kept in step by hand.
   readonly property color surface: "#0b0f16"
-  // The color below is here just so that I remember it
+  // the colour below is kept only as a reminder of where this one came from.
   // readonly property color surface: "#0f1726"
   readonly property color frame: root.surface
   readonly property color notch: root.surface
@@ -44,7 +44,7 @@ Singleton {
   // the window reads through it.
   //
   // this is alpha baked into the fill rather than an opacity on the item, because
-  // FrameWindow drives that property to fade the mark in and out and would
+  // FocusIndicator drives that property to fade the mark in and out and would
   // overwrite anything set here.
   property real focusOpacity: 1.0
 
@@ -147,9 +147,9 @@ Singleton {
 
   property string iconFont: "Material Symbols Rounded"
 
-  // Material Symbols ship as one variable font.
-  // Four axes shape every icon on the frame:
-  //   FILL  0 outlined, 1 solid. Values between work.
+  // material symbols ship as one variable font, and four axes shape every icon on
+  // the frame:
+  //   FILL  0 outlined, 1 solid. values between work.
   //   wght  stroke thickness, 100 thin to 700 bold
   //   GRAD  emphasis tweak, -25 to 200
   //   opsz  the size you draw at, so the font tunes proportions
@@ -165,13 +165,13 @@ Singleton {
   // a second frozen map beats mutating iconAxes, which would change every glyph at
   // once and emit no notify.
   //
-  // **FILL is 0.995 and must not be 1.** Near the axis maximum qt rasterises these
+  // FILL is 0.995 and must not be 1. near the axis maximum qt rasterises these
   // outlines wrong: the glyph comes back speckled and eaten away, as though the
   // inner contour were being XORed out of the outer one rather than merged into it
-  // -- a filled moon becomes a moon with holes in it. The window is narrow and it
+  // -- a filled moon becomes a moon with holes in it. the window is narrow and it
   // is glyph by glyph: 0.997 already breaks the bell, 0.998 breaks everything, and
   // 0.99 is clean but leaves the moon's last sliver visibly unfilled at 14px. 0.995
-  // is filled and clean for every glyph here. Verified by rendering a ramp through
+  // is filled and clean for every glyph here. verified by rendering a ramp through
   // qt and the same names through chromium from the very same font file, where FILL
   // 1 is correct -- so this is qt, not the font, and not the design asking for
   // something the font cannot do.
@@ -330,8 +330,8 @@ Singleton {
 
   property int launcherWidth: 520
 
-  // no launcherTop: the panel is centred in the desktop opening instead, which
-  // has to be worked out from the window's own height. windows/LauncherWindow.qml
+  // no launcherTop: the panel is placed in the desktop opening instead, by the
+  // share of the free space launcherBias names below. windows/LauncherWindow.qml
   // does the arithmetic and says why.
 
   // how far above its resting place the panel starts, and falls back to on the

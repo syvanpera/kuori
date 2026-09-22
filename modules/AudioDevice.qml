@@ -13,6 +13,8 @@ Rectangle {
   // whether this is the one sound is going to or coming from.
   property bool current: false
 
+  signal picked()
+
   width: parent.width
   height: Theme.sysNetIcon + Theme.sysNetPaddingV * 2
 
@@ -60,6 +62,4 @@ Rectangle {
 
     onClicked: root.picked()
   }
-
-  signal picked()
 }

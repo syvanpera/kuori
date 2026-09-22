@@ -9,8 +9,8 @@ import qs.services
 import qs.theme
 
 // the only window that paints. it covers the whole screen so the border, the
-// notches and (stage 2) the panels that drop out of them share one coordinate
-// space, which is the only way the rounded corners come out seamless.
+// notches and the panels that drop out of them share one coordinate space, which
+// is the only way the rounded corners come out seamless.
 PanelWindow {
   id: root
 
@@ -57,6 +57,14 @@ PanelWindow {
     onCleared: Notches.close()
   }
 
+  // an idle inhibitor is a property of a surface, not of a session, so it hangs
+  // off the one window this shell always has mapped. the flag it follows lives in
+  // the service, where the switch that sets it can reach it.
+  IdleInhibitor {
+    window: root
+    enabled: Display.awake
+  }
+
   // escape shuts whatever is latched open. the grab above is what makes this
   // reachable: it routes the keyboard here as well as the pointer, so the frame
   // needs no keyboard focus of its own -- and asking for one breaks both the
@@ -67,14 +75,6 @@ PanelWindow {
   //
   // no size: this exists to hold focus, and an item filling the window would sit
   // over the tabs for no reason.
-  // an idle inhibitor is a property of a surface, not of a session, so it hangs
-  // off the one window this shell always has mapped. the flag it follows lives in
-  // the service, where the switch that sets it can reach it.
-  IdleInhibitor {
-    window: root
-    enabled: Display.awake
-  }
-
   Item {
     focus: true
 
