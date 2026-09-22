@@ -29,8 +29,13 @@ clock in the middle, and the switches beside the system tab on the right.
 ![Three windows, with the focused one marked along its top edge](docs/focus.webp)
 
 Which window has focus, said by kuori rather than by a window border: a strip along one edge, with
-horns at its ends that follow Hyprland's own corner radius. `Theme.focusStyle` swaps it for a corner
-wedge, and `Theme.focusStripEdge` moves it to the bottom.
+horns at its ends that follow Hyprland's own corner radius. `Theme.focusStripEdge` moves it to the
+bottom.
+
+![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
+
+The same three windows with `Theme.focusStyle: "mark"` — a wedge filling the focused window's
+upper-right corner instead. It is the quieter of the two.
 
 ![The launcher, on the applications category](docs/launcher.webp)
 
