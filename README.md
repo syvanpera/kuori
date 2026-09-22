@@ -317,7 +317,7 @@ with a dash for a time, and `+N more` past four. A legend under the list says wh
 an account's primary calendar is named after the account. It opens on today. Paging the month drops the pick, and an
 empty day cannot be picked. Under the header, "No events" means exactly that; "Not synced yet" means
 no sync has ever run, and "Not synced this far" means the month on screen is outside what the last
-sync fetched (the month before this one to three months ahead).
+sync fetched (the month before this one to six months ahead).
 
 Opening the tab re-reads the file, and if it is older than five minutes starts the sync unit as
 well, so what you see is at most a few minutes behind Google while you are looking and costs

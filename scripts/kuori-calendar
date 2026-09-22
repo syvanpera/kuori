@@ -24,9 +24,9 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 API = "https://www.googleapis.com/calendar/v3"
 
 # how far the panel can page and still find dots. the month before this one, in
-# case the tab is opened on the 1st looking back, and three ahead.
+# case the tab is opened on the 1st looking back, and six ahead.
 MONTHS_BACK = 1
-MONTHS_AHEAD = 3
+MONTHS_AHEAD = 6
 
 
 def log(msg):
