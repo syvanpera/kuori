@@ -82,6 +82,8 @@ PanelWindow {
       model: Notifications.popups
 
       ToastCard {
+        id: card
+
         required property int index
         required property var modelData
 
@@ -94,7 +96,10 @@ PanelWindow {
         NumberAnimation {
           id: entry
 
-          target: parent
+          // the card itself, named rather than reached for: a NumberAnimation has
+          // no parent property of its own, so `parent` here resolves against the
+          // delegate's scope and animates the Column holding every card.
+          target: card
           properties: "x"
           from: Theme.toastSlide
           to: 0
