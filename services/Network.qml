@@ -56,6 +56,16 @@ Singleton {
   readonly property string ssid: root.network?.name ?? ""
   readonly property string band: root.bandFor(root.ssid)
 
+  // whether there is a link to draw bars for at all, and how strong it is. the tab's
+  // strip reads both, rather than finding the device and the association itself:
+  // two walks of the same list can disagree with each other mid-scan.
+  readonly property bool linked: root.enabled && root.network !== null
+  readonly property real strength: root.network?.signalStrength ?? 0
+
+  // what a radio with no link looks like, kept beside those two so the whole glyph
+  // family lives in one place -- glyph() below is the rest of it.
+  readonly property string offGlyph: "wifi_off"
+
   // one entry per ssid in range, the connected one first and the rest by signal.
   // sorted here rather than in the view because this only re-runs when the scan
   // finds or loses an access point: signalStrength moves constantly, and sorting
@@ -150,6 +160,21 @@ Singleton {
       case WifiSecurityType.Open: return "Open"
       default: return ""
     }
+  }
+
+  // the one ladder for how many bars a network has, asked by both the tab's strip
+  // and the rows in the panel -- which used different tables and different glyph
+  // families until this existed, so the same access point could be three bars in
+  // one place and two in the other.
+  //
+  // the steps are this shell's own: the design draws every wifi glyph as a plain
+  // `wifi` and only its mock data carries a weaker one. the family is the design's
+  // though, which is why there is no three-bar step -- material symbols has none.
+  function glyph(strength: real): string {
+    if (strength >= 0.66) return "wifi"
+    if (strength >= 0.33) return "wifi_2_bar"
+
+    return "wifi_1_bar"
   }
 
   function bandFor(ssid: string): string {

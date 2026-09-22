@@ -26,14 +26,7 @@ Column {
   // a known network is drawn plain -- you have been here before and the only
   // question is whether you are on it now. a stranger is drawn by its signal,
   // because that is what decides whether joining is worth trying.
-  readonly property string glyph: {
-    if (!root.stranger) return "wifi"
-
-    const strength = root.network.signalStrength
-    if (strength >= 0.66) return "wifi"
-    if (strength >= 0.33) return "wifi_2_bar"
-    return "wifi_1_bar"
-  }
+  readonly property string glyph: root.stranger ? Network.glyph(root.network.signalStrength) : "wifi"
 
   readonly property string detail: {
     if (root.active) return "Connected"

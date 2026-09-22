@@ -8,11 +8,7 @@ import qs.theme
 PanelRow {
   id: root
 
-  icon: {
-    if (!Audio.sinkReady || Audio.muted) return "volume_off"
-    if (Audio.volume >= 0.5) return "volume_up"
-    return "volume_down"
-  }
+  icon: Audio.levelGlyph(Audio.volume, !Audio.sinkReady || Audio.muted)
 
   label: "Audio"
   lit: Audio.sinkReady && !Audio.muted

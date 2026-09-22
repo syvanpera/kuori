@@ -95,10 +95,9 @@ Item {
           return "brightness_high"
         }
 
-        if (root.value === 0) return "volume_off"
-        if (root.value < 34) return "volume_mute"
-        if (root.value < 67) return "volume_down"
-        return "volume_up"
+        // the real level and the mute flag rather than the zeroed reading above:
+        // the shared ladder is the one that decides what muted looks like.
+        return Audio.levelGlyph(Audio.volume, root.muted)
       }
 
       iconColor: root.fill

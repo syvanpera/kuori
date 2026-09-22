@@ -61,6 +61,19 @@ Singleton {
     Pipewire.preferredDefaultAudioSource = node
   }
 
+  // the one ladder for how loud a thing looks: the tab's strip, the panel's audio
+  // row and the osd all ask this, so none of them can disagree with the other two.
+  // the steps are the design's own, from the only place it writes them down -- its
+  // osd -- including that a muted sink reads as off rather than as quiet, because
+  // it zeroes the value before choosing a glyph.
+  function levelGlyph(level: real, muted: bool): string {
+    if (muted || level <= 0) return "volume_off"
+    if (level < 0.34) return "volume_mute"
+    if (level < 0.67) return "volume_down"
+
+    return "volume_up"
+  }
+
   // pipewire carries the freedesktop icon name the device declared, the same
   // vocabulary bluez uses, plus a form factor when it has one.
   function glyph(node: var): string {

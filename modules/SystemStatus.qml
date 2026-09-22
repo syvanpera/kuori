@@ -1,8 +1,7 @@
 import QtQuick
-import Quickshell.Networking
+import qs.components
 import qs.services
 import qs.theme
-import qs.components
 
 // the right tab: wifi, bluetooth, volume, notifications and battery. every one of
 // them reports something and opens the section of the panel that is about it. the
@@ -10,17 +9,12 @@ import qs.components
 Row {
   id: root
 
-  readonly property var wifiDevice: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
-  readonly property var wifiNetwork: root.wifiDevice?.networks.values.find(n => n.connected) ?? null
-  readonly property bool wifiUp: Networking.wifiEnabled && root.wifiNetwork !== null
-  readonly property real signalStrength: root.wifiNetwork?.signalStrength ?? 0
-
   readonly property bool btEnabled: Bluez.enabled
   readonly property bool btConnected: Bluez.connected.length > 0
 
-  readonly property bool sinkReady: Audio.sinkReady
-  readonly property bool muted: Audio.muted
-  readonly property int volume: Math.round(Audio.volume * 100)
+  // a sink that is muted and one that is not there yet say the same thing here:
+  // no sound is coming out, and the glyph and its colour both follow from that.
+  readonly property bool silent: !Audio.sinkReady || Audio.muted
 
   readonly property bool charging: Power.charging
   readonly property int level: Power.percent
@@ -40,21 +34,12 @@ Row {
     onClicked: Notches.toggleRow("wifi")
 
     Glyph {
-      // a threshold table beats an if-ladder here: each floor stays on the same
-      // line as the glyph it picks, and choosing one is a single find().
-      readonly property var ladder: [
-        { floor: 0.75, icon: "android_wifi_4_bar" },
-        { floor: 0.55, icon: "android_wifi_3_bar" },
-        { floor: 0.35, icon: "network_wifi_2_bar" },
-        { floor: 0.00, icon: "network_wifi_1_bar" }
-      ]
-
-      icon: root.wifiUp ? ladder.find(step => root.signalStrength >= step.floor).icon : "android_wifi_3_bar_off"
+      icon: Network.linked ? Network.glyph(Network.strength) : Network.offGlyph
       // the design paints every glyph the same shade. dimming rather than
       // reddening is the smallest deviation that still makes a dead radio legible.
       iconColor: {
         if (root.showing("wifi")) return Theme.accent
-        return root.wifiUp ? Theme.glyph : Theme.textDim
+        return Network.linked ? Theme.glyph : Theme.textDim
       }
     }
   }
@@ -84,16 +69,11 @@ Row {
     onClicked: Notches.toggleRow("audio")
 
     Glyph {
-      icon: {
-        if (!root.sinkReady) return "volume_off"
-        if (root.muted) return "volume_mute"
-        if (root.volume >= 50) return "volume_up"
-        return "volume_down"
-      }
+      icon: Audio.levelGlyph(Audio.volume, root.silent)
 
       iconColor: {
         if (root.showing("audio")) return Theme.accent
-        return !root.sinkReady || root.muted ? Theme.textDim : Theme.glyph
+        return root.silent ? Theme.textDim : Theme.glyph
       }
     }
   }
