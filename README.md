@@ -80,6 +80,7 @@ scanning if something looks dead.
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
 | Text | `JetBrainsMono Nerd Font` and `Manrope` |
+| Every icon and glyph | `Material Symbols Rounded` |
 
 Everything the shell shells out to must be on the **systemd unit's** PATH, which is not your login
 shell's. See *Running it*.
@@ -250,6 +251,21 @@ different one while the launcher is open switches category without closing it.
 | `color` | Pick a colour off the screen and copy it |
 
 `Print` is the obvious bind for `region`.
+
+### `polkit`
+
+Walks the authentication dialog through each state it can be in, against a mock request, so it can be
+looked at without a real one. `close` puts it away.
+
+| Call | Does |
+|---|---|
+| `prompt` | Raise the dialog, waiting for a password |
+| `busy` | Show it verifying |
+| `error` | Show a refused attempt |
+| `ok` | Show it accepted |
+| `close` | Dismiss it |
+
+A real request from polkit raises the same dialog on its own; nothing here is needed for that.
 
 ### `display`
 
@@ -435,7 +451,8 @@ explain.
 ## Layout
 
 ```
-shell.qml       the root: one shell per screen, plus the launcher, toasts and IPC
+shell.qml       the root: one shell per screen, plus the launcher, the polkit
+                dialog, toasts and IPC
 windows/        surfaces — which windows exist and what each is for
 components/     reusable pieces with no domain knowledge
 modules/        the contents of a tab, a panel or a dialog
