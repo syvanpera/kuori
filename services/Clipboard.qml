@@ -62,9 +62,13 @@ Singleton {
     // a file the Image element can load, named for the entry so the same one is
     // never decoded twice.
     if (entry.kind === "image") {
-      const path = `${Quickshell.cachePath(`clip-${entry.id}`)}`
+      const path = Quickshell.cachePath(`clip-${entry.id}`)
 
-      toFile.command = ["sh", "-c", `cliphist decode ${entry.id} > '${path}'`]
+      // the id and the path go in as arguments rather than as text spliced into
+      // the script. cliphist's own listing cannot produce an id with a quote in
+      // it today, and that is exactly the kind of thing that stops being true
+      // without anyone here hearing about it.
+      toFile.command = ["sh", "-c", `cliphist decode "$1" > "$2"`, "sh", entry.id, path]
       toFile.target = path
       toFile.running = true
       return
@@ -93,7 +97,7 @@ Singleton {
   // image anyway. a shell because the whole point is the pipe -- decode writes
   // bytes, including binary ones, that must not pass through a string.
   function copy(id: string): void {
-    restore.command = ["sh", "-c", `cliphist decode ${id} | wl-copy`]
+    restore.command = ["sh", "-c", `cliphist decode "$1" | wl-copy`, "sh", id]
     restore.running = true
   }
 
@@ -173,7 +177,10 @@ Singleton {
   Process {
     id: sweepCache
 
-    command: ["sh", "-c", `rm -f '${Quickshell.cachePath("clip-")}'*`]
+    // the prefix is an argument and the glob is not, which is the whole trick: a
+    // quoted "$1" cannot be re-read as script, and the star outside the quotes is
+    // still the shell's to expand.
+    command: ["sh", "-c", `rm -f "$1"*`, "sh", Quickshell.cachePath("clip-")]
     running: true
   }
 

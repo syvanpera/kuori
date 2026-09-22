@@ -166,14 +166,15 @@ Singleton {
     shot.file = file
     shot.environment = ({})
 
+    // the directory, the geometry and the filename are arguments, not text spliced
+    // into the script: the first two come from a config file and from slurp, and a
+    // stray quote in either would otherwise be read as shell rather than as a path.
     shot.command = ["sh", "-c",
-      `mkdir -p '${root.shots}' && grim -g '${geometry}' - | tee '${file}' | wl-copy --type image/png`]
+      `mkdir -p "$1" && grim -g "$2" - | tee "$3" | wl-copy --type image/png`,
+      "sh", root.shots, geometry, file]
     shot.running = true
   }
 
-  // the monitor's name for a whole-screen recording, and its geometry for the
-  // window one: wf-recorder takes hyprland's layout coordinates, which is the same
-  // space `at` and `size` are already in.
   // Qt's formatter, not toISOString: that one is UTC, and a recording named three
   // hours before it happened is a file you cannot find again.
   function stamp(): string {
@@ -199,13 +200,12 @@ Singleton {
         .join("\n")
       : root.monitorRects()
 
-    // a shell because the boxes reach slurp on its stdin, and free-form region
-    // selection is the one case with no boxes to give it.
     // both go through a shell, and for the same reason: slurp blocks forever on a
-    // stdin that is an open pipe (see regionPicker below).
+    // stdin that is an open pipe (see regionPicker below). the boxes reach it as
+    // an argument printf expands, so a geometry can never be read as script.
     picker.command = root.target === "region"
       ? ["sh", "-c", "exec slurp < /dev/null"]
-      : ["sh", "-c", `printf '%s' '${rects}' | slurp -r -f '%x,%y %wx%h'`]
+      : ["sh", "-c", `printf '%s' "$1" | slurp -r -f '%x,%y %wx%h'`, "sh", rects]
 
     picker.running = true
   }
@@ -426,6 +426,10 @@ Singleton {
     // out one pixel and straight back: the move away is the event hyprpicker needs,
     // and the move back is what makes the colour the one that was under the
     // pointer rather than its neighbour.
+    //
+    // concatenation rather than the backtick literal used everywhere else here:
+    // this script is mostly `${...}` parameter expansions, every one of which a
+    // template literal would try to evaluate as javascript.
     command: ["sh", "-c",
       "pos=$(hyprctl cursorpos); x=${pos%%,*}; y=${pos##*, };"
       + " hyprctl dispatch \"hl.dsp.cursor.move({ x = $((x + 1)), y = $y })\";"
