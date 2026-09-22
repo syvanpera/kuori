@@ -26,6 +26,12 @@ provides an application launcher, a notification daemon, and an authentication a
 At rest: the frame around the desktop and the four tabs on the top edge — workspaces on the left, the
 clock in the middle, and the switches beside the system tab on the right.
 
+![Three windows, with the focused one marked along its top edge](docs/focus.webp)
+
+Which window has focus, said by kuori rather than by a window border: a strip along one edge, with
+horns at its ends that follow Hyprland's own corner radius. `Theme.focusStyle` swaps it for a corner
+wedge, and `Theme.focusStripEdge` moves it to the bottom.
+
 ![The launcher, on the applications category](docs/launcher.webp)
 
 The launcher, on applications, with a toast in the corner behind it.
