@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
+import qs.services
 import qs.theme
 
 // one row in the launcher's result grid: a square tile, a name, and a second line
@@ -28,18 +29,11 @@ Rectangle {
   // the tile and nothing is drawn on top.
   readonly property string swatch: root.row?.swatch ?? ""
 
-  // a desktop entry's icon is a NAME, not a path, and iconPath with check:true
-  // answers "" instead of a broken image when the theme has nothing under it,
-  // which is the only way to know the fallback is needed. some entries ship an
-  // absolute path instead, and the icon loader has no idea what to do with one.
-  readonly property string iconSource: {
-    const icon = root.row?.icon ?? ""
-
-    if (icon.length === 0) return ""
-    if (icon.startsWith("/")) return `file://${icon}`
-
-    return Quickshell.iconPath(icon, true)
-  }
+  // a desktop entry's icon is a NAME, not a path. Icons.path resolves one and
+  // remembers the answer, including the "" that means no theme has it -- that
+  // fallback is the expensive question to ask, and a grid that recycles its
+  // delegates asks it again on every scroll.
+  readonly property string iconSource: Icons.path(root.row?.icon ?? "")
 
   readonly property string detail: {
     const detail = root.row?.detail ?? ""

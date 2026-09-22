@@ -19,6 +19,13 @@ ShellRoot {
   // panel first opens -- or every notification before that is lost.
   readonly property int notificationCount: Notifications.history.length
 
+  // the same trick again, for a cost you can watch: `DesktopEntries` is not
+  // scanned until something reads it, and until this line the something was the
+  // first launcher open. So the first open of a session waited for the scan, and
+  // the rows sat there with empty tiles until it landed. Reading it here moves the
+  // scan to startup, where nobody is looking.
+  readonly property int applicationCount: DesktopEntries.applications.values.length
+
   // one launcher for the whole session, on whichever monitor has focus, so it
   // hangs off the root instead of off Variants.
   LauncherLoader {}
