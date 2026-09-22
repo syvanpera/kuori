@@ -17,7 +17,7 @@ Rectangle {
   color: root.selected ? Theme.launcherChipActive : Theme.launcherSunken
 
   Behavior on color {
-    ColorAnimation { duration: 150 }
+    ColorAnimation { duration: Theme.notchFadeDuration }
   }
 
   Text {
@@ -33,7 +33,7 @@ Rectangle {
     font.letterSpacing: Theme.launcherChipLetterSpacing
 
     Behavior on color {
-      ColorAnimation { duration: 150 }
+      ColorAnimation { duration: Theme.notchFadeDuration }
     }
   }
 

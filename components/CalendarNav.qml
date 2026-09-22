@@ -15,7 +15,7 @@ Rectangle {
   color: mouse.containsMouse ? Theme.launcherRaise : "transparent"
 
   Behavior on color {
-    ColorAnimation { duration: 150 }
+    ColorAnimation { duration: Theme.notchFadeDuration }
   }
 
   Glyph {

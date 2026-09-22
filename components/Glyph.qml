@@ -34,7 +34,7 @@ Item {
     font.variableAxes: root.filled ? Theme.iconAxesFilled : Theme.iconAxes
 
     Behavior on color {
-      ColorAnimation { duration: 150 }
+      ColorAnimation { duration: Theme.notchFadeDuration }
     }
   }
 }

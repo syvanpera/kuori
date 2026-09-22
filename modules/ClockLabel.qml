@@ -46,11 +46,11 @@ Column {
 
     text: Qt.formatDateTime(Time.date, "ddd d MMM")
     verticalAlignment: Text.AlignVCenter
-    color: Theme.tint.alpha(0.55)
+    color: Theme.textDim
     font.family: Theme.uiFont
     font.pixelSize: Theme.clockPeekSize
     font.weight: Font.Medium
-    font.variableAxes: ({ "wght": 500 })
+    font.variableAxes: Theme.uiAxesMedium
     font.letterSpacing: Theme.clockPeekSpacing
 
     Behavior on height {

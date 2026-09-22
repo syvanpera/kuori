@@ -232,7 +232,15 @@ Singleton {
   property int clockPeekGap: 10
   readonly property real clockPeekSpacing: root.clockPeekSize * 0.05
   property int notchExpandDuration: 240
+
+  // named for the notch, but it is the shell's one hover fade: every colour that
+  // answers a pointer uses it, here and in the panels. the design's own most
+  // common transition is .16s and this is it.
   property int notchFadeDuration: 160
+
+  // a control that moves rather than fades -- the switch knob travelling across
+  // its track, a row's chevron turning over. the design gives both .2s.
+  property int controlMoveDuration: 200
 
   // the workspace panel: one pill per workspace, the same states the dots show.
   property int wsPillSize: 30
@@ -275,6 +283,10 @@ Singleton {
   property int calHeadSize: 9
 
   readonly property color calHeadText: root.tint.alpha(0.35)
+
+  // the WK heading over the week column, a shade quieter than the day headings
+  // beside it and than the numbers under it.
+  readonly property color calWeekHeadText: root.tint.alpha(0.28)
   readonly property color calWeekText: root.tint.alpha(0.3)
   readonly property color calDayText: root.tint.alpha(0.72)
   readonly property color calNavText: root.tint.alpha(0.55)
@@ -283,6 +295,10 @@ Singleton {
   property int eventTitleSize: 12
   property int eventDetailSize: 11
   property int eventGap: 10
+
+  // what "No events" is drawn in, which is the only event line there is until
+  // something on this machine keeps a calendar.
+  readonly property color eventEmptyText: root.tint.alpha(0.5)
 
   // dark text for anything sitting on a lit accent surface: a workspace pill, the
   // calendar's today. the rest are a wash over the surface, the same sheen the
@@ -908,6 +924,9 @@ Singleton {
 
   // and the same again for the one place the design asks for 700.
   property var uiAxesBold: ({ "wght": 700 })
+
+  // and for the clock's own lines, which the design sets at 500.
+  property var uiAxesMedium: ({ "wght": 500 })
 
   // css line-height:1.2 in a box. Text.implicitHeight follows the font's own line
   // spacing, which is taller, and would make every chip a few pixels fat.

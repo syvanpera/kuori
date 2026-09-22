@@ -145,7 +145,7 @@ Column {
         font.family: Theme.uiFont
         font.pixelSize: Theme.clockDateSize
         font.weight: Font.Medium
-        font.variableAxes: ({ "wght": 500 })
+        font.variableAxes: Theme.uiAxesMedium
 
         Behavior on color {
           ColorAnimation { duration: Theme.notchFadeDuration }
@@ -233,7 +233,7 @@ Column {
         text: "WK"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        color: Theme.tint.alpha(0.28)
+        color: Theme.calWeekHeadText
         font.family: Theme.monoFont
         font.pixelSize: Theme.calHeadSize
         font.weight: Font.Medium
@@ -355,7 +355,7 @@ Column {
 
       Text {
         text: "No events"
-        color: Theme.tint.alpha(0.5)
+        color: Theme.eventEmptyText
         font.family: Theme.uiFont
         font.pixelSize: Theme.eventDetailSize
       }

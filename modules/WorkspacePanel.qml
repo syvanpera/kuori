@@ -47,7 +47,7 @@ Row {
       }
 
       Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation { duration: Theme.notchFadeDuration }
       }
 
       Text {
@@ -65,7 +65,7 @@ Row {
         font.weight: Font.Medium
 
         Behavior on color {
-          ColorAnimation { duration: 150 }
+          ColorAnimation { duration: Theme.notchFadeDuration }
         }
       }
 

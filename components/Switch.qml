@@ -37,7 +37,7 @@ Rectangle {
 
     Behavior on x {
       NumberAnimation {
-        duration: 200
+        duration: Theme.controlMoveDuration
         easing.type: Easing.Bezier
         easing.bezierCurve: Theme.easeStandard
       }

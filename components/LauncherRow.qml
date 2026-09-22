@@ -45,7 +45,7 @@ Rectangle {
   color: root.selected ? Theme.launcherRaise : "transparent"
 
   Behavior on color {
-    ColorAnimation { duration: 150 }
+    ColorAnimation { duration: Theme.notchFadeDuration }
   }
 
   // clipping rather than a plain Rectangle so a thumbnail takes the tile's rounded
@@ -71,7 +71,7 @@ Rectangle {
     }
 
     Behavior on color {
-      ColorAnimation { duration: 150 }
+      ColorAnimation { duration: Theme.notchFadeDuration }
     }
 
     Image {
@@ -148,7 +148,7 @@ Rectangle {
       font.variableAxes: Theme.uiAxesSemiBold
 
       Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation { duration: Theme.notchFadeDuration }
       }
     }
 

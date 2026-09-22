@@ -91,7 +91,7 @@ Rectangle {
       rotation: root.expanded ? 180 : 0
 
       Behavior on rotation {
-        NumberAnimation { duration: 200 }
+        NumberAnimation { duration: Theme.controlMoveDuration }
       }
     }
 

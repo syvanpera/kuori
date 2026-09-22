@@ -51,7 +51,7 @@ Row {
         opacity: dot.glowing ? 1 : 0
 
         Behavior on opacity {
-          NumberAnimation { duration: 150 }
+          NumberAnimation { duration: Theme.notchFadeDuration }
         }
       }
 
@@ -61,7 +61,7 @@ Row {
         color: dot.shade
 
         Behavior on color {
-          ColorAnimation { duration: 150 }
+          ColorAnimation { duration: Theme.notchFadeDuration }
         }
       }
 
