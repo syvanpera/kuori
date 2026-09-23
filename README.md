@@ -172,6 +172,22 @@ qs log -p ~/.config/kuori           # or quickshell's own log
 Starting a second instance by hand while the unit is running gives you two shells, each claiming its
 own exclusive zone, and a border that reserves twice the space it should.
 
+### Watching the log
+
+Everything kuori prints goes to the unit's journal: QML errors, warnings from the services, and what
+its helpers say — the Bluetooth pairing agent's lines are prefixed `bluetooth agent:`.
+
+```sh
+journalctl --user -u kuori -f               # follow it live
+journalctl --user -u kuori -b               # everything since boot
+journalctl --user -u kuori --since "-10min" # the last ten minutes
+journalctl --user -u kuori -b | grep -E 'ReferenceError|TypeError'
+```
+
+When a panel is inexplicably empty, that last one is the first thing to run: a hot reload that
+caught the config mid-change (a `git checkout`, say) leaves bindings failing with `ReferenceError`
+and nothing on screen to say so. `systemctl --user restart kuori` clears it.
+
 ## Keyboard
 
 Nothing is bound by kuori itself — every entry point is an IPC call, so the binds live in your
