@@ -48,6 +48,7 @@ Scope {
 
     ToastWindow {
       screen: root.openScreen
+      screenName: root.openScreen?.name ?? ""
     }
   }
 }

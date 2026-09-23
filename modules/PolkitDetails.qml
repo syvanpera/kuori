@@ -66,7 +66,7 @@ Item {
   }
 
   Rectangle {
-    id: rows
+    id: table
 
     x: Theme.pkGutter
     y: disclosure.y + disclosure.height + Theme.pkDetailsBoxTop
@@ -86,14 +86,8 @@ Item {
       width: table.width - Theme.pkDetailsBoxPaddingH * 2
       spacing: Theme.pkDetailsRowGap
 
-      // the design also lists COMMAND, PROGRAM, VENDOR and PID. polkit hands
-      // those to the agent in a details map that AuthFlow does not expose, so
-      // the block shows what is actually known rather than inventing the rest.
       Repeater {
-        model: [
-          { key: "ACTION", value: root.flow?.actionId ?? "" },
-          { key: "COOKIE", value: root.flow?.cookie ?? "" }
-        ]
+        model: root.rows
 
         Item {
           required property var modelData

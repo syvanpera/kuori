@@ -16,6 +16,11 @@ import qs.theme
 PanelWindow {
   id: root
 
+  // the screen the loader put this on, by name. handed in rather than read off
+  // `screen`: that one changes as the surface maps, and a visibility bound to it
+  // re-entered its own binding every time a toast appeared.
+  property string screenName: ""
+
   anchors {
     top: true
     right: true
@@ -55,7 +60,7 @@ PanelWindow {
   // ordering -- two surfaces on one layer stack by creation order, and this one is
   // always created later -- so the toasts stand aside for the one panel they
   // overlap instead. nothing is lost by it: that panel is where the history is.
-  visible: Notches.openOn(root.screen?.name ?? "") !== "system"
+  visible: Notches.openOn(root.screenName) !== "system"
 
   // only the cards are clickable; every other pixel of this surface belongs to
   // whatever is behind it. without this the whole top-right corner of the desktop
