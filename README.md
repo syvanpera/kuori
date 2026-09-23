@@ -196,7 +196,7 @@ and nothing on screen to say so. `systemctl --user restart kuori` clears it.
 ## Keyboard
 
 Nothing is bound by kuori itself — every entry point is an IPC call, so the binds live in your
-Hyprland config. These are the ones this machine uses, from `~/.config/hypr/hyprland.lua`:
+Hyprland config. These are the ones this machine uses, from `~/.config/hypr/bindings.lua`:
 
 | Keys | Does |
 |---|---|
@@ -204,6 +204,7 @@ Hyprland config. These are the ones this machine uses, from `~/.config/hypr/hypr
 | `ALT` + `SHIFT` + `C` | Open it on the clipboard history |
 | `SUPER` + `SHIFT` + `S` | Screenshot a region |
 | Brightness up / down | One step of the backlight, through kuori itself |
+| `SUPER` + `CTRL` + `L` | Lock the screen |
 
 Binding anything else is one more line, and the `-p` goes in every one of them:
 
