@@ -114,6 +114,21 @@ PanelWindow {
     Keys.onEnterPressed: keySink.answer()
     Keys.onUpPressed: if (keySink.steering) system.panelItem?.step(-1)
     Keys.onDownPressed: if (keySink.steering) system.panelItem?.step(1)
+
+    // the launcher's two home-row pairs as well: ctrl+n and ctrl+p the readline
+    // way, ctrl+j and ctrl+k the vim way. the panel is one column, so both pairs
+    // mean the same thing here. these keys have no handler of their own, which is
+    // why they reach this one at all.
+    Keys.onPressed: event => {
+      if (!keySink.steering || !(event.modifiers & Qt.ControlModifier)) return
+
+      const delta = { [Qt.Key_N]: 1, [Qt.Key_J]: 1, [Qt.Key_P]: -1, [Qt.Key_K]: -1 }[event.key]
+
+      if (delta === undefined) return
+
+      system.panelItem?.step(delta)
+      event.accepted = true
+    }
     Keys.onTabPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
     Keys.onLeftPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
     Keys.onRightPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected

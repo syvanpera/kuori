@@ -242,7 +242,7 @@ keyboard: the launcher behind it stops answering keys entirely.
 
 | Keys | Does |
 |---|---|
-| `↑` / `↓` | Move through the panel in reading order — each row's header, and the switches, entries and power profiles of the row that is folded out — wrapping at both ends |
+| `↑` / `↓`, `Ctrl+n` / `Ctrl+p`, `Ctrl+j` / `Ctrl+k` | Move through the panel in reading order — each row's header, and the switches, entries and power profiles of the row that is folded out — wrapping at both ends |
 | `Enter` | What a click would do: fold a row out or away, throw a switch, pick an audio device, join or connect |
 | `Escape` | Close the panel |
 
