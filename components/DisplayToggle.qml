@@ -11,9 +11,21 @@ Item {
   property string detail: ""
   property bool checked: false
 
+  // the system panel's keyboard lands here, and return throws the switch.
+  readonly property bool keyTarget: true
+  property bool keyed: false
+
   signal toggled()
 
+  function press(): void {
+    root.toggled()
+  }
+
   implicitHeight: Math.max(glyph.height, text.implicitHeight, control.height)
+
+  KeyWash {
+    shown: root.keyed
+  }
 
   Glyph {
     id: glyph

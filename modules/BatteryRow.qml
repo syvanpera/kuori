@@ -85,12 +85,21 @@ PanelRow {
 
           readonly property bool current: Power.profile === choice.modelData.profile
 
+          // the panel's keyboard steps through the three in reading order, and
+          // return picks the one it is on.
+          readonly property bool keyTarget: true
+          property bool keyed: false
+
+          function press(): void {
+            Power.setProfile(choice.modelData.profile)
+          }
+
           width: profiles.cell
           height: label.implicitHeight + Theme.sysProfilePaddingV * 2
 
           radius: Theme.sysProfileRadius
           color: {
-            if (hover.containsMouse) return Theme.sysNetHover
+            if (hover.containsMouse || choice.keyed) return Theme.sysNetHover
             return choice.current ? Theme.sysProfileOn : Theme.sysProfileOff
           }
 

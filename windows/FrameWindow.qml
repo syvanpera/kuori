@@ -100,6 +100,9 @@ PanelWindow {
     readonly property bool pairing: Bluez.asking && Notches.openOn(root.screenName) === "system" && Notches.row === "bluetooth"
     readonly property bool choosing: keySink.pairing && Bluez.request.kind !== "type"
 
+    // the system panel is open here, so the arrows and return are its cursor's.
+    readonly property bool steering: Notches.openOn(root.screenName) === "system" && !keySink.pairing
+
     focus: true
 
     Keys.onEscapePressed: keySink.pairing ? Bluez.reject() : Notches.close()
@@ -107,11 +110,18 @@ PanelWindow {
     // a keyboard being paired types its code on itself, and enter there is the
     // device's. an enter reaching the shell is some other keyboard's, and means
     // nothing to that card.
-    Keys.onReturnPressed: if (keySink.choosing) keySink.choose()
-    Keys.onEnterPressed: if (keySink.choosing) keySink.choose()
+    Keys.onReturnPressed: keySink.answer()
+    Keys.onEnterPressed: keySink.answer()
+    Keys.onUpPressed: if (keySink.steering) system.panelItem?.step(-1)
+    Keys.onDownPressed: if (keySink.steering) system.panelItem?.step(1)
     Keys.onTabPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
     Keys.onLeftPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
     Keys.onRightPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
+
+    function answer(): void {
+      if (keySink.choosing) keySink.choose()
+      else if (keySink.steering) system.panelItem?.press()
+    }
 
     function choose(): void {
       if (Bluez.selected === 0) Bluez.accept()

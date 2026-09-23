@@ -570,6 +570,10 @@ Singleton {
   // a network you are pointing at, and one whose row is open for a passphrase.
   readonly property color sysNetHover: root.sheen.alpha(0.12)
 
+  // how far the keyboard's wash reaches past a switch row on every side. the well
+  // pads its contents by sysWellPaddingH, so this stays inside the well.
+  property int keyWashInset: 5
+
   property int sysLockIcon: 12
 
   // the volume and gain sliders. the knob is centred on the end of the fill, so

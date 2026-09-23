@@ -33,12 +33,21 @@ Rectangle {
   // what sits at the far end, if anything. the name gives way to it.
   default property alias trailing: trailing.data
 
+  // the system panel's keyboard can land on an entry a click would mean something
+  // on, and return there is that click. it wears the hover look while it is there.
+  readonly property bool keyTarget: root.clickable
+  property bool keyed: false
+
   signal clicked()
+
+  function press(): void {
+    if (root.clickable) root.clicked()
+  }
 
   implicitHeight: (root.compact ? Theme.sysNetIcon : Math.max(Theme.sysNetIcon, text.implicitHeight)) + Theme.sysNetPaddingV * 2
 
   radius: Theme.sysNetRadius
-  color: hover.containsMouse && root.clickable ? Theme.sysNetHover : root.fill
+  color: (hover.containsMouse || root.keyed) && root.clickable ? Theme.sysNetHover : root.fill
 
   Behavior on color {
     ColorAnimation { duration: Theme.notchFadeDuration }

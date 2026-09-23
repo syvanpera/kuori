@@ -66,6 +66,9 @@ Item {
   // the silhouette the drop shadow has to match.
   readonly property alias bodyHeight: body.height
 
+  // the panel itself, for the frame's keyboard to talk to.
+  readonly property alias panelItem: panelLoader.item
+
   readonly property bool flushLeft: root.placement === "left"
   readonly property bool flushRight: root.placement === "right"
 

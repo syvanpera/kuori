@@ -26,7 +26,17 @@ Rectangle {
   // the fold animates to a height nothing had to write down.
   default property alias content: body.data
 
+  // the header is somewhere the panel's keyboard lands, and return folds the row
+  // out or away. the body's own targets are only reachable while it is out.
+  readonly property bool keyTarget: true
+  readonly property bool keyChildren: root.expanded
+  property bool keyed: false
+
   signal toggled()
+
+  function press(): void {
+    root.toggled()
+  }
 
   implicitHeight: header.height + fold.height
 
@@ -48,6 +58,14 @@ Rectangle {
     anchors.right: parent.right
     anchors.top: parent.top
     height: Theme.sysRowIcon + Theme.sysRowPaddingV * 2
+
+    // the design gives a header no hover, so the keyboard's wash is the only thing
+    // that ever lights one. flush with the row, whose corners it shares.
+    KeyWash {
+      shown: root.keyed
+      inset: 0
+      radius: Theme.sysRowRadius
+    }
 
     Glyph {
       id: rowIcon

@@ -238,6 +238,19 @@ keyboard: the launcher behind it stops answering keys entirely.
 | `Enter` | Answer with whichever is lit. It starts on the action, as the card says |
 | `Escape` | Cancel, leaving the launcher where it was |
 
+### Inside the system panel
+
+| Keys | Does |
+|---|---|
+| `↑` / `↓` | Move through the panel in reading order — each row's header, and the switches, entries and power profiles of the row that is folded out — wrapping at both ends |
+| `Enter` | What a click would do: fold a row out or away, throw a switch, pick an audio device, join or connect |
+| `Escape` | Close the panel |
+
+The first arrow starts inside the row that is already out, so opening the panel on Audio and pressing
+`↓` goes straight to its switch and devices. What the keyboard is on wears the same lit look as the
+pointer. Sliders and the capture block are mouse only. While a Bluetooth pairing card is up, the keys
+are the card's, as described under Bluetooth below.
+
 ## IPC
 
 Every call is `qs ipc -p ~/.config/kuori call <target> <function>`. `qs ipc -p ~/.config/kuori show`
