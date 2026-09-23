@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Services.UPower
 import qs.components
 import qs.services
 import qs.theme
@@ -79,25 +78,13 @@ PanelRow {
     Row {
       id: profiles
 
+      readonly property real cell: (profiles.width - Theme.sysProfileGap * (Power.profiles.length - 1)) / Power.profiles.length
+
       width: parent.width
       spacing: Theme.sysProfileGap
 
-      // performance is not offered on every machine, and a button that cannot be
-      // chosen is worse than one that is not there.
-      readonly property var choices: {
-        const all = [
-          { label: "Power-saver", profile: PowerProfile.PowerSaver },
-          { label: "Balanced", profile: PowerProfile.Balanced },
-          { label: "Performance", profile: PowerProfile.Performance }
-        ]
-
-        return Power.hasPerformance ? all : all.filter(c => c.profile !== PowerProfile.Performance)
-      }
-
-      readonly property real cell: (width - Theme.sysProfileGap * (choices.length - 1)) / choices.length
-
       Repeater {
-        model: profiles.choices
+        model: Power.profiles
 
         Rectangle {
           id: choice

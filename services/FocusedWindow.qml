@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import qs.theme
 
 // where the focused window is, for whatever wants to mark it. a singleton because
 // the geometry is one global fact and FrameWindow is instantiated once per
@@ -111,7 +112,7 @@ Singleton {
   Timer {
     id: debounce
 
-    interval: 30
+    interval: Theme.focusDebounce
     onTriggered: Hyprland.refreshToplevels()
   }
 
@@ -122,7 +123,7 @@ Singleton {
   Timer {
     id: settle
 
-    interval: 200
+    interval: Theme.focusSettle
     onTriggered: Hyprland.refreshToplevels()
   }
 }

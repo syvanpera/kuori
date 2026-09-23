@@ -182,29 +182,6 @@ Singleton {
     leave.restart()
   }
 
-  // what the fade is for. the lock comes off when it has finished rather than
-  // when it starts, so the desktop is never seen through a half-drawn prompt.
-  Timer {
-    id: leave
-
-    interval: Theme.lockExit + 30
-
-    onTriggered: {
-      const wasLocked = root.locked
-
-      root.locked = false
-      root.previewing = false
-      root.reset()
-      root.wake()
-
-      if (wasLocked) {
-        root.save()
-        helper.tell("hint off")
-        console.info("lock: unlocked")
-      }
-    }
-  }
-
   // one conversation for the password and another for a finger, side by side. a
   // single pam stack asks them in turn, and pam_fprintd waits up to half a minute
   // for a finger before the password is ever read.
@@ -326,10 +303,47 @@ Singleton {
     capsSettle.restart()
   }
 
+  function heard(event: var): void {
+    if (event.type === "ready") {
+      // a lock restored at startup was taken before the helper was listening.
+      if (root.locked) helper.tell("hint on")
+    } else if (event.type === "lock") {
+      root.lock(event.reason)
+    } else if (event.type === "wake") {
+      // hyprland brings the outputs back on resume, and the reader may have gone
+      // away under a conversation that is still waiting on it.
+      root.blanked = false
+      if (root.shown && !root.leaving) root.listen()
+    }
+  }
+
+  // what the fade is for. the lock comes off when it has finished rather than
+  // when it starts, so the desktop is never seen through a half-drawn prompt.
+  Timer {
+    id: leave
+
+    interval: Theme.lockExit + 30
+
+    onTriggered: {
+      const wasLocked = root.locked
+
+      root.locked = false
+      root.previewing = false
+      root.reset()
+      root.wake()
+
+      if (wasLocked) {
+        root.save()
+        helper.tell("hint off")
+        console.info("lock: unlocked")
+      }
+    }
+  }
+
   Timer {
     id: capsSettle
 
-    interval: 80
+    interval: Theme.lockCapsDelay
 
     onTriggered: capsProbe.running = true
   }
@@ -459,7 +473,7 @@ Singleton {
   Timer {
     id: fingerRetry
 
-    interval: 1000
+    interval: Theme.lockFingerRetry
 
     onTriggered: if (root.shown && !root.leaving) finger.start()
   }
@@ -481,60 +495,13 @@ Singleton {
     onTriggered: root.fingerMissed = false
   }
 
-  function heard(line: string): void {
-    let event
-
-    try {
-      event = JSON.parse(line)
-    } catch (err) {
-      console.warn(`lock helper: unreadable line: ${line}`)
-      return
-    }
-
-    if (event.type === "ready") {
-      // a lock restored at startup was taken before the helper was listening.
-      if (root.locked) helper.tell("hint on")
-    } else if (event.type === "lock") {
-      root.lock(event.reason)
-    } else if (event.type === "wake") {
-      // hyprland brings the outputs back on resume, and the reader may have gone
-      // away under a conversation that is still waiting on it.
-      root.blanked = false
-      if (root.shown && !root.leaving) root.listen()
-    }
-  }
-
-  Process {
+  Helper {
     id: helper
 
-    command: ["python3", Quickshell.shellPath("scripts/kuori-lockd")]
-    running: true
-    stdinEnabled: true
+    script: "kuori-lockd"
+    name: "lock helper"
 
-    function tell(word: string): void {
-      if (helper.running) helper.write(`${word}\n`)
-    }
-
-    stdout: SplitParser {
-      onRead: line => root.heard(line)
-    }
-
-    stderr: SplitParser {
-      onRead: line => console.warn(`lock helper: ${line}`)
-    }
-
-    onExited: (code, status) => {
-      console.warn(`lock helper: exited ${code}; restarting`)
-      respawn.restart()
-    }
-  }
-
-  Timer {
-    id: respawn
-
-    interval: 5000
-
-    onTriggered: helper.running = true
+    onEvent: message => root.heard(message)
   }
 
   Process {

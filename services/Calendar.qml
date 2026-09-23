@@ -84,6 +84,13 @@ Singleton {
     return root.list.filter(cal => events.some(ev => ev.calendar === cal.id))
   }
 
+  function forget(): void {
+    root.ready = false
+    root.byDay = ({})
+    root.calendars = ({})
+    root.list = []
+  }
+
   // a bare "2026-09-23" must not go through the Date constructor: that reads it
   // as utc midnight, which east of greenwich is still the day before.
   function localDate(iso: string): date {
@@ -108,7 +115,17 @@ Singleton {
     printErrors: false
 
     onLoaded: {
-      const data = JSON.parse(state.text() || "{}")
+      let data
+
+      // a file cut short or edited by hand is a file that cannot be read, and
+      // says so the way a missing one does.
+      try {
+        data = JSON.parse(state.text() || "{}")
+      } catch (e) {
+        console.warn(`calendar: ignoring unreadable ${root.file}: ${e}`)
+        root.forget()
+        return
+      }
 
       const cals = {}
       for (const cal of data.calendars ?? []) cals[cal.id] = cal
@@ -118,8 +135,21 @@ Singleton {
       const add = (k, ev) => (days[k] = days[k] ?? []).push(ev)
 
       for (const ev of data.events ?? []) {
+        // a timed event is on every day it touches: one that runs past midnight
+        // is still on when the next day starts. only its first day has a start
+        // time to show, so the others carry a copy marked as continued. an end at
+        // midnight exactly is the end of the day before.
         if (!ev.allDay) {
-          add(root.key(new Date(ev.start)), ev)
+          const start = new Date(ev.start)
+          const end = new Date(ev.end ?? ev.start)
+
+          add(root.key(start), ev)
+
+          const next = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1)
+          for (let d = next; d < end; d.setDate(d.getDate() + 1)) {
+            add(root.key(d), Object.assign({}, ev, { continued: true }))
+          }
+
           continue
         }
 
@@ -142,10 +172,7 @@ Singleton {
     // a file that has gone is a file that has gone: keeping the last read would
     // have the panel say "no events" about days it no longer knows anything about.
     onLoadFailed: {
-      root.ready = false
-      root.byDay = ({})
-      root.calendars = ({})
-      root.list = []
+      root.forget()
 
       console.info(`calendar: nothing at ${root.file} yet`)
     }

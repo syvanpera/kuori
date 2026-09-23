@@ -495,7 +495,9 @@ Column {
           width: Theme.eventTimeWidth
           height: Theme.eventLineHeight
 
-          text: eventRow.modelData.allDay ? "—" : Qt.formatTime(new Date(eventRow.modelData.start), "hh:mm")
+          // a dash for no start time today: an all-day event, or one that began
+          // on an earlier day and is still running.
+          text: eventRow.modelData.allDay || eventRow.modelData.continued ? "—" : Qt.formatTime(new Date(eventRow.modelData.start), "hh:mm")
           verticalAlignment: Text.AlignVCenter
           color: Calendar.colorOf(eventRow.modelData.calendar)
           font.family: Theme.monoFont

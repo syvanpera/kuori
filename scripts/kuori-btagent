@@ -23,15 +23,19 @@ as each key is typed on the device, which is what `entered` counts.
 It lives as long as the shell's pipe does: stdin closing is the shell going away.
 """
 
-import json
-import os
 import select
 import sys
 
 from jeepney import DBusAddress, HeaderFields, MatchRule, MessageType
-from jeepney import new_error, new_method_call, new_method_return
+from jeepney import new_error, new_method_return
 from jeepney.bus_messages import message_bus
 from jeepney.io.blocking import open_dbus_connection
+
+# run from a terminal as well as from the shell, and neither should leave a
+# __pycache__ in the config directory.
+sys.dont_write_bytecode = True
+
+from kuori_bus import Lines, call, drain, emit, logger  # noqa: E402
 
 PATH = "/fi/kuori/btagent"
 AGENT = "org.bluez.Agent1"
@@ -45,13 +49,7 @@ REJECTED = "org.bluez.Error.Rejected"
 CANCELED = "org.bluez.Error.Canceled"
 
 
-def emit(**event):
-    sys.stdout.write(json.dumps(event) + "\n")
-    sys.stdout.flush()
-
-
-def log(text):
-    print(f"kuori-btagent: {text}", file=sys.stderr, flush=True)
+log = logger("kuori-btagent")
 
 
 def register(conn):
@@ -59,15 +57,14 @@ def register(conn):
     # it has to be the default rather than merely registered, because bluez hands a
     # pairing to the agent owned by whoever called Pair -- that is quickshell's own
     # connection, not this one -- and falls back to the default when there is none.
-    for method, signature, body in [
-        ("RegisterAgent", "os", (PATH, CAPABILITY)),
-        ("RequestDefaultAgent", "o", (PATH,)),
-    ]:
-        reply = conn.send_and_get_reply(new_method_call(MANAGER, method, signature, body), timeout=5)
-        if reply.header.message_type == MessageType.error:
-            raise RuntimeError(f"{method}: {reply.header.fields.get(HeaderFields.error_name)} {reply.body}")
+    call(conn, MANAGER, "RegisterAgent", "os", (PATH, CAPABILITY))
+    call(conn, MANAGER, "RequestDefaultAgent", "o", (PATH,))
 
     emit(type="ready")
+
+
+def bluez_running(conn):
+    return conn.send_and_get_reply(message_bus.NameHasOwner("org.bluez"), timeout=5).body[0]
 
 
 class Agent:
@@ -160,33 +157,31 @@ def main():
     rule.add_arg_condition(0, "org.bluez")
     conn.send_and_get_reply(message_bus.AddMatch(rule), timeout=5)
 
-    register(conn)
+    # a bluetoothd that is not up yet is waited for rather than crashed on: the
+    # owner watch registers the moment it appears, and exiting would only have the
+    # shell start this again every few seconds for as long as it stays down.
+    if bluez_running(conn):
+        register(conn)
+    else:
+        log("bluetoothd is not running; waiting for it")
+
     agent = Agent(conn)
-    pending = b""
+    shell = Lines()
 
     while True:
-        readable, _, _ = select.select([conn.sock, sys.stdin.fileno()], [], [])
+        readable, _, _ = select.select([conn.sock, shell.fd], [], [])
 
-        if sys.stdin.fileno() in readable:
-            chunk = os.read(sys.stdin.fileno(), 4096)
-            if not chunk:
+        if shell.fd in readable:
+            lines = shell.read()
+            if lines is None:
                 agent.drop(CANCELED)
                 return
 
-            pending += chunk
-            *lines, pending = pending.split(b"\n")
             for line in lines:
-                agent.answer(line.decode(errors="replace").strip())
+                agent.answer(line)
 
         if conn.sock in readable:
-            # one read can carry several messages, and select only knows about the
-            # socket, not jeepney's buffer -- so drain until it has nothing left.
-            while True:
-                try:
-                    msg = conn.receive(timeout=0)
-                except TimeoutError:
-                    break
-
+            for msg in drain(conn):
                 kind = msg.header.message_type
 
                 if kind == MessageType.method_call and msg.header.fields.get(HeaderFields.path) == PATH:

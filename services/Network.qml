@@ -376,7 +376,7 @@ Singleton {
   }
 
   Timer {
-    interval: 10000
+    interval: Theme.sysNetPoll
     repeat: true
     triggeredOnStart: true
     running: root.detailed

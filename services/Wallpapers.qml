@@ -1,8 +1,8 @@
 pragma Singleton
 import QtQuick
-import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
+import Qt.labs.folderlistmodel
 import qs.services
 
 // the wallpaper library, and which of it is on screen.

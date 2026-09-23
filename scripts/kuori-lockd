@@ -28,16 +28,20 @@ send it, and a lock screen that anything can open is not one.
 It lives as long as the shell's pipe does: stdin closing is the shell going away.
 """
 
-import json
 import os
 import select
 import sys
 import time
 
-from jeepney import DBusAddress, HeaderFields, MatchRule, MessageType
-from jeepney import Properties, new_method_call
+from jeepney import DBusAddress, HeaderFields, MatchRule, MessageType, Properties
 from jeepney.bus_messages import message_bus
 from jeepney.io.blocking import open_dbus_connection
+
+# run from a terminal as well as from the shell, and neither should leave a
+# __pycache__ in the config directory.
+sys.dont_write_bytecode = True
+
+from kuori_bus import Lines, call, drain, emit, logger  # noqa: E402
 
 LOGIN1 = "org.freedesktop.login1"
 MANAGER = DBusAddress("/org/freedesktop/login1", bus_name=LOGIN1, interface=f"{LOGIN1}.Manager")
@@ -47,20 +51,7 @@ MANAGER = DBusAddress("/org/freedesktop/login1", bus_name=LOGIN1, interface=f"{L
 SLEEP_GRACE = 4.0
 
 
-def emit(**event):
-    sys.stdout.write(json.dumps(event) + "\n")
-    sys.stdout.flush()
-
-
-def log(text):
-    print(f"kuori-lockd: {text}", file=sys.stderr, flush=True)
-
-
-def call(conn, address, method, signature=None, body=()):
-    reply = conn.send_and_get_reply(new_method_call(address, method, signature, body), timeout=5)
-    if reply.header.message_type == MessageType.error:
-        raise RuntimeError(f"{method}: {reply.header.fields.get(HeaderFields.error_name)} {reply.body}")
-    return reply.body
+log = logger("kuori-lockd")
 
 
 def session_path(conn):
@@ -112,56 +103,56 @@ class Sleep:
 
 def main():
     conn = open_dbus_connection(bus="SYSTEM", enable_fds=True)
-    session = session_path(conn)
-    session_address = DBusAddress(session, bus_name=LOGIN1, interface=f"{LOGIN1}.Session")
+
+    # without a session this can still hold the sleep and watch the lid, which are
+    # the two that matter; only `loginctl lock-session` and the LockedHint need
+    # one. exiting instead would have the shell restart this every few seconds,
+    # failing the same way each time, with no sleep lock in between.
+    try:
+        session = session_path(conn)
+    except (RuntimeError, IndexError, TypeError) as err:
+        log(f"no session to watch, so no lock-session and no LockedHint: {err}")
+        session = None
+
+    session_address = DBusAddress(session, bus_name=LOGIN1, interface=f"{LOGIN1}.Session") if session else None
 
     watch(conn, sender=LOGIN1, interface=f"{LOGIN1}.Manager", member="PrepareForSleep", path="/org/freedesktop/login1")
     watch(conn, sender=LOGIN1, interface="org.freedesktop.DBus.Properties", member="PropertiesChanged",
           path="/org/freedesktop/login1")
-    watch(conn, sender=LOGIN1, interface=f"{LOGIN1}.Session", member="Lock", path=session)
+    if session:
+        watch(conn, sender=LOGIN1, interface=f"{LOGIN1}.Session", member="Lock", path=session)
 
     sleep = Sleep(conn)
     sleep.hold()
     emit(type="ready")
 
-    pending = b""
+    shell = Lines()
 
     while True:
-        readable, _, _ = select.select([conn.sock, sys.stdin.fileno()], [], [], sleep.timeout())
+        readable, _, _ = select.select([conn.sock, shell.fd], [], [], sleep.timeout())
 
         if not readable and sleep.deadline is not None:
             log("the lock did not come up in time; letting the sleep go ahead")
             sleep.release()
             continue
 
-        if sys.stdin.fileno() in readable:
-            chunk = os.read(sys.stdin.fileno(), 4096)
-            if not chunk:
+        if shell.fd in readable:
+            lines = shell.read()
+            if lines is None:
                 return
 
-            pending += chunk
-            *lines, pending = pending.split(b"\n")
-            for line in lines:
-                word = line.decode(errors="replace").strip()
-
+            for word in lines:
                 if word == "locked":
                     if sleep.deadline is not None:
                         sleep.release()
-                elif word in ("hint on", "hint off"):
+                elif word in ("hint on", "hint off") and session_address:
                     try:
                         call(conn, session_address, "SetLockedHint", "b", (word == "hint on",))
                     except RuntimeError as err:
                         log(str(err))
 
         if conn.sock in readable:
-            # one read can carry several messages, and select only knows about the
-            # socket, not jeepney's buffer -- so drain until it has nothing left.
-            while True:
-                try:
-                    msg = conn.receive(timeout=0)
-                except TimeoutError:
-                    break
-
+            for msg in drain(conn):
                 if msg.header.message_type != MessageType.signal:
                     continue
 

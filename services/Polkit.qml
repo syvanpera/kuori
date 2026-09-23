@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Polkit
+import qs.theme
 
 // what the shell is being asked to authenticate, if anything.
 //
@@ -126,7 +127,7 @@ Singleton {
 
     property string value: ""
 
-    interval: 600
+    interval: Theme.pkMockVerdict
 
     onTriggered: {
       // the design's mock password. anything else is a refusal, in pam's own
@@ -149,7 +150,7 @@ Singleton {
   Timer {
     id: settle
 
-    interval: 1100
+    interval: Theme.pkMockSettle
 
     onTriggered: root.mocking = false
   }

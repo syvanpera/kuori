@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.theme
 
 // the screen's backlight. quickshell has no module for it, so this is sysfs both
 // ways: acpilight's udev rule gives the brightness file to the video group and
@@ -96,11 +97,32 @@ Singleton {
   // reloading after our own write costs a read and changes nothing, because set()
   // has already put the value it wrote in root.raw.
   Process {
+    id: watcher
+
     running: root.device !== ""
     command: ["udevadm", "monitor", "--udev", "--subsystem-match=backlight"]
 
     stdout: SplitParser {
       onRead: brightness.reload()
+    }
+
+    // it has no reason to exit, and if it does the osd stops hearing the keys with
+    // nothing in the log to say why. started again after the helpers' own pause,
+    // with one read to catch whatever changed while it was down.
+    onExited: code => {
+      console.warn(`backlight: udevadm monitor exited ${code}; restarting`)
+      rewatch.restart()
+    }
+  }
+
+  Timer {
+    id: rewatch
+
+    interval: Theme.helperRespawn
+
+    onTriggered: {
+      brightness.reload()
+      watcher.running = root.device !== ""
     }
   }
 

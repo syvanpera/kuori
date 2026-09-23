@@ -108,6 +108,15 @@ Singleton {
   // rarer than the case this is here to catch.
   readonly property bool hasPerformance: PowerProfiles.hasPerformanceProfile
 
+  // the three the design offers, in its order. there is no case for filtering
+  // this: the section they sit in is hidden whenever hasPerformance is false, so
+  // a machine that would lose Performance loses all three.
+  readonly property var profiles: [
+    { label: "Power-saver", profile: PowerProfile.PowerSaver },
+    { label: "Balanced", profile: PowerProfile.Balanced },
+    { label: "Performance", profile: PowerProfile.Performance }
+  ]
+
   function setProfile(which: int): void {
     PowerProfiles.profile = which
   }

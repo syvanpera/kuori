@@ -100,6 +100,11 @@ Singleton {
 
   property int focusFade: 150
 
+  // hyprland fires several geometry events at once when a window opens or closes:
+  // one refresh for the burst, and one more once the reflow has finished.
+  property int focusDebounce: 30
+  property int focusSettle: 200
+
   // "mark" for the wedge in the window's top-right corner, "strip" for a bar the
   // width of the window hung above it. both read the same focusColor and fade.
   property string focusStyle: "strip"
@@ -505,6 +510,9 @@ Singleton {
   property int sysNetTextSpacing: 3
   property int sysNetSpacing: 2
 
+  // how often the network row pings and re-reads its counters while it is open.
+  property int sysNetPoll: 10000
+
   // the pill switch. 2 + 11 + 11 + 2 is the design's 26, which is why the knob's
   // travel is exactly its own width.
   property int switchWidth: 26
@@ -620,6 +628,12 @@ Singleton {
   property int btFailLinger: 2600
   property int btCancelLinger: 1500
 
+  // pairing and paired can arrive from bluez in either order, so a pairing that
+  // stopped is judged this long later. and one that never moves at all is given
+  // up on after the longer wait.
+  property int btPairSettle: 500
+  property int btPairTimeout: 20000
+
   readonly property color btCardText: root.tint.alpha(0.72)
   readonly property color btCode: root.tintBright
   readonly property color btDigitDim: root.tint.alpha(0.3)
@@ -720,6 +734,11 @@ Singleton {
   property int pkFade: 160
   property int pkRise: 200
 
+  // the mock flow's pam: how long it thinks, and how long an accepted card stays
+  // up before it goes, which is the design's own hold.
+  property int pkMockVerdict: 600
+  property int pkMockSettle: 1100
+
   // the chip behind the admin glyph, and the colour of a passphrase accepted.
   // neither is anywhere else in the shell yet.
   readonly property color elevated: "#f0a35e"
@@ -754,6 +773,10 @@ Singleton {
   // long the lock may then sit idle before the screen goes off -- in seconds,
   // which is what IdleMonitor counts in. the design's stay awake row says "idle
   // after 10 min", and this is that ten minutes.
+  // how long a python helper -- the lock's, the pairing agent -- stays down after
+  // it exits before it is started again.
+  property int helperRespawn: 5000
+
   property int lockIdle: 600
   property int lockBlank: 60
 
@@ -808,6 +831,12 @@ Singleton {
   property int lockShake: 360
   property int lockFingerHold: 2400
   property int lockFingerOk: 700
+
+  // a fingerprint conversation that was listening and gave up starts again after
+  // this; caps lock is asked about this long after each key, once the keyboard
+  // has had time to report it.
+  property int lockFingerRetry: 1000
+  property int lockCapsDelay: 80
 
   readonly property color lockWash: "#06090e"
   readonly property real lockWashAlpha: 0.38

@@ -194,9 +194,9 @@ Singleton {
 
     if (request.kind === "pin") {
       if (root.pin === "") return
-      agent.write(`answer ${root.pin}\n`)
+      agent.tell(`answer ${root.pin}`)
     } else {
-      agent.write("yes\n")
+      agent.tell("yes")
     }
 
     // a pairing the other side started is ours to finish too: once it lands it is
@@ -212,7 +212,7 @@ Singleton {
     if (!root.asking) return
 
     if (request.kind === "type") root.requestDevice?.cancelPair()
-    else agent.write("no\n")
+    else agent.tell("no")
 
     // said no on purpose, so the row goes quiet rather than reporting a failure.
     root.pending = ""
@@ -265,15 +265,7 @@ Singleton {
     if (Notches.open === "system") Notches.row = "bluetooth"
   }
 
-  function heard(line: string): void {
-    let event
-    try {
-      event = JSON.parse(line)
-    } catch (e) {
-      console.warn(`bluetooth agent: unreadable line: ${line}`)
-      return
-    }
-
+  function heard(event: var): void {
     switch (event.type) {
       case "ready":
         console.info("bluetooth: this shell is the pairing agent")
@@ -300,7 +292,7 @@ Singleton {
       // never trusted here -- let a paired one in and nobody else.
       case "service": {
         const device = root.devices.find(d => d.dbusPath === event.device)
-        agent.write(device?.paired ? "yes\n" : "no\n")
+        agent.tell(device?.paired ? "yes" : "no")
         return
       }
       case "cancel":
@@ -320,34 +312,14 @@ Singleton {
   //
   // it runs for as long as the shell does, panel open or not, because a device
   // can ask to pair at any time. restarted when it dies, but not in a tight loop.
-  Process {
+  Helper {
     id: agent
 
-    command: ["python3", Quickshell.shellPath("scripts/kuori-btagent")]
-    running: true
-    stdinEnabled: true
+    script: "kuori-btagent"
+    name: "bluetooth agent"
 
-    stdout: SplitParser {
-      onRead: line => root.heard(line)
-    }
-
-    stderr: SplitParser {
-      onRead: line => console.warn(`bluetooth agent: ${line}`)
-    }
-
-    onExited: (code, status) => {
-      console.warn(`bluetooth agent: exited ${code}; restarting`)
-      root.fold()
-      respawn.restart()
-    }
-  }
-
-  Timer {
-    id: respawn
-
-    interval: 5000
-
-    onTriggered: agent.running = true
+    onEvent: message => root.heard(message)
+    onExited: root.fold()
   }
 
   Connections {
@@ -400,7 +372,7 @@ Singleton {
   Timer {
     id: pairSettle
 
-    interval: 500
+    interval: Theme.btPairSettle
 
     onTriggered: {
       const device = root.pendingDevice
@@ -411,7 +383,7 @@ Singleton {
   // and in case it never moves at all. not while bluez is waiting on the user,
   // who may take their time finding the code on a phone.
   Timer {
-    interval: 20000
+    interval: Theme.btPairTimeout
     running: root.pending !== "" && root.request === null
 
     onTriggered: root.giveUp()
@@ -453,16 +425,16 @@ Singleton {
       if (kind === "compare") event.code = "482913"
       if (kind === "type") Object.assign(event, { code: "731045", entered: 0 })
 
-      root.heard(JSON.stringify(event))
+      root.heard(event)
     }
 
     function typed(count: int): void {
       if (root.request?.kind !== "type") return
-      root.heard(JSON.stringify({ type: "display", device: root.request.path, code: root.request.code, entered: count }))
+      root.heard({ type: "display", device: root.request.path, code: root.request.code, entered: count })
     }
 
     function cancel(): void {
-      root.heard(JSON.stringify({ type: "cancel" }))
+      root.heard({ type: "cancel" })
     }
 
     function fail(): void {
