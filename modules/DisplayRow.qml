@@ -34,7 +34,7 @@ PanelRow {
 
       icon: "coffee"
       label: "Stay awake"
-      detail: Display.awake ? "Idle inhibited" : "Idle after 10 min"
+      detail: Display.awake ? "Idle inhibited" : `Idle after ${Math.round(Theme.lockIdle / 60)} min`
       checked: Display.awake
 
       onToggled: Display.setAwake(!Display.awake)

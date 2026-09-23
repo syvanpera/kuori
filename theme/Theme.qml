@@ -449,6 +449,10 @@ Singleton {
   // always 1,1.
   readonly property var easeStandard: [0.2, 0.8, 0.2, 1.0, 1.0, 1.0]
 
+  // css cubic-bezier(.4, 0, .2, 1): the lock screen's way in and out, which
+  // starts slower than the notches do.
+  readonly property var easeExit: [0.4, 0.0, 0.2, 1.0, 1.0, 1.0]
+
   property real launcherShadowBlur: 70
   property real launcherShadowOffset: 24
 
@@ -734,6 +738,74 @@ Singleton {
   readonly property color pkCancelHover: root.sheen.alpha(0.1)
   readonly property color pkCancelText: root.tint.alpha(0.7)
   readonly property color pkDoneFill: root.success.alpha(0.2)
+
+  // the lock screen. how long the desktop may sit idle before it locks, and how
+  // long the lock may then sit idle before the screen goes off -- in seconds,
+  // which is what IdleMonitor counts in. the design's stay awake row says "idle
+  // after 10 min", and this is that ten minutes.
+  property int lockIdle: 600
+  property int lockBlank: 60
+
+  // the design's column starts 208px down a 900px screen. a fraction rather than
+  // the pixels, so it sits the same way on a 960 and a 1440 high monitor.
+  property real lockTop: 0.231
+
+  property int lockClockSize: 136
+  readonly property real lockClockSpacing: -root.lockClockSize * 0.02
+  property int lockDateTop: 20
+  property int lockDateSize: 19
+  readonly property real lockDateSpacing: root.lockDateSize * 0.01
+  property int lockPromptTop: 62
+  property int lockPromptWidth: 300
+  property int lockPromptGap: 14
+  property int lockPromptRise: 8
+
+  property int lockTileSize: 38
+  property int lockTileRadius: 11
+  property int lockTileText: 16
+  property int lockIdentityGap: 11
+  property int lockNameSize: 14
+
+  property int lockFingerGlyph: 20
+  property int lockFingerGap: 8
+  property real lockFingerSize: 11.5
+  property int lockFingerLine: 15
+
+  // the field is the polkit dialog's, give or take its fill.
+  property int lockFieldGap: 8
+  property int lockCapsGap: 6
+  property int lockNoteLine: 15
+
+  // the picture behind it: the wallpaper, blurred, desaturated and darkened, and
+  // a second wash of the surface over that. the secondary screens are darker
+  // still, since nothing on them is asking for anything.
+  property real lockBlur: 34
+  property real lockSaturation: -0.2
+  property real lockBright: 0.62
+  property real lockBrightSecondary: 0.42
+  property real lockBackdropScale: 1.06
+  property real lockClockDim: 0.55
+
+  // the time from locking to the prompt being usable, and from the right
+  // password to the desktop.
+  property int lockWake: 900
+  property int lockExit: 450
+  property int lockExitContent: 350
+  property real lockExitScale: 1.04
+  property int lockPromptFade: 220
+  property int lockPromptMove: 260
+  property int lockShake: 360
+  property int lockFingerHold: 2400
+  property int lockFingerOk: 700
+
+  readonly property color lockWash: "#06090e"
+  readonly property real lockWashAlpha: 0.38
+  readonly property color lockFieldFill: root.surface.alpha(0.6)
+  readonly property color lockFieldBusy: root.accent.alpha(0.4)
+  readonly property color lockFingerText: root.tint.alpha(0.7)
+  readonly property color lockFingerIdle: root.tint.alpha(0.72)
+  readonly property color lockDateText: root.tint.alpha(0.72)
+  readonly property color lockBadge: root.tint.alpha(0.7)
 
   // the confirmation in front of a power action. it borrows the polkit card's
   // width, shadow and entry animation -- the design draws them identically -- and

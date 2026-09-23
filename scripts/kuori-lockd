@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+"""Tell the shell when logind wants the screen locked.
+
+Quickshell has no logind of its own, and three things should lock the screen that
+the shell cannot see: the lid closing, the machine going to sleep, and
+`loginctl lock-session`. This watches all three on the system bus and turns each
+into one JSON line on stdout; the shell answers on stdin.
+
+Sleep is the one with a deadline. logind suspends the moment the last delay lock
+is released, so this holds one from startup: when PrepareForSleep arrives it asks
+the shell to lock, and lets go only once the shell says the lock is up -- or when
+logind's own InhibitDelayMaxSec would have given up on it anyway. Without that
+the machine can suspend with the desktop on screen and wake up showing it for the
+moment before the lock lands.
+
+Out, one object per line:
+  {"type": "ready"}
+  {"type": "lock", "reason": "lid" | "sleep" | "session"}
+  {"type": "wake"}
+
+In, one word per line:
+  locked        the lock is on screen; a pending sleep may go ahead
+  hint on|off   set the session's LockedHint, for anything else that asks logind
+
+`Unlock` from logind is deliberately not honoured. Any process of this user may
+send it, and a lock screen that anything can open is not one.
+
+It lives as long as the shell's pipe does: stdin closing is the shell going away.
+"""
+
+import json
+import os
+import select
+import sys
+import time
+
+from jeepney import DBusAddress, HeaderFields, MatchRule, MessageType
+from jeepney import Properties, new_method_call
+from jeepney.bus_messages import message_bus
+from jeepney.io.blocking import open_dbus_connection
+
+LOGIN1 = "org.freedesktop.login1"
+MANAGER = DBusAddress("/org/freedesktop/login1", bus_name=LOGIN1, interface=f"{LOGIN1}.Manager")
+
+# logind's own default InhibitDelayMaxSec is five seconds. letting go a little
+# before it keeps the decision here rather than with logind's timeout.
+SLEEP_GRACE = 4.0
+
+
+def emit(**event):
+    sys.stdout.write(json.dumps(event) + "\n")
+    sys.stdout.flush()
+
+
+def log(text):
+    print(f"kuori-lockd: {text}", file=sys.stderr, flush=True)
+
+
+def call(conn, address, method, signature=None, body=()):
+    reply = conn.send_and_get_reply(new_method_call(address, method, signature, body), timeout=5)
+    if reply.header.message_type == MessageType.error:
+        raise RuntimeError(f"{method}: {reply.header.fields.get(HeaderFields.error_name)} {reply.body}")
+    return reply.body
+
+
+def session_path(conn):
+    # the shell runs as a user unit, outside the session's own scope, so logind's
+    # "auto" session and GetSessionByPID both miss. the id reaches the unit through
+    # the user manager's environment; failing that, the user's display session is
+    # the one this shell is drawing on.
+    ident = os.environ.get("XDG_SESSION_ID")
+    if ident:
+        return call(conn, MANAGER, "GetSession", "s", (ident,))[0]
+
+    user = call(conn, MANAGER, "GetUser", "u", (os.getuid(),))[0]
+    reply = conn.send_and_get_reply(
+        Properties(DBusAddress(user, bus_name=LOGIN1, interface=f"{LOGIN1}.User")).get("Display"),
+        timeout=5,
+    )
+    return reply.body[0][1][1]
+
+
+def watch(conn, **fields):
+    conn.send_and_get_reply(message_bus.AddMatch(MatchRule(type="signal", **fields)), timeout=5)
+
+
+class Sleep:
+    """The delay lock, and whether a sleep is waiting on it."""
+
+    def __init__(self, conn):
+        self.conn = conn
+        self.fd = None
+        self.deadline = None
+
+    def hold(self):
+        if self.fd is not None:
+            return
+        body = call(self.conn, MANAGER, "Inhibit", "ssss", ("sleep", "kuori", "Lock the screen first", "delay"))
+        self.fd = body[0]
+
+    def release(self):
+        self.deadline = None
+        if self.fd is not None:
+            self.fd.close()
+            self.fd = None
+
+    def timeout(self):
+        if self.deadline is None:
+            return None
+        return max(0.0, self.deadline - time.monotonic())
+
+
+def main():
+    conn = open_dbus_connection(bus="SYSTEM", enable_fds=True)
+    session = session_path(conn)
+    session_address = DBusAddress(session, bus_name=LOGIN1, interface=f"{LOGIN1}.Session")
+
+    watch(conn, sender=LOGIN1, interface=f"{LOGIN1}.Manager", member="PrepareForSleep", path="/org/freedesktop/login1")
+    watch(conn, sender=LOGIN1, interface="org.freedesktop.DBus.Properties", member="PropertiesChanged",
+          path="/org/freedesktop/login1")
+    watch(conn, sender=LOGIN1, interface=f"{LOGIN1}.Session", member="Lock", path=session)
+
+    sleep = Sleep(conn)
+    sleep.hold()
+    emit(type="ready")
+
+    pending = b""
+
+    while True:
+        readable, _, _ = select.select([conn.sock, sys.stdin.fileno()], [], [], sleep.timeout())
+
+        if not readable and sleep.deadline is not None:
+            log("the lock did not come up in time; letting the sleep go ahead")
+            sleep.release()
+            continue
+
+        if sys.stdin.fileno() in readable:
+            chunk = os.read(sys.stdin.fileno(), 4096)
+            if not chunk:
+                return
+
+            pending += chunk
+            *lines, pending = pending.split(b"\n")
+            for line in lines:
+                word = line.decode(errors="replace").strip()
+
+                if word == "locked":
+                    if sleep.deadline is not None:
+                        sleep.release()
+                elif word in ("hint on", "hint off"):
+                    try:
+                        call(conn, session_address, "SetLockedHint", "b", (word == "hint on",))
+                    except RuntimeError as err:
+                        log(str(err))
+
+        if conn.sock in readable:
+            # one read can carry several messages, and select only knows about the
+            # socket, not jeepney's buffer -- so drain until it has nothing left.
+            while True:
+                try:
+                    msg = conn.receive(timeout=0)
+                except TimeoutError:
+                    break
+
+                if msg.header.message_type != MessageType.signal:
+                    continue
+
+                member = msg.header.fields.get(HeaderFields.member)
+
+                if member == "PrepareForSleep":
+                    if msg.body[0]:
+                        sleep.deadline = time.monotonic() + SLEEP_GRACE
+                        emit(type="lock", reason="sleep")
+                    else:
+                        # back from sleep. the delay lock was spent on the way down
+                        # and the next sleep needs a fresh one.
+                        sleep.release()
+                        sleep.hold()
+                        emit(type="wake")
+                elif member == "PropertiesChanged":
+                    interface, changed, _ = msg.body
+                    lid = changed.get("LidClosed")
+                    # a lid closed while docked does not suspend, and should still
+                    # lock: the laptop's own screen is no longer being watched.
+                    if interface == f"{LOGIN1}.Manager" and lid is not None and lid[1]:
+                        emit(type="lock", reason="lid")
+                elif member == "Lock":
+                    emit(type="lock", reason="session")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

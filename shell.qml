@@ -36,6 +36,9 @@ ShellRoot {
   // and one stack of toasts, which exists only while something is in it.
   ToastLoader {}
 
+  // and the lock, which covers every screen at once.
+  LockScreen {}
+
   // the shell's only external entry point. hyprland cannot talk to a quickshell
   // window, so the keybind shells out to `qs ipc call`. it lives here rather than
   // in the singleton because the reload hook belongs in the root tree, and because
@@ -170,6 +173,22 @@ ShellRoot {
 
     function toggle(row: string): void {
       Notches.toggleRow(row, "")
+    }
+  }
+
+  // the lock, for a keybind -- and its preview, which draws every state of it on
+  // ordinary windows without locking anything, so it can be looked at.
+  IpcHandler {
+    target: "lock"
+
+    function now(): void {
+      Lock.lock("ipc")
+    }
+
+    // rest, typing, verifying, wrong, long, caps, finger, fingerfail, fingerok,
+    // secondary, or close.
+    function preview(scene: string): void {
+      Lock.preview(scene)
     }
   }
 

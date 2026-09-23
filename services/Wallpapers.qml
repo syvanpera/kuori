@@ -44,6 +44,12 @@ Singleton {
     apply.running = true
   }
 
+  // ask awww again. the lock screen draws the wallpaper too, and is the other
+  // thing that wants to know what is showing right now.
+  function refresh(): void {
+    query.running = true
+  }
+
   // deliberately never the one already showing: a shuffle that can land on what is
   // already there looks like it did nothing.
   function shuffle(): void {

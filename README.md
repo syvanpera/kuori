@@ -19,6 +19,8 @@ provides an application launcher, a notification daemon, and an authentication a
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
 - **A Bluetooth pairing agent**: pairing codes and confirmations appear in the system panel.
 - **A focus indicator** on the active window, either a corner wedge or a strip along one edge.
+- **A lock screen** that takes a password or a fingerprint. It locks after ten idle minutes, when the lid
+  closes and before the machine sleeps, and turns the screen off a minute after locking.
 
 ## Screenshots
 
@@ -80,6 +82,9 @@ scanning if something looks dead.
 | Night light | `hyprsunset` |
 | Calendar events | `python3`, and a Google OAuth client — see *Calendar* |
 | Pairing Bluetooth devices | `python3` with `jeepney` — `python3.withPackages (ps: [ ps.jeepney ])` |
+| Locking at all | the PAM services `kuori` and `kuori-fingerprint` — see *Lock screen* |
+| Locking on lid close and before sleep | `python3` with `jeepney`, as above |
+| Fingerprint unlock | `fprintd`, and a finger enrolled with `fprintd-enroll` |
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
 | Text | `JetBrainsMono Nerd Font` and `Manrope` |
@@ -312,6 +317,22 @@ can be looked at without a device that wants pairing. Open the section first wit
 | `cancel` | Show the card being called off from the device's side |
 | `fail` | Show "Could not pair" on the row |
 
+### `lock`
+
+| Call | Does |
+|---|---|
+| `now` | Lock the screen |
+| `preview <scene>` | Show the lock screen **without locking anything**, in one of its states: `rest`, `typing`, `verifying`, `wrong`, `long`, `caps`, `finger`, `fingerfail`, `fingerok`, `secondary`. `close` puts it away, and so does Escape on the bare clock |
+
+Bind `now` to whatever key locks for you — `Super+L` is taken by focus-right here:
+
+```lua
+hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("qs ipc -p ~/.config/kuori call lock now"))
+```
+
+`loginctl lock-session` locks it too. The preview's password field is real: a wrong password there is
+refused by PAM exactly as it would be on the lock, and the right one closes it.
+
 ### `display`
 
 | Call | Does |
@@ -536,6 +557,41 @@ running is picked up after `systemctl --user restart kuori`.
 
 **Restarting the shell ends a recording**, since the recorder is its child process.
 
+## Lock screen
+
+The screen **locks** after ten minutes with nobody at the keyboard, when the lid closes (even while
+docked, when closing it does not suspend), before the machine goes to sleep, on `loginctl
+lock-session`, and on `lock now`. Once locked, the screen **goes off** after another minute idle and
+comes back on at the first key or movement. Anything that inhibits idle — the **Stay awake** switch, a
+playing video — holds off both.
+
+At rest it is the clock and the date over your wallpaper, blurred. The first key you type brings up
+the prompt *and* is typed into it; a click does the same without typing anything. Escape puts the
+prompt away again. On a second monitor it is the clock alone, dimmed; the prompt is on the monitor
+the keyboard is on.
+
+**A finger on the sensor unlocks it too**, with no need to open the prompt first — a touch brings the
+prompt up, so a finger it does not know is shown being refused. The line saying so
+only appears once `fprintd` is actually listening — with no finger enrolled it never does, and the
+password is the only way in. Enrol one with `fprintd-enroll`.
+
+It needs two PAM services, one for each way in, because a single stack asks them in turn: with the
+fingerprint first, a typed password would sit unread for up to thirty seconds. On NixOS:
+
+```nix
+security.pam.services.kuori = { fprintAuth = false; };
+security.pam.services.kuori-fingerprint = { unixAuth = false; fprintAuth = true; };
+```
+
+**kuori refuses to lock without `/etc/pam.d/kuori`**, and says so in the log: a lock with nothing
+behind it could only be escaped from a TTY.
+
+**If the shell crashes while locked, the screen stays locked.** Hyprland keeps the session locked when
+its lock client dies, and the restarted shell takes the lock back up (with
+`misc:allow_session_lock_restore = true` in Hyprland's config). Nothing that restarts or kills kuori
+opens the lock, and there is deliberately no IPC call that does. If it ever comes to that, a TTY
+(`Ctrl+Alt+F3`) and `systemctl --user restart kuori` brings the prompt back.
+
 ## Configuration
 
 There is no config file: this is a shell you edit. Almost everything lives in `theme/Theme.qml` —
@@ -553,10 +609,12 @@ every colour, size, duration and font in one place.
 | How old the calendar may be when the tab opens before it re-syncs | `Theme.calSyncStale` |
 | How many events a day lists before `+N more` | `Theme.eventMax` |
 | How many clipboard entries the launcher shows | `cliphist`'s own `-max-items` |
+| How long before it locks, and then how long before the screen goes off | `Theme.lockIdle`, `Theme.lockBlank`, in seconds |
 | Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
-State that has to survive a restart — currently the night light and its colour temperature — is
-written to `~/.local/state/quickshell/by-shell/<id>/display.json`. Stay awake deliberately does not:
+State that has to survive a restart — the night light and its colour temperature, and whether the
+screen is locked — is written to `~/.local/state/quickshell/by-shell/<id>/`, as `display.json` and
+`lock.json`. Stay awake deliberately does not:
 an idle inhibitor is invisible, and one silently restored after a restart is a flat battery nobody can
 explain.
 
