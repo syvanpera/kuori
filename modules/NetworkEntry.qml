@@ -34,88 +34,25 @@ Column {
     return ""
   }
 
-  Rectangle {
-    id: line
-
+  ListEntry {
     width: root.width
-    height: Math.max(Theme.sysNetIcon, text.implicitHeight) + Theme.sysNetPaddingV * 2
 
-    radius: Theme.sysNetRadius
-    color: {
-      if (hover.containsMouse) return Theme.sysNetHover
-      return root.highlighted ? Theme.sysNetActive : "transparent"
-    }
+    icon: root.glyph
+    name: root.network.name
+    detail: root.detail
+    lit: root.highlighted
+    fill: root.highlighted ? Theme.sysNetActive : "transparent"
 
-    Behavior on color {
-      ColorAnimation { duration: Theme.notchFadeDuration }
-    }
-
-    Glyph {
-      id: entryIcon
-
-      x: Theme.sysNetPaddingH
-      anchors.verticalCenter: parent.verticalCenter
-
-      size: Theme.sysNetIcon
-      icon: root.glyph
-      iconColor: root.highlighted ? Theme.accent : Theme.sysNetGlyph
-    }
+    onClicked: Network.select(root.network)
 
     // the lock sits at the far end rather than replacing the signal, so a row can
     // say how strong a network is and that it is shut at the same time.
     Glyph {
-      id: lock
-
-      x: line.width - Theme.sysNetPaddingH - width
-      anchors.verticalCenter: parent.verticalCenter
       visible: root.locked
 
       size: Theme.sysLockIcon
       icon: "lock"
       iconColor: Theme.sysNetLock
-    }
-
-    Column {
-      id: text
-
-      anchors.left: entryIcon.right
-      anchors.leftMargin: Theme.sysNetGap
-      anchors.right: root.locked ? lock.left : parent.right
-      anchors.rightMargin: Theme.sysNetGap
-      anchors.verticalCenter: parent.verticalCenter
-
-      spacing: Theme.sysNetTextSpacing
-
-      Text {
-        width: parent.width
-
-        text: root.network.name
-        color: root.highlighted ? Theme.text : Theme.sysNetName
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysNetNameSize
-        font.weight: Font.Medium
-        elide: Text.ElideRight
-      }
-
-      Text {
-        width: parent.width
-        visible: root.detail !== ""
-
-        text: root.detail
-        color: Theme.sysNetDetail
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysNetDetailSize
-        elide: Text.ElideRight
-      }
-    }
-
-    MouseArea {
-      id: hover
-
-      anchors.fill: parent
-      hoverEnabled: true
-
-      onClicked: Network.select(root.network)
     }
   }
 

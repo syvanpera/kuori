@@ -40,12 +40,9 @@ PanelRow {
     }
   }
 
-  Rectangle {
+  Rule {
     width: root.bodyWidth
-    height: 1
     visible: Network.wiredDevices.length > 0
-
-    color: Theme.sysLine
   }
 
   SectionSwitch {
@@ -57,16 +54,9 @@ PanelRow {
   }
 
   // the readings describe a link, so there is nothing to say without one.
-  Grid {
+  StatGrid {
     width: root.bodyWidth
     visible: Network.online
-
-    columns: 2
-    columnSpacing: Theme.sysStatGapH
-    rowSpacing: Theme.sysStatGapV
-
-    // two equal columns of whatever the gutter leaves.
-    readonly property real cell: (width - Theme.sysStatGapH) / 2
 
     StatPair {
       width: parent.cell

@@ -46,7 +46,6 @@ Rectangle {
 
   readonly property bool lit: root.active || root.busy || root.asked
 
-  width: parent.width
   height: row.height + card.height
 
   radius: Theme.sysNetRadius
@@ -65,80 +64,25 @@ Rectangle {
     NumberAnimation { duration: Theme.notchFadeDuration }
   }
 
-  Rectangle {
+  ListEntry {
     id: row
 
     width: parent.width
-    height: Math.max(Theme.sysNetIcon, text.implicitHeight) + Theme.sysNetPaddingV * 2
 
-    radius: Theme.sysNetRadius
-
-    // a row that would ignore a click does not light up under the pointer either.
-    color: hover.containsMouse && hover.enabled ? Theme.sysNetHover : "transparent"
-
-    Behavior on color {
-      ColorAnimation { duration: Theme.notchFadeDuration }
+    icon: Bluez.glyph(root.device)
+    name: root.device.name
+    detail: root.detail
+    detailColor: {
+      if (root.refused) return Theme.sysError
+      return root.busy && !root.active ? Theme.accent : Theme.sysNetDetail
     }
+    lit: root.lit
 
-    Glyph {
-      id: deviceIcon
+    // a device mid-question, mid-attempt, or waiting behind another's question
+    // has nothing a click could mean.
+    clickable: !root.locked && !root.asked && !Bluez.busy(root.device)
 
-      x: Theme.sysNetPaddingH
-      anchors.verticalCenter: parent.verticalCenter
-
-      size: Theme.sysNetIcon
-      icon: Bluez.glyph(root.device)
-      iconColor: root.lit ? Theme.accent : Theme.sysNetGlyph
-    }
-
-    Column {
-      id: text
-
-      anchors.left: deviceIcon.right
-      anchors.leftMargin: Theme.sysNetGap
-      anchors.right: parent.right
-      anchors.rightMargin: Theme.sysNetPaddingH
-      anchors.verticalCenter: parent.verticalCenter
-
-      spacing: Theme.sysNetTextSpacing
-
-      Text {
-        width: parent.width
-
-        text: root.device.name
-        color: root.lit ? Theme.text : Theme.sysNetName
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysNetNameSize
-        font.weight: Font.Medium
-        elide: Text.ElideRight
-      }
-
-      Text {
-        width: parent.width
-        visible: root.detail !== ""
-
-        text: root.detail
-        color: {
-          if (root.refused) return Theme.sysError
-          return root.busy && !root.active ? Theme.accent : Theme.sysNetDetail
-        }
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.sysNetDetailSize
-      }
-    }
-
-    MouseArea {
-      id: hover
-
-      anchors.fill: parent
-      hoverEnabled: true
-
-      // a device mid-question, mid-attempt, or waiting behind another's question
-      // has nothing a click could mean.
-      enabled: !root.locked && !root.asked && !Bluez.busy(root.device)
-
-      onClicked: Bluez.toggle(root.device)
-    }
+    onClicked: Bluez.toggle(root.device)
   }
 
   // the design grows the card out of the row, and folds it back the same way.

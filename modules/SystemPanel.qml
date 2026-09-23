@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.services
 import qs.theme
 
@@ -66,10 +67,8 @@ Column {
 
   // ruled off from the rows above it, which is how the design separates the one
   // block in this panel that is not a row.
-  Rectangle {
+  Rule {
     width: root.contentWidth
-    height: 1
-    color: Theme.sysLine
   }
 
   CaptureSection {

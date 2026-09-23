@@ -225,9 +225,8 @@ Column {
     height: 12
   }
 
-  Rectangle {
+  Rule {
     width: root.contentWidth
-    height: 1
     color: Theme.notchPanelLine
   }
 
@@ -420,9 +419,8 @@ Column {
     height: 13
   }
 
-  Rectangle {
+  Rule {
     width: root.contentWidth
-    height: 1
     color: Theme.notchPanelLine
   }
 

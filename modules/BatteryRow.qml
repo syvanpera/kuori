@@ -24,14 +24,8 @@ PanelRow {
   // Limit and Cycles in the design have no source on this machine: nothing under
   // /sys exposes a charge threshold, and upower reports charge-cycles as N/A.
   // Health and Rate are both real here, and are the two readings worth the space.
-  Grid {
+  StatGrid {
     width: root.bodyWidth
-
-    columns: 2
-    columnSpacing: Theme.sysStatGapH
-    rowSpacing: Theme.sysStatGapV
-
-    readonly property real cell: (width - Theme.sysStatGapH) / 2
 
     StatPair {
       width: parent.cell
@@ -65,10 +59,8 @@ PanelRow {
     visible: Power.hasPerformance
     spacing: Theme.sysBodyGap
 
-    Rectangle {
+    Rule {
       width: parent.width
-      height: 1
-      color: Theme.sysLine
     }
 
     Caption {

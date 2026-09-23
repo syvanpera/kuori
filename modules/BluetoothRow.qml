@@ -38,6 +38,7 @@ PanelRow {
     delegate: BluetoothEntry {
       required property var modelData
 
+      width: root.bodyWidth
       device: modelData
     }
   }
@@ -55,6 +56,7 @@ PanelRow {
     delegate: BluetoothEntry {
       required property var modelData
 
+      width: root.bodyWidth
       device: modelData
     }
   }

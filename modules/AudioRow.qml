@@ -30,67 +30,56 @@ PanelRow {
     onToggled: Audio.setMuted(!Audio.muted)
   }
 
-  Caption {
-    text: "OUTPUT"
-  }
-
-  VolumeSlider {
+  // the heading stays with nothing listed under it: the level beneath it still
+  // means something, and the design always draws both.
+  DeviceSection {
     width: root.bodyWidth
-    value: Audio.volume
+    heading: "OUTPUT"
+    ruled: false
+    hideEmpty: false
+    model: Audio.sinks
 
-    onMoved: level => Audio.setVolume(Audio.sink, level)
-  }
+    delegate: AudioDevice {
+      required property var modelData
 
-  Column {
-    width: root.bodyWidth
-    spacing: Theme.sysNetSpacing
+      width: root.bodyWidth
+      node: modelData
+      current: modelData === Audio.sink
 
-    Repeater {
-      model: Audio.sinks
+      onPicked: Audio.selectSink(modelData)
+    }
 
-      AudioDevice {
-        required property var modelData
+    DisplaySlider {
+      width: root.bodyWidth
+      value: Audio.volume
+      reading: `${Math.round(Audio.volume * 100)}%`
 
-        node: modelData
-        current: modelData === Audio.sink
-
-        onPicked: Audio.selectSink(modelData)
-      }
+      onMoved: level => Audio.setVolume(Audio.sink, level)
     }
   }
 
-  Rectangle {
+  DeviceSection {
     width: root.bodyWidth
-    height: 1
-    color: Theme.sysLine
-  }
+    heading: "INPUT"
+    hideEmpty: false
+    model: Audio.sources
 
-  Caption {
-    text: "INPUT"
-  }
+    delegate: AudioDevice {
+      required property var modelData
 
-  VolumeSlider {
-    width: root.bodyWidth
-    value: Audio.gain
+      width: root.bodyWidth
+      node: modelData
+      current: modelData === Audio.source
 
-    onMoved: level => Audio.setVolume(Audio.source, level)
-  }
+      onPicked: Audio.selectSource(modelData)
+    }
 
-  Column {
-    width: root.bodyWidth
-    spacing: Theme.sysNetSpacing
+    DisplaySlider {
+      width: root.bodyWidth
+      value: Audio.gain
+      reading: `${Math.round(Audio.gain * 100)}%`
 
-    Repeater {
-      model: Audio.sources
-
-      AudioDevice {
-        required property var modelData
-
-        node: modelData
-        current: modelData === Audio.source
-
-        onPicked: Audio.selectSource(modelData)
-      }
+      onMoved: level => Audio.setVolume(Audio.source, level)
     }
   }
 }

@@ -8,16 +8,53 @@ import qs.theme
 Column {
   id: root
 
+  // a caption at the left and a segmented choice filling the rest: the target
+  // for a capture and the format for a colour.
+  component Choice: Item {
+    id: choice
+
+    property string caption: ""
+    property alias model: segments.model
+    property alias current: segments.current
+    property alias mono: segments.mono
+
+    signal picked(var value)
+
+    height: Math.max(label.implicitHeight, segments.implicitHeight)
+
+    Caption {
+      id: label
+
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+
+      text: choice.caption
+    }
+
+    Segmented {
+      id: segments
+
+      anchors.left: label.right
+      anchors.leftMargin: Theme.capTargetGap
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+
+      onPicked: value => choice.picked(value)
+    }
+  }
+
   spacing: Theme.capGap
 
   Row {
+    id: modes
+
+    readonly property real cell: (modes.width - Theme.capTileGap * 2) / 3
+
     width: parent.width
     spacing: Theme.capTileGap
 
-    readonly property real cell: (width - Theme.capTileGap * 2) / 3
-
     ModeTile {
-      width: parent.cell
+      width: modes.cell
 
       icon: "screenshot_region"
       label: "Screenshot"
@@ -27,7 +64,7 @@ Column {
     }
 
     ModeTile {
-      width: parent.cell
+      width: modes.cell
 
       icon: "screen_record"
       label: "Record"
@@ -37,7 +74,7 @@ Column {
     }
 
     ModeTile {
-      width: parent.cell
+      width: modes.cell
 
       icon: "colorize"
       label: "Color"
@@ -48,34 +85,15 @@ Column {
   }
 
   // a colour has no target: it is wherever you point.
-  Item {
+  Choice {
     width: parent.width
-    height: Math.max(targetLabel.implicitHeight, targets.implicitHeight)
-
     visible: Capture.mode !== "pick"
 
-    Caption {
-      id: targetLabel
+    caption: "TARGET"
+    model: Capture.targets.map(t => ({ label: t.label, value: t.id }))
+    current: Capture.target
 
-      anchors.left: parent.left
-      anchors.verticalCenter: parent.verticalCenter
-
-      text: "TARGET"
-    }
-
-    Segmented {
-      id: targets
-
-      anchors.left: targetLabel.right
-      anchors.leftMargin: Theme.capTargetGap
-      anchors.right: parent.right
-      anchors.verticalCenter: parent.verticalCenter
-
-      model: Capture.targets.map(t => ({ label: t.label, value: t.id }))
-      current: Capture.target
-
-      onPicked: value => Capture.target = value
-    }
+    onPicked: value => Capture.target = value
   }
 
   Column {
@@ -84,33 +102,15 @@ Column {
 
     visible: Capture.mode === "pick"
 
-    Item {
+    Choice {
       width: parent.width
-      height: Math.max(formatLabel.implicitHeight, formats.implicitHeight)
 
-      Caption {
-        id: formatLabel
+      caption: "FORMAT"
+      mono: true
+      model: ColourPicker.formats.map(f => ({ label: f.toUpperCase(), value: f }))
+      current: ColourPicker.format
 
-        anchors.left: parent.left
-        anchors.verticalCenter: parent.verticalCenter
-
-        text: "FORMAT"
-      }
-
-      Segmented {
-        id: formats
-
-        anchors.left: formatLabel.right
-        anchors.leftMargin: Theme.capTargetGap
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-
-        mono: true
-        model: ColourPicker.formats.map(f => ({ label: f.toUpperCase(), value: f }))
-        current: ColourPicker.format
-
-        onPicked: value => ColourPicker.format = value
-      }
+      onPicked: value => ColourPicker.format = value
     }
 
     Rectangle {

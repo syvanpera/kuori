@@ -526,13 +526,13 @@ Anything a password manager marked with `x-kde-passwordManagerHint` is **never r
 
 ## Capture
 
-The block at the foot of the system panel: pick **Screenshot** or **Record**, pick a target — Region,
-App or Monitor — and press **Capture!**.
+The block at the foot of the system panel: pick **Screenshot**, **Record** or **Color**; for the first
+two pick a target — Region, App or Monitor — and press **Capture!**.
 
 - **Screenshots are saved and copied at once**, so the file is kept *and* ready to paste.
 - The pointer becomes a **crosshair** while you are selecting, for every target.
 - **Region** drags a rectangle. **App** dims the screen and lets you click the window you want, not
-  whichever happens to be focused. **Monitor** does the same for screens — and skips the picker when
+  whichever happens to be focused — only windows actually on screen are offered. **Monitor** does the same for screens — and skips the picker when
   there is only one, since there is nothing to choose.
 - **Where they go is not kuori's decision**: `XDG_SCREENSHOTS_DIR` then `XDG_PICTURES_DIR` from
   `~/.config/user-dirs.dirs`, which on this machine means `~/Pictures/Screenshots`. Recordings go to
