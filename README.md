@@ -344,7 +344,10 @@ a recording is running. It opens a panel of rows, one folded open at a time:
   the machine has a wired interface, a USB adapter or dock included. Under it are the Wi-Fi switch and
   the known and available networks. Clicking an open network joins it with **no confirmation**.
 - **Bluetooth** — paired devices first. A device that has stopped advertising will refuse to connect;
-  the row says so rather than looking dead.
+  the row says so rather than looking dead. Clicking a device that was never paired pairs it, trusts
+  it so it reconnects by itself, then connects. That works for mice and most headphones; a keyboard
+  that asks for a passkey to be typed is refused ("Could not pair"), because the shell has no pairing
+  agent to show the code. Pair one of those once with `bluetoothctl` (`pair`, `trust`, `connect`).
 - **Audio** — output and input devices, volume, and a switch that is mute read the right way up.
 - **Battery** — level, time remaining, health, rate, and power profiles when a daemon offers them.
 - **Display** — night light, stay awake, brightness, and a colour temperature slider that appears

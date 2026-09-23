@@ -19,8 +19,11 @@ Rectangle {
   // has no state for either, and a click that does nothing visible is worse than
   // a line that admits it.
   readonly property string detail: {
-    if (root.refused) return "Could not connect"
-    if (Bluez.busy(root.device)) return root.active ? "Disconnecting…" : "Connecting…"
+    if (root.refused) return Bluez.failedPairing ? "Could not pair" : "Could not connect"
+    if (Bluez.busy(root.device)) {
+      if (root.active && root.device.paired) return "Disconnecting…"
+      return root.device.paired ? "Connecting…" : "Pairing…"
+    }
     return Bluez.charge(root.device)
   }
 

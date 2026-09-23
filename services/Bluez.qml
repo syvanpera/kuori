@@ -24,6 +24,11 @@ Singleton {
   property string pending: ""
   property string failed: ""
 
+  // whether that last attempt died pairing rather than connecting, so the row can
+  // say which. they fail for different reasons: a pairing is refused by a device
+  // that wants a passkey typed, which nothing here can show.
+  property bool failedPairing: false
+
   readonly property var adapter: Bluetooth.defaultAdapter
   readonly property bool enabled: root.adapter?.enabled ?? false
 
@@ -59,8 +64,10 @@ Singleton {
   }
 
   // a click on a device is a request to change its mind about being connected.
-  // pairing is not offered: it needs somewhere to show a code, which the design
-  // has no room for.
+  // one that was never paired is paired first, and trusted once it is, which is
+  // what lets a mouse or a keyboard reconnect by itself after that. this shell
+  // registers no pairing agent, so bluez pairs as a device with no display and no
+  // keyboard: fine for a mouse, refused by a keyboard that wants a code typed.
   function toggle(device: var): void {
     if (!device) return
 
@@ -72,13 +79,16 @@ Singleton {
     }
 
     root.pending = device.address
-    device.connect()
+
+    if (device.paired) device.connect()
+    else device.pair()
   }
 
   // whether this device is in the middle of changing its mind.
   function busy(device: var): bool {
     if (!device) return false
     return device.address === root.pending
+      || device.pairing
       || device.state === BluetoothDeviceState.Connecting
       || device.state === BluetoothDeviceState.Disconnecting
   }
@@ -118,6 +128,7 @@ Singleton {
     if (root.pending === "") return
 
     root.failed = root.pending
+    root.failedPairing = !(root.pendingDevice?.paired ?? true)
     root.pending = ""
     linger.restart()
   }
@@ -125,9 +136,12 @@ Singleton {
   Connections {
     target: root.pendingDevice
 
+    // pairing opens a link of its own, so a device can read connected while it is
+    // still pairing, with none of its profiles up. only a paired device has
+    // actually arrived, and only one that has stopped pairing has failed.
     function onStateChanged(): void {
       const device = root.pendingDevice
-      if (!device) return
+      if (!device || !device.paired || device.pairing) return
 
       if (device.state === BluetoothDeviceState.Connected) {
         root.pending = ""
@@ -138,6 +152,34 @@ Singleton {
       // that is not advertising, which is most of them a moment after the host
       // dropped them -- hence the mouse you have to switch off and on again.
       if (device.state === BluetoothDeviceState.Disconnected) root.giveUp()
+    }
+
+    function onPairedChanged(): void {
+      const device = root.pendingDevice
+      if (!device?.paired) return
+
+      device.trusted = true
+
+      if (device.connected) root.pending = ""
+      else device.connect()
+    }
+
+    function onPairingChanged(): void {
+      if (!root.pendingDevice?.pairing) pairSettle.restart()
+    }
+  }
+
+  // over without having paired: refused, or it wanted a passkey. asked a moment
+  // later, because pairing and paired can arrive from bluez in either order, and
+  // a pairing that ended one property ahead of succeeding is not a failure.
+  Timer {
+    id: pairSettle
+
+    interval: 500
+
+    onTriggered: {
+      const device = root.pendingDevice
+      if (device && !device.pairing && !device.paired) root.giveUp()
     }
   }
 
