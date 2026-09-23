@@ -22,6 +22,11 @@ PanelWindow {
   // what Notches knows this screen by.
   readonly property string screenName: root.screen?.name ?? ""
 
+  // whether this is the first screen at its scale, and so the one that keeps the
+  // launcher's icons decoded for every screen at that scale.
+  readonly property bool holdsIcons: Array.from(Quickshell.screens)
+    .find(other => other.devicePixelRatio === root.screen?.devicePixelRatio) === root.screen
+
   anchors {
     top: true
     bottom: true
@@ -127,8 +132,12 @@ PanelWindow {
   // on every single open. these hold the same images at the same size for the life
   // of the session, so the launcher's own IconImages find them already decoded.
   // nothing draws them -- they exist to be a reference qt's pixmap cache respects.
+  //
+  // one set per scale rather than per screen. the cache keys a picture by the size
+  // it was decoded at, so two monitors at the same scale would hold two copies of
+  // one set, and a monitor at another scale needs its own.
   Repeater {
-    model: DesktopEntries.applications.values
+    model: root.holdsIcons ? DesktopEntries.applications.values : []
 
     IconImage {
       required property var modelData

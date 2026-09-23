@@ -67,11 +67,7 @@ Item {
   ]
 
   Behavior on reveal {
-    NumberAnimation {
-      duration: Theme.osdDuration
-      easing.type: Easing.Bezier
-      easing.bezierCurve: Theme.easeStandard
-    }
+    Glide { duration: Theme.osdDuration }
   }
 
   Rectangle {

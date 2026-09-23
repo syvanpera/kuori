@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Wayland
 import QtQuick
+import qs.components
 import qs.modules
 import qs.services
 import qs.theme
@@ -27,11 +28,7 @@ PanelWindow {
     right: Theme.toastRight
 
     Behavior on top {
-      NumberAnimation {
-        duration: Theme.notchExpandDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.notchExpandDuration }
     }
   }
 
@@ -99,7 +96,7 @@ PanelWindow {
         // the design slides each card in from the right as it arrives.
         Component.onCompleted: entry.start()
 
-        NumberAnimation {
+        Glide {
           id: entry
 
           // the card itself, named rather than reached for: a NumberAnimation has
@@ -110,8 +107,6 @@ PanelWindow {
           from: Theme.toastSlide
           to: 0
           duration: Theme.toastEnter
-          easing.type: Easing.Bezier
-          easing.bezierCurve: Theme.easeStandard
         }
       }
     }

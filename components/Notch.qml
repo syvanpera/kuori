@@ -125,19 +125,11 @@ Item {
     bottomRightRadius: root.flushRight || root.hangHeight > 0 ? 0 : Theme.notchRadius
 
     Behavior on width {
-      NumberAnimation {
-        duration: Theme.notchExpandDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.notchExpandDuration }
     }
 
     Behavior on height {
-      NumberAnimation {
-        duration: Theme.notchExpandDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.notchExpandDuration }
     }
 
     HoverHandler {

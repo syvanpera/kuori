@@ -30,7 +30,7 @@ Singleton {
   readonly property color glyph: root.tint.alpha(0.85)
   readonly property color textDim: root.tint.alpha(0.55)
 
-  // a toggle on the system strip that is off. it is dimmer than textDim because it
+  // a switch in the toggles tab that is off. it is dimmer than textDim because it
   // is not reporting anything -- it is a switch waiting to be pressed.
   readonly property color stripOff: root.tint.alpha(0.38)
 
@@ -39,9 +39,9 @@ Singleton {
   readonly property color workspaceOccupied: "#6f87a8"
   readonly property color workspaceEmpty: root.tint.alpha(0.28)
 
-  // how solid the focus mark is over the window it sits on. at full strength the
-  // accent is a hard block against a dark window, so it is let down a little and
-  // the window reads through it.
+  // how solid the focus mark is over the window it sits on: 1 is the accent at full
+  // strength, which is where it has been left, and anything lower lets the window
+  // read through it.
   //
   // this is alpha baked into the fill rather than an opacity on the item, because
   // FocusIndicator drives that property to fade the mark in and out and would
@@ -145,10 +145,32 @@ Singleton {
   property real stripUnderline: 1.5
   property int stripUnderlineGap: 4
 
+  // font.pixelSize is an int, and a real handed to it is rounded half up: the
+  // design's 9.5, 11.5 and 12.5 draw at 10, 12 and 13, measured. they are written
+  // here as the design gives them, so the record of what it asked for survives,
+  // but no text in the shell is ever a half pixel.
+  //
   // "JetBrains Mono" does not resolve on this machine, it falls back to DejaVu.
   // the nerd font patch is the only build installed and keeps the upstream
   // metrics, so the design's advance widths still land where the mockup put them.
   property string monoFont: "JetBrainsMono Nerd Font"
+
+  property string uiFont: "Manrope"
+
+  // Manrope is one variable file whose default named instance is ExtraLight, so
+  // font.weight alone leaves a 600 heading looking like a hairline. pinning the
+  // axis is the same fix the symbol font already needs.
+  property var uiAxesSemiBold: ({ "wght": 600 })
+
+  // and the same again for the one place the design asks for 700.
+  property var uiAxesBold: ({ "wght": 700 })
+
+  // and for the clock's own lines, which the design sets at 500.
+  property var uiAxesMedium: ({ "wght": 500 })
+
+  // and for body text, which the design leaves at 400. without it a toast's body
+  // or a calendar event reads at the file's ExtraLight default.
+  property var uiAxesRegular: ({ "wght": 400 })
 
   property string iconFont: "Material Symbols Rounded"
 
@@ -192,6 +214,11 @@ Singleton {
   // through smoked glass rather than a surface of the shell.
   readonly property color shade: "#06090e"
   readonly property color ink: "#000000"
+
+  // every raised surface inside the panel is white at one of three alphas over
+  // the notch colour, the same trick the frame plays with tint.
+  readonly property color sheen: "#ffffff"
+
   readonly property color launcherScrim: root.shade.alpha(0.55)
   readonly property color launcherShadow: root.ink.alpha(0.5)
 
@@ -236,6 +263,9 @@ Singleton {
   property int clockPeekHeight: 13
   property int clockPeekGap: 10
   readonly property real clockPeekSpacing: root.clockPeekSize * 0.05
+
+  // how long a tab takes to grow into its panel, and every fold that grows the
+  // same way.
   property int notchExpandDuration: 240
 
   // named for the notch, but it is the shell's one hover fade: every colour that
@@ -247,11 +277,28 @@ Singleton {
   // its track, a row's chevron turning over. the design gives both .2s.
   property int controlMoveDuration: 200
 
+  // the design uses one easing curve everywhere, css cubic-bezier(.2,.8,.2,1).
+  // Easing.Bezier wants the two control points followed by the end point, which is
+  // always 1,1.
+  readonly property var easeStandard: [0.2, 0.8, 0.2, 1.0, 1.0, 1.0]
+
+  // css cubic-bezier(.4, 0, .2, 1): the lock screen's way in and out, which
+  // starts slower than the notches do.
+  readonly property var easeExit: [0.4, 0.0, 0.2, 1.0, 1.0, 1.0]
+
   // the workspace panel: one pill per workspace, the same states the dots show.
   property int wsPillSize: 30
   property int wsPillRadius: 10
   property int wsPillSpacing: 4
   property int wsPillTextSize: 13
+
+  // dark text for anything sitting on a lit accent surface: a workspace pill, the
+  // calendar's today. the rest are a wash over the surface, the same sheen the
+  // launcher raises its rows with.
+  readonly property color litText: "#081018"
+  readonly property color wsPillOccupied: root.sheen.alpha(0.09)
+  readonly property color wsPillEmpty: root.sheen.alpha(0.04)
+  readonly property color wsPillEmptyText: root.tint.alpha(0.38)
 
   // the clock panel: a big time, the date, a month grid and whatever is on today.
   // 224 of content inside 18 of padding. the design writes the 224, because css
@@ -318,8 +365,8 @@ Singleton {
   property int eventGap: 10
   property int eventRowGap: 8
 
-  // the time column of an event row: the design's 9.5px, which pixelSize takes
-  // as a real the same way sysRowLabelSize does.
+  // the time column of an event row: the design's 9.5px, which draws at 10 --
+  // see the note on half-pixel sizes over monoFont.
   property real eventTimeSize: 9.5
   property int eventTimeWidth: 32
   property int eventLineHeight: 15
@@ -351,17 +398,6 @@ Singleton {
   // asked to run again. ms.
   property int calSyncStale: 300000
 
-  // dark text for anything sitting on a lit accent surface: a workspace pill, the
-  // calendar's today. the rest are a wash over the surface, the same sheen the
-  // launcher raises its rows with.
-  readonly property color litText: "#081018"
-  readonly property color wsPillOccupied: root.sheen.alpha(0.09)
-  readonly property color wsPillEmpty: root.sheen.alpha(0.04)
-  readonly property color wsPillEmptyText: root.tint.alpha(0.38)
-
-  // every raised surface inside the panel is white at one of three alphas over
-  // the notch colour, the same trick the frame plays with tint.
-  readonly property color sheen: "#ffffff"
   readonly property color launcherLine: root.sheen.alpha(0.07)
   readonly property color launcherRaise: root.sheen.alpha(0.06)
   readonly property color launcherSunken: root.sheen.alpha(0.04)
@@ -457,15 +493,6 @@ Singleton {
 
   property int launcherFade: 160
   property int launcherSlideDuration: 200
-
-  // the design uses one easing curve everywhere, css cubic-bezier(.2,.8,.2,1).
-  // Easing.Bezier wants the two control points followed by the end point, which is
-  // always 1,1.
-  readonly property var easeStandard: [0.2, 0.8, 0.2, 1.0, 1.0, 1.0]
-
-  // css cubic-bezier(.4, 0, .2, 1): the lock screen's way in and out, which
-  // starts slower than the notches do.
-  readonly property var easeExit: [0.4, 0.0, 0.2, 1.0, 1.0, 1.0]
 
   property real launcherShadowBlur: 70
   property real launcherShadowOffset: 24
@@ -594,7 +621,6 @@ Singleton {
 
   // how long a refused join's reason stays under its row.
   property int sysErrorLinger: 1800
-
 
   readonly property color sysFieldBorder: root.sheen.alpha(0.12)
   readonly property color sysFieldFill: root.sheen.alpha(0.05)
@@ -847,7 +873,7 @@ Singleton {
   property int lockFingerRetry: 1000
   property int lockCapsDelay: 80
 
-  readonly property color lockWash: "#06090e"
+  readonly property color lockWash: root.shade
   readonly property real lockWashAlpha: 0.38
   readonly property color lockFieldFill: root.surface.alpha(0.6)
   readonly property color lockFieldBusy: root.accent.alpha(0.4)
@@ -911,6 +937,9 @@ Singleton {
   property int clipPreviewNameSize: 10
   property real clipPreviewMetaSize: 9.5
   property int clipPreviewFootGap: 8
+
+  // the chequerboard behind a transparent image, the design's 16px squares.
+  property int clipCheckerTile: 16
 
   // the preview decodes this long after the selection stops moving, so arrowing
   // through the list does not run a process per keystroke.
@@ -1041,14 +1070,14 @@ Singleton {
   property int toastDismissPaddingV: 6
   readonly property real toastDismissSpacing: root.toastDismissSize * 0.07
 
-  // four on screen, and the ones behind the first sit back a little further with
-  // every card, which is how the design says a stack rather than a list.
   // the bluetooth toast's "OPEN BLUETOOTH", which stands where an ordinary
   // toast's buttons would.
   property real toastLinkSize: 9.5
   readonly property real toastLinkSpacing: root.toastLinkSize * 0.07
   property int toastLinkTop: 2
 
+  // four on screen, and the ones behind the first sit back a little further with
+  // every card, which is how the design says a stack rather than a list.
   property int toastMax: 4
   property real toastFadeStep: 0.04
   property int toastSlide: 20
@@ -1130,23 +1159,6 @@ Singleton {
   // the bar tracks the value rather than jumping to it, as the design's
   // `transition: width .14s` does.
   property int osdFillDuration: 140
-
-  property string uiFont: "Manrope"
-
-  // Manrope is one variable file whose default named instance is ExtraLight, so
-  // font.weight alone leaves a 600 heading looking like a hairline. pinning the
-  // axis is the same fix the symbol font already needs.
-  property var uiAxesSemiBold: ({ "wght": 600 })
-
-  // and the same again for the one place the design asks for 700.
-  property var uiAxesBold: ({ "wght": 700 })
-
-  // and for the clock's own lines, which the design sets at 500.
-  property var uiAxesMedium: ({ "wght": 500 })
-
-  // and for body text, which the design leaves at 400. without it a toast's body
-  // or a calendar event reads at the file's ExtraLight default.
-  property var uiAxesRegular: ({ "wght": 400 })
 
   // css line-height:1.2 in a box. Text.implicitHeight follows the font's own line
   // spacing, which is taller, and would make every chip a few pixels fat.

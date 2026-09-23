@@ -12,9 +12,10 @@ import qs.theme
 Shape {
   id: root
 
-  // the geometry renderer flattens arcs at build time and cannot re-tessellate
-  // for a fractional device pixel ratio; the curve renderer evaluates them in
-  // the fragment shader, so the opening stays smooth at eDP-1's 1.6x.
+  // the geometry renderer flattens arcs at build time and cannot re-tessellate for
+  // a fractional device pixel ratio; the curve renderer evaluates them in the
+  // fragment shader, so the opening stays smooth at whatever scale a monitor runs
+  // at.
   preferredRendererType: Shape.CurveRenderer
 
   ShapePath {

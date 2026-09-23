@@ -1,6 +1,7 @@
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Effects
+import qs.components
 import qs.modules
 import qs.services
 import qs.theme
@@ -61,11 +62,7 @@ ModalWindow {
     opacity: root.shown ? 1 : 0
 
     Behavior on y {
-      NumberAnimation {
-        duration: Theme.launcherSlideDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.launcherSlideDuration }
     }
 
     Behavior on opacity {
@@ -124,11 +121,7 @@ ModalWindow {
       scale: panel.pending ? 1 : Theme.pkScaleFrom
 
       Behavior on scale {
-        NumberAnimation {
-          duration: Theme.pkRise
-          easing.type: Easing.Bezier
-          easing.bezierCurve: Theme.easeStandard
-        }
+        Glide { duration: Theme.pkRise }
       }
 
       onAccepted: panel.resolve(true)

@@ -29,9 +29,9 @@ Shape {
   width: root.radius + root.bleed
   height: root.radius + root.bleed
 
-  // the geometry renderer flattens arcs at build time and cannot re-tessellate
-  // for a fractional device pixel ratio; the curve renderer evaluates the curve
-  // in the fragment shader, so the bite stays smooth at eDP-1's 1.6x.
+  // the geometry renderer flattens arcs at build time and cannot re-tessellate for
+  // a fractional device pixel ratio; the curve renderer evaluates the curve in the
+  // fragment shader, so the bite stays smooth at whatever scale a monitor runs at.
   preferredRendererType: Shape.CurveRenderer
 
   transform: Scale {

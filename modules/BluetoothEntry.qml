@@ -95,11 +95,7 @@ Rectangle {
     clip: true
 
     Behavior on height {
-      NumberAnimation {
-        duration: Theme.btFold
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.btFold }
     }
 
     PairingCard {

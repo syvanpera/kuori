@@ -44,11 +44,7 @@ Column {
   }
 
   Behavior on y {
-    NumberAnimation {
-      duration: Theme.lockPromptMove
-      easing.type: Easing.Bezier
-      easing.bezierCurve: Theme.easeStandard
-    }
+    Glide { duration: Theme.lockPromptMove }
   }
 
   Row {

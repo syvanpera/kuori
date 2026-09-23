@@ -22,11 +22,7 @@ Item {
   clip: true
 
   Behavior on width {
-    NumberAnimation {
-      duration: Theme.notchExpandDuration
-      easing.type: Easing.Bezier
-      easing.bezierCurve: Theme.easeStandard
-    }
+    Glide { duration: Theme.notchExpandDuration }
   }
 
   Behavior on opacity {

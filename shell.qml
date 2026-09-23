@@ -21,8 +21,8 @@ ShellRoot {
 
   // the same trick again, for a cost you can watch: `DesktopEntries` is not
   // scanned until something reads it, and until this line the something was the
-  // first launcher open. So the first open of a session waited for the scan, and
-  // the rows sat there with empty tiles until it landed. Reading it here moves the
+  // first launcher open. so the first open of a session waited for the scan, and
+  // the rows sat there with empty tiles until it landed. reading it here moves the
   // scan to startup, where nobody is looking.
   readonly property int applicationCount: DesktopEntries.applications.values.length
 
@@ -39,11 +39,11 @@ ShellRoot {
   // and the lock, which covers every screen at once.
   LockScreen {}
 
-  // the shell's only external entry point. hyprland cannot talk to a quickshell
-  // window, so the keybind shells out to `qs ipc call`. it lives here rather than
-  // in the singleton because the reload hook belongs in the root tree, and because
-  // referencing Launcher from here is what constructs the singleton at startup
-  // instead of on first use.
+  // the launcher's entry point. hyprland cannot talk to a quickshell window, so the
+  // keybind shells out to `qs ipc call`. it lives here rather than in the
+  // singleton because the reload hook belongs in the root tree. it does not
+  // construct Launcher -- a mention inside a function body is not a read, as the
+  // note at the top says -- the Connections in LauncherLoader does that.
   IpcHandler {
     target: "launcher"
 
@@ -119,8 +119,6 @@ ShellRoot {
     }
   }
 
-  // the display's two switches are three folds deep in a panel, and both are the
-  // kind of thing a key should reach.
   // the brightness keys, so one press is one step of the shell's own scale and the
   // reading it shows. hyprland's binds ran brightnessctl, whose percentages are
   // points on a perceptual curve rather than the level this shell reports.
@@ -140,6 +138,8 @@ ShellRoot {
     }
   }
 
+  // night light and stay awake are switches in the toggles tab, and both are the
+  // kind of thing a key should reach as well.
   IpcHandler {
     target: "display"
 
@@ -193,8 +193,8 @@ ShellRoot {
   }
 
   // notifications are the one thing here with no window of its own to click: a
-  // toast is gone by the time you reach for it, and the switch is three folds deep
-  // in a panel. so the two verbs worth binding a key to live here.
+  // toast is gone by the time you reach for it. so the verbs worth binding a key
+  // to live here, beside the do-not-disturb switch in the toggles tab.
   IpcHandler {
     target: "notifications"
 

@@ -128,11 +128,7 @@ Rectangle {
     height: root.expanded ? well.implicitHeight + Theme.sysWellMargin : 0
 
     Behavior on height {
-      NumberAnimation {
-        duration: Theme.notchExpandDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.notchExpandDuration }
     }
 
     Rectangle {

@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.services
 import qs.theme
 
@@ -27,11 +28,7 @@ Column {
     height: root.peeking ? Theme.clockPeekGap : 0
 
     Behavior on height {
-      NumberAnimation {
-        duration: Theme.notchExpandDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.notchExpandDuration }
     }
   }
 
@@ -53,11 +50,7 @@ Column {
     font.letterSpacing: Theme.clockPeekSpacing
 
     Behavior on height {
-      NumberAnimation {
-        duration: Theme.notchExpandDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.notchExpandDuration }
     }
 
     Behavior on opacity {

@@ -14,8 +14,8 @@ Shape {
 
   // the geometry renderer flattens arcs at build time and cannot re-tessellate for
   // a fractional device pixel ratio; the curve renderer evaluates them in the
-  // fragment shader, so the corner stays smooth at eDP-1's 1.6x. same choice, and
-  // the same reason, as DesktopFrame.
+  // fragment shader, so the corner stays smooth at whatever scale a monitor runs
+  // at. same choice, and the same reason, as DesktopFrame.
   preferredRendererType: Shape.CurveRenderer
 
   // width and height, not implicitWidth and implicitHeight: Shape derives its own

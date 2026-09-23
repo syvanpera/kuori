@@ -40,7 +40,8 @@ ToastFrame {
       visible: root.image !== ""
       source: root.image
       fillMode: Image.PreserveAspectFit
-      sourceSize.height: Theme.toastChipSize * 2
+      // logical pixels; qt scales for the screen itself.
+      sourceSize.height: Theme.toastChipSize
       asynchronous: true
     },
 

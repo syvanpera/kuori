@@ -41,11 +41,7 @@ Rectangle {
     color: root.checked ? Theme.notch : Theme.switchKnobOff
 
     Behavior on x {
-      NumberAnimation {
-        duration: Theme.controlMoveDuration
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.controlMoveDuration }
     }
 
     Behavior on color {

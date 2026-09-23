@@ -17,11 +17,7 @@ Item {
   height: Theme.pkDetailsTop + disclosure.height + (root.open ? Theme.pkDetailsBoxTop + table.height : 0)
 
   Behavior on height {
-    NumberAnimation {
-      duration: Theme.pkRise
-      easing.type: Easing.Bezier
-      easing.bezierCurve: Theme.easeStandard
-    }
+    Glide { duration: Theme.pkRise }
   }
 
   clip: true

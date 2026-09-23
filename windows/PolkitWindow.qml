@@ -1,6 +1,7 @@
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Effects
+import qs.components
 import qs.modules
 import qs.services
 import qs.theme
@@ -59,11 +60,7 @@ ModalWindow {
     }
 
     Behavior on scale {
-      NumberAnimation {
-        duration: Theme.pkRise
-        easing.type: Easing.Bezier
-        easing.bezierCurve: Theme.easeStandard
-      }
+      Glide { duration: Theme.pkRise }
     }
   }
 }

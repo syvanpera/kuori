@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Widgets
+import qs.components
 import qs.services
 import qs.theme
 
@@ -83,7 +84,9 @@ Rectangle {
       // decoded at the tile's height rather than the file's: a wallpaper is a
       // screen-sized picture and the tile is 32px. only the height is given, so a
       // panorama stays a panorama and still covers the square after the crop.
-      sourceSize.height: Theme.launcherIconSize * 2
+      // logical pixels: qt multiplies by the screen's scale itself, so doubling
+      // it here decoded four times the pixels on the laptop's panel.
+      sourceSize.height: Theme.launcherIconSize
 
       // decoding is what costs, and a flick through the list would otherwise do it
       // on the gui thread.

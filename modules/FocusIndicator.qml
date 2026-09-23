@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Hyprland
+import qs.components
 import qs.services
 import qs.theme
 

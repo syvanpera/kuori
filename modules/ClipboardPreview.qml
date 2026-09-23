@@ -118,8 +118,9 @@ Rectangle {
         asynchronous: true
 
         // decoded at the size it is shown, not the size it was copied at: a
-        // screenshot of this display is 2560 wide and this box is not.
-        sourceSize.height: Theme.clipPreviewImageHeight * 2
+        // screenshot of this display is 2560 wide and this box is not. logical
+        // pixels, which qt scales for the screen itself.
+        sourceSize.height: Theme.clipPreviewImageHeight
       }
 
       // until it is decoded, and if it cannot be: the design's own placeholder.
