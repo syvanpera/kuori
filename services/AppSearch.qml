@@ -56,26 +56,44 @@ Singleton {
   // best of every field rather than first field that matches, so a name buried in
   // a long comment cannot beat the command that is exactly what was typed.
   function score(entry: var, needle: string): int {
-    const name = (entry.name ?? "").toLowerCase()
+    const hay = root.haystack(entry)
 
-    let best = root.fieldScore(name, needle) * root.weightName
-    best = Math.max(best, root.fieldScore((entry.genericName ?? "").toLowerCase(), needle) * root.weightGeneric)
+    let best = root.fieldScore(hay.name, needle) * root.weightName
+    best = Math.max(best, root.fieldScore(hay.genericName, needle) * root.weightGeneric)
 
     // keywords are the entry's author saying what to search for, so they are worth
     // more than the prose in the comment.
-    for (const keyword of entry.keywords ?? []) {
-      best = Math.max(best, root.fieldScore(keyword.toLowerCase(), needle) * root.weightKeyword)
+    for (const keyword of hay.keywords) {
+      best = Math.max(best, root.fieldScore(keyword, needle) * root.weightKeyword)
     }
 
-    best = Math.max(best, root.fieldScore((entry.comment ?? "").toLowerCase(), needle) * root.weightComment)
+    best = Math.max(best, root.fieldScore(hay.comment, needle) * root.weightComment)
 
     // the binary, last: it matches on something nobody ever sees, but it is how you
     // find gimp when the entry is called "GNU Image Manipulation Program".
-    best = Math.max(best, root.fieldScore(root.binaryOf(entry).toLowerCase(), needle) * root.weightCommand)
+    best = Math.max(best, root.fieldScore(hay.binary, needle) * root.weightCommand)
 
     if (best === 0) return 0
 
-    return best + root.lengthBonus(name)
+    return best + root.lengthBonus(hay.name)
+  }
+
+  // every field score() reads, lowercased once and kept on the row. the rows are
+  // stable objects -- the launcher depends on that -- so the work is done the
+  // first time a row is scored rather than for every row on every keystroke,
+  // which with a clipboard history is several hundred rows a key.
+  function haystack(entry: var): var {
+    if (entry.haystack) return entry.haystack
+
+    entry.haystack = {
+      name: (entry.name ?? "").toLowerCase(),
+      genericName: (entry.genericName ?? "").toLowerCase(),
+      keywords: (entry.keywords ?? []).map(keyword => keyword.toLowerCase()),
+      comment: (entry.comment ?? "").toLowerCase(),
+      binary: root.binaryOf(entry).toLowerCase()
+    }
+
+    return entry.haystack
   }
 
   // one field against one needle: does it start with it, does a word in it start

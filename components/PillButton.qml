@@ -13,7 +13,7 @@ Rectangle {
   property color fill: Theme.accent
   property color hoverFill: root.fill
   property color textColor: Theme.litText
-  property int textSize: Theme.cfButtonSize
+  property real textSize: Theme.cfButtonSize
 
   property real paddingH: 0
   property real paddingV: 0

@@ -151,13 +151,13 @@ Rectangle {
 
     Item {
       width: parent.width
-      height: Math.max(meta.implicitHeight, enter.height)
+      height: Math.max(meta.implicitHeight, hint.height)
 
       Text {
         id: meta
 
         anchors.left: parent.left
-        anchors.right: enter.left
+        anchors.right: hint.left
         anchors.rightMargin: Theme.clipPreviewFootGap
         anchors.verticalCenter: parent.verticalCenter
 
@@ -176,26 +176,17 @@ Rectangle {
         font.pixelSize: Theme.clipPreviewMetaSize
       }
 
-      KeyCap {
-        id: enter
-
-        anchors.right: hint.left
-        anchors.rightMargin: Theme.clipPreviewFootGap
-        anchors.verticalCenter: parent.verticalCenter
-
-        label: "ENTER"
-      }
-
-      Text {
+      KeyHint {
         id: hint
 
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
 
-        text: "copy"
-        color: Theme.clipPreviewHint
-        font.family: Theme.monoFont
-        font.pixelSize: Theme.clipPreviewMetaSize
+        key: "ENTER"
+        label: "copy"
+        spacing: Theme.clipPreviewFootGap
+        textColor: Theme.clipPreviewHint
+        textSize: Theme.clipPreviewMetaSize
       }
     }
   }
