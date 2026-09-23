@@ -159,7 +159,7 @@ ShellRoot {
     target: "calendar"
 
     function toggle(): void {
-      Notches.toggle("clock")
+      Notches.toggle("clock", "")
     }
   }
 
@@ -169,7 +169,7 @@ ShellRoot {
     target: "system"
 
     function toggle(row: string): void {
-      Notches.toggleRow(row)
+      Notches.toggleRow(row, "")
     }
   }
 

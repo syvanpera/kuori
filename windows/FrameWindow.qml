@@ -19,6 +19,9 @@ PanelWindow {
   // positions in, offset by the monitor's own origin.
   readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
 
+  // what Notches knows this screen by.
+  readonly property string screenName: root.screen?.name ?? ""
+
   anchors {
     top: true
     bottom: true
@@ -50,11 +53,18 @@ PanelWindow {
   // leave that follows cancels the click before it finishes. the grab keeps input
   // on the shell while a panel is out, which is also what makes a click anywhere
   // else dismiss it.
+  //
+  // only on the screen the panel is open on. hyprland keeps one grab at a time, so
+  // a grab per screen has each new one clearing the last -- and a cleared grab is
+  // read as a click elsewhere, which shut every panel the instant it opened.
   HyprlandFocusGrab {
     windows: [root]
-    active: Notches.open !== ""
+    active: Notches.openOn(root.screenName) !== ""
 
-    onCleared: Notches.close()
+    // a grab also clears when the panel moves to another screen and this one lets
+    // go. that is not a click elsewhere, and closing on it would shut the panel
+    // that just opened over there.
+    onCleared: if (Notches.screen === root.screenName) Notches.close()
   }
 
   // an idle inhibitor is a property of a surface, not of a session, so it hangs
@@ -82,7 +92,7 @@ PanelWindow {
     // it has a meaning for, the way the launcher's confirmation does -- and each is
     // answered in its own handler, because those run before Keys.onPressed and a
     // guard written there would never see them.
-    readonly property bool pairing: Bluez.asking && Notches.open === "system" && Notches.row === "bluetooth"
+    readonly property bool pairing: Bluez.asking && Notches.openOn(root.screenName) === "system" && Notches.row === "bluetooth"
     readonly property bool choosing: keySink.pairing && Bluez.request.kind !== "type"
 
     focus: true
@@ -176,6 +186,7 @@ PanelWindow {
     y: Theme.borderWidth
     placement: "left"
     notchId: "workspaces"
+    screenName: root.screenName
 
     panel: Component {
       WorkspacePanel {}
@@ -191,6 +202,7 @@ PanelWindow {
     y: Theme.borderWidth
     placement: "center"
     notchId: "clock"
+    screenName: root.screenName
     trigger: "click"
 
     panel: Component {
@@ -215,13 +227,14 @@ PanelWindow {
     y: Theme.borderWidth
     placement: "center"
     notchId: "toggles"
+    screenName: root.screenName
 
     // centre-placed for its corners and its fillets, but padded like the tabs that
     // carry glyphs rather than like the clock.
     padding: Theme.notchPadding
 
     // both of the things that would grow over it.
-    aside: Notches.open === "system" || Osd.shown
+    aside: Notches.openOn(root.screenName) === "system" || osd.visible
 
     Toggles {}
   }
@@ -233,6 +246,7 @@ PanelWindow {
     y: Theme.borderWidth
     placement: "right"
     notchId: "system"
+    screenName: root.screenName
     trigger: "click"
 
     // the one tab that keeps its strip: the glyphs it reports stay on screen while
@@ -246,7 +260,9 @@ PanelWindow {
       SystemPanel {}
     }
 
-    SystemStatus {}
+    SystemStatus {
+      screenName: root.screenName
+    }
   }
 
   // last, so it is over the frame and over the focus indicator, like the tabs. it
@@ -255,6 +271,7 @@ PanelWindow {
     id: osd
 
     stripWidth: system.width
+    here: Screens.focused?.name === root.screenName
     x: root.width - width - Theme.borderWidth
     y: Theme.borderWidth + system.bodyHeight
   }

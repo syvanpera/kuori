@@ -20,6 +20,11 @@ Item {
   // and the contents win if they need more.
   property real stripWidth: 0
 
+  // whether this is the screen to show on. every screen has a box, and a key press
+  // is answered on the one being looked at -- three boxes for one brightness key
+  // is two of them reporting a laptop panel from monitors it does not light.
+  property bool here: true
+
   readonly property bool volume: Osd.kind === "volume"
   readonly property bool muted: root.volume && Audio.muted
 
@@ -34,7 +39,7 @@ Item {
 
   // 0 away, 1 fully out. the drop-in reads this rather than animating three
   // properties separately and letting them drift apart.
-  property real reveal: Osd.shown ? 1 : 0
+  property real reveal: Osd.shown && root.here ? 1 : 0
 
   // what the shadow beside the frame has to match. it is drawn there rather than
   // here so the border band covers the part of it that falls on the band.

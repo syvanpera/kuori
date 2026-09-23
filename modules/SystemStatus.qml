@@ -9,6 +9,10 @@ import qs.theme
 Row {
   id: root
 
+  // the screen this strip is on. its icons open the panel here, not on whichever
+  // monitor hyprland happens to think is focused.
+  property string screenName: ""
+
   readonly property bool btEnabled: Bluez.enabled
   readonly property bool btConnected: Bluez.connected.length > 0
 
@@ -23,7 +27,7 @@ Row {
   // an icon whose section is showing is accented and underlined, which is the only
   // thing on the strip that says what the panel below it is currently about.
   function showing(row: string): bool {
-    return Notches.open === "system" && Notches.row === row
+    return Notches.openOn(root.screenName) === "system" && Notches.row === row
   }
 
   spacing: Theme.systemSpacing
@@ -31,7 +35,7 @@ Row {
   StripButton {
     active: root.showing("wifi")
 
-    onClicked: Notches.toggleRow("wifi")
+    onClicked: Notches.toggleRow("wifi", root.screenName)
 
     Glyph {
       icon: Network.linkGlyph
@@ -47,7 +51,7 @@ Row {
   StripButton {
     active: root.showing("bluetooth")
 
-    onClicked: Notches.toggleRow("bluetooth")
+    onClicked: Notches.toggleRow("bluetooth", root.screenName)
 
     Glyph {
       icon: {
@@ -66,7 +70,7 @@ Row {
   StripButton {
     active: root.showing("audio")
 
-    onClicked: Notches.toggleRow("audio")
+    onClicked: Notches.toggleRow("audio", root.screenName)
 
     Glyph {
       icon: Audio.levelGlyph(Audio.volume, root.silent)
@@ -84,7 +88,7 @@ Row {
   StripButton {
     active: root.showing("notifications")
 
-    onClicked: Notches.toggleRow("notifications")
+    onClicked: Notches.toggleRow("notifications", root.screenName)
 
     Glyph {
       icon: Notifications.history.length > 0 ? "notifications_active" : "notifications_none"
@@ -99,7 +103,7 @@ Row {
   StripButton {
     active: root.showing("battery")
 
-    onClicked: Notches.toggleRow("battery")
+    onClicked: Notches.toggleRow("battery", root.screenName)
 
     Row {
       spacing: Theme.batterySpacing

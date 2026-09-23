@@ -129,9 +129,7 @@ Rectangle {
   MouseArea {
     anchors.fill: parent
 
-    onClicked: {
-      Notches.open = "system"
-      Notches.row = "bluetooth"
-    }
+    // the focused screen, which is where the toast itself went up.
+    onClicked: Notches.showRow("bluetooth", "")
   }
 }

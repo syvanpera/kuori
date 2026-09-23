@@ -58,7 +58,7 @@ PanelWindow {
   // ordering -- two surfaces on one layer stack by creation order, and this one is
   // always created later -- so the toasts stand aside for the one panel they
   // overlap instead. nothing is lost by it: that panel is where the history is.
-  visible: Notches.open !== "system"
+  visible: Notches.openOn(root.screen?.name ?? "") !== "system"
 
   // only the cards are clickable; every other pixel of this surface belongs to
   // whatever is behind it. without this the whole top-right corner of the desktop

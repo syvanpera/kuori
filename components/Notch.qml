@@ -26,6 +26,10 @@ Item {
   // identifies this tab in the shared open state.
   property string notchId: ""
 
+  // the screen this tab is on, by name. every screen has a copy of every tab, and
+  // only one of them is the one that was opened.
+  property string screenName: ""
+
   // the strip's contents. one child, which lays itself out and gets measured.
   default property alias content: contentItem.data
 
@@ -47,11 +51,11 @@ Item {
 
   readonly property bool open: {
     if (!root.panel) return false
-    if (root.trigger === "click") return Notches.open === root.notchId
+    if (root.trigger === "click") return Notches.openOn(root.screenName) === root.notchId
 
     // a hovering tab stays shut while another tab is being read, so brushing past
     // it cannot yank a panel out from under the pointer.
-    return root.hovered && Notches.open === ""
+    return root.hovered && Notches.openOn(root.screenName) === ""
   }
 
   // the item the window mask points at. it tracks the body, so the input region
@@ -211,7 +215,7 @@ Item {
     enabled: root.trigger === "click" && root.panel !== null
     visible: enabled
 
-    onClicked: Notches.toggle(root.notchId)
+    onClicked: Notches.toggle(root.notchId, root.screenName)
   }
 
   // where the tab meets the top band on its left. the flush-left tab has no band

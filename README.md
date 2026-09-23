@@ -345,6 +345,13 @@ and stops at 1% so a key held one press too long cannot leave a dark screen.
 **Workspaces** (left) opens on hover, since it has nothing to click. The others latch open on a
 click, and a click anywhere else closes them.
 
+**With more than one monitor** every screen has its own frame and its own copy of every tab, but only
+one panel is open at a time, on the screen it was opened from. Clicking a tab opens it there; a
+keybind or an IPC call (`calendar toggle`, `system toggle <row>`) opens it on the focused monitor.
+The same tab on another screen moves the panel there rather than opening a second one, and unplugging
+the monitor a panel is on closes it. The launcher, the polkit dialog and the toasts appear on the
+focused monitor.
+
 **Clock** (centre) opens a calendar. The month arrows page; the date line is clickable to come back
 to today, but only when you have paged away from it. Clicking the time again closes the panel.
 
@@ -418,7 +425,7 @@ it would work with no change to your Hyprland config at all. (The brightness key
 kuori, but for a different reason: see `backlight` above.)
 
 Toasts move down while it is out, and it stays away entirely while the system panel is open, since the
-panel is showing those same sliders.
+panel is showing those same sliders. With several monitors it appears on the focused one only.
 
 ## Notifications
 
