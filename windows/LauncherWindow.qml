@@ -1,5 +1,3 @@
-import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Effects
@@ -9,73 +7,16 @@ import qs.theme
 
 // the launcher surface: a fullscreen overlay on one monitor holding the scrim and
 // the panel. exists only while the launcher is open.
-PanelWindow {
+ModalWindow {
   id: root
 
-  // drives every transition. false for the first frame because a Behavior never
-  // runs on the value a property was initialised with, and the design's entry
-  // animation needs somewhere to come from.
-  property bool shown: false
+  fade: Theme.launcherFade
+  scrimColor: Theme.launcherScrim
 
-  // the loader waits for this instead of destroying the window the moment the
-  // launcher closes, which would cut the exit animation off at frame one.
-  signal dismissed()
-
-  anchors {
-    top: true
-    bottom: true
-    left: true
-    right: true
-  }
-
-  // same reasoning as the frame: a surface anchored to all four edges can never
-  // reserve space, and anything but Ignore would fight the reservation windows
-  // for the area they already claimed.
-  exclusionMode: ExclusionMode.Ignore
-  color: "transparent"
-
-  // Overlay, not Top: the frame sits on Top, and hyprland draws fullscreen windows
-  // above Top, so a launcher on Top would be invisible in exactly the case where
-  // it is most needed.
-  WlrLayershell.layer: WlrLayer.Overlay
   WlrLayershell.namespace: "qs-launcher"
 
-  // Exclusive because the keybind that opens this never clicks it, and without an
-  // exclusive grab the first keystroke goes to whatever hyprland still thinks is
-  // focused. dropped the instant we start closing, so the app just launched gets
-  // the keyboard rather than an overlay on its way out. do not also set
-  // PanelWindow.focusable: it writes this same value.
-  WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-  // and the input region goes with it. a mapped layer surface eats every click in
-  // its region, including through the fade; an empty region hands the pointer back
-  // to the desktop for those frames.
-  mask: Region { item: root.shown ? scrim : null }
-
-  Component.onCompleted: root.shown = true
-
-  onShownChanged: {
-    if (root.shown) {
-      exit.stop()
-      return
-    }
-
-    // the grab goes the moment we start closing, so the app just launched gets
-    // the keyboard rather than an overlay on its way out.
-    grab.active = false
-    exit.restart()
-  }
-
-  // the window outlives the close only to play the fade out. a Behavior runs its
-  // animation without ever emitting finished(), so the teardown is timed rather
-  // than chained off the animation.
-  Timer {
-    id: exit
-
-    interval: Theme.launcherFade
-
-    onTriggered: root.dismissed()
-  }
+  onScrimClicked: Launcher.close()
+  onGrabCleared: Launcher.close()
 
   Connections {
     target: Launcher
@@ -84,50 +25,6 @@ PanelWindow {
     // Behavior, no second window.
     function onOpenedChanged(): void {
       root.shown = Launcher.opened
-    }
-  }
-
-  // the compositor is the only thing that can see a click on another monitor, or
-  // focus being handed to a window by a keybind. cleared(), not activeChanged:
-  // active also drops when we release the grab ourselves, and closing on that
-  // would be a loop.
-  HyprlandFocusGrab {
-    id: grab
-
-    windows: [root]
-
-    onCleared: Launcher.close()
-  }
-
-  // one turn of the event loop after the surface is mapped. asking hyprland to
-  // grab a surface it has not seen yet is answered with an immediate cleared(),
-  // which would close the launcher on the frame it opened.
-  Timer {
-    interval: 1
-    running: root.shown
-
-    onTriggered: grab.active = true
-  }
-
-  // the backdrop, and the click-outside target: the panel sits on top and eats its
-  // own clicks, so anything reaching here is outside the panel.
-  MouseArea {
-    id: scrim
-
-    anchors.fill: parent
-    opacity: root.shown ? 1 : 0
-
-    onClicked: Launcher.close()
-
-    Behavior on opacity {
-      NumberAnimation {
-        duration: Theme.launcherFade
-      }
-    }
-
-    Rectangle {
-      anchors.fill: parent
-      color: Theme.launcherScrim
     }
   }
 
@@ -175,6 +72,7 @@ PanelWindow {
       NumberAnimation { duration: Theme.launcherFade }
     }
   }
+
   // over the panel and its own scrim, because it is a question about the row that
   // was just chosen and nothing behind it should answer first. the launcher stays
   // up underneath: cancelling puts you back where you were.
@@ -198,7 +96,23 @@ PanelWindow {
       color: Theme.cfScrim
     }
 
+    // the polkit card's shadow, which this card borrows along with its width.
+    RectangularShadow {
+      x: card.x
+      y: card.y
+      width: card.width
+      height: card.height
+      scale: card.scale
+      radius: Theme.notchRadius
+      blur: Theme.pkShadowBlur
+      spread: 0
+      offset.y: Theme.pkShadowOffset
+      color: Theme.pkShadow
+    }
+
     ConfirmDialog {
+      id: card
+
       anchors.centerIn: parent
 
       // kept alive through the fade out: reading the row's name off a row that

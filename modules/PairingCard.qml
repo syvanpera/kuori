@@ -18,11 +18,7 @@ Item {
   readonly property string code: root.request?.code ?? ""
   readonly property int entered: root.request?.entered ?? -1
 
-  // "482 913". the design splits a six-digit code in the middle, which is how a
-  // phone shows the same number; anything else is a legacy pin, shown whole.
-  readonly property string spaced: root.code.length === 6
-    ? `${root.code.slice(0, 3)} ${root.code.slice(3)}`
-    : root.code
+  readonly property string spaced: Bluez.spacedCode(root.code)
 
   implicitHeight: body.implicitHeight + Theme.btCardTop + Theme.btCardBottom
 
@@ -31,60 +27,32 @@ Item {
 
     color: Theme.btCardText
     font.family: Theme.uiFont
+    font.variableAxes: Theme.uiAxesRegular
     font.pixelSize: Theme.btCardTextSize
     lineHeight: Theme.btCardTextLine
     lineHeightMode: Text.FixedHeight
     wrapMode: Text.Wrap
   }
 
-  component CardButton: Rectangle {
+  // the toast's own buttons, sized for the card. the keyboard's choice wears a
+  // ring, as the design draws it: the card says enter does something, so it has
+  // to say which.
+  component CardButton: PillButton {
     id: button
 
-    property string label: ""
     property bool primary: false
     property bool ringed: false
 
-    signal clicked()
-
-    width: text.implicitWidth + Theme.btButtonPaddingH * 2
-    height: text.implicitHeight + Theme.btButtonPaddingV * 2
-
+    fill: button.primary ? Theme.toastPrimaryFill : Theme.toastActionFill
+    hoverFill: button.primary ? Theme.toastPrimaryHover : Theme.toastActionHover
+    textColor: button.primary ? Theme.accent : Theme.btSecondaryText
+    textSize: Theme.btButtonSize
+    paddingH: Theme.btButtonPaddingH
+    paddingV: Theme.btButtonPaddingV
     radius: Theme.btButtonRadius
-    color: {
-      if (button.primary) return mouse.containsMouse ? Theme.toastPrimaryHover : Theme.toastPrimaryFill
 
-      return mouse.containsMouse ? Theme.toastActionHover : Theme.toastActionFill
-    }
-
-    // the keyboard's choice wears a ring, as the design draws it: the card says
-    // enter does something, so it has to say which.
-    border.width: button.ringed ? Theme.btButtonRing : 0
-    border.color: button.primary ? Theme.accent : Theme.btSecondaryRing
-
-    Behavior on color {
-      ColorAnimation { duration: Theme.notchFadeDuration }
-    }
-
-    Text {
-      id: text
-
-      anchors.centerIn: parent
-
-      text: button.label
-      color: button.primary ? Theme.accent : Theme.btSecondaryText
-      font.family: Theme.uiFont
-      font.pixelSize: Theme.btButtonSize
-      font.variableAxes: Theme.uiAxesSemiBold
-    }
-
-    MouseArea {
-      id: mouse
-
-      anchors.fill: parent
-      hoverEnabled: true
-
-      onClicked: button.clicked()
-    }
+    ring: button.ringed ? Theme.btButtonRing : 0
+    ringColor: button.primary ? Theme.accent : Theme.btSecondaryRing
   }
 
   Column {
@@ -187,7 +155,7 @@ Item {
           border.width: 1
           border.color: Theme.sysFieldBorder
 
-          TextInput {
+          Field {
             id: field
 
             anchors.left: parent.left
@@ -216,20 +184,7 @@ Item {
             Keys.onEscapePressed: Bluez.reject()
             Keys.onTabPressed: Bluez.selected = 1 - Bluez.selected
 
-            cursorDelegate: Rectangle {
-              width: 1
-              color: Theme.accent
-            }
-
-            Text {
-              anchors.fill: parent
-              visible: field.text.length === 0
-
-              text: "PIN or passkey"
-              color: Theme.launcherDimText
-              font: field.font
-              verticalAlignment: Text.AlignVCenter
-            }
+            placeholder: "PIN or passkey"
           }
         }
       }

@@ -198,6 +198,11 @@ Item {
     opacity: root.open ? 1 : 0
     enabled: root.open
 
+    // out of the scene graph once faded, which keeps a shut panel from being drawn
+    // or hovered on every screen. its implicit size is still measured while
+    // hidden, which is all the body needs from it.
+    visible: panelLoader.opacity > 0
+
     Behavior on opacity {
       NumberAnimation { duration: Theme.notchFadeDuration }
     }

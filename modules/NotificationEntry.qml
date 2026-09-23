@@ -83,6 +83,7 @@ Rectangle {
         wrapMode: Text.Wrap
         color: Theme.notifBody
         font.family: Theme.uiFont
+        font.variableAxes: Theme.uiAxesRegular
         font.pixelSize: Theme.notifBodySize
         lineHeight: Theme.notifBodyLine
         lineHeightMode: Text.FixedHeight

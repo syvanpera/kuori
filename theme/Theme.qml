@@ -656,6 +656,11 @@ Singleton {
   property int pkTitleSize: 14
   property int pkMessageSize: 12
 
+  // css line-height:1.5. qml's lineHeight multiplies the font's own line spacing,
+  // which is already taller than the pixel size, so the ratio has to be turned
+  // into a fixed box or the paragraph comes out airy.
+  readonly property int pkMessageLine: Math.round(root.pkMessageSize * 1.5)
+
   property int pkIdentityPaddingH: 12
   property int pkIdentityPaddingV: 10
   property int pkIdentityRadius: 11
@@ -680,6 +685,9 @@ Singleton {
   property int pkNoteGap: 6
   property int pkNoteIcon: 12
   property int pkNoteSize: 10
+
+  // one turn of the glyph that spins while pam is thinking.
+  property int noteSpin: 900
 
   property int pkDetailsTop: 6
   property int pkDetailsGap: 5
@@ -1097,6 +1105,10 @@ Singleton {
 
   // and for the clock's own lines, which the design sets at 500.
   property var uiAxesMedium: ({ "wght": 500 })
+
+  // and for body text, which the design leaves at 400. without it a toast's body
+  // or a calendar event reads at the file's ExtraLight default.
+  property var uiAxesRegular: ({ "wght": 400 })
 
   // css line-height:1.2 in a box. Text.implicitHeight follows the font's own line
   // spacing, which is taller, and would make every chip a few pixels fat.

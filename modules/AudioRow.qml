@@ -8,10 +8,10 @@ import qs.theme
 PanelRow {
   id: root
 
-  icon: Audio.levelGlyph(Audio.volume, !Audio.sinkReady || Audio.muted)
+  icon: Audio.levelGlyph(Audio.volume, Audio.silent)
 
   label: "Audio"
-  lit: Audio.sinkReady && !Audio.muted
+  lit: !Audio.silent
   value: Audio.summary
 
   // the device lists are only bound while the row is open.
@@ -25,7 +25,7 @@ PanelRow {
   // design's ENABLED is mute read the right way up.
   SectionSwitch {
     width: root.bodyWidth
-    checked: Audio.sinkReady && !Audio.muted
+    checked: !Audio.silent
 
     onToggled: Audio.setMuted(!Audio.muted)
   }

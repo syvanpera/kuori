@@ -83,6 +83,16 @@ Singleton {
     .filter(d => !root.isConnected(d))
     .sort((a, b) => (b.paired - a.paired) || a.name.localeCompare(b.name))
 
+  // the one glyph for the radio as a whole, which the strip and the panel row both
+  // show -- glyph() below is for a device. the design draws a plain `bluetooth`
+  // everywhere; the strip had grown a ladder of its own, and two ladders for one
+  // radio is the problem Network.linkGlyph was written to end.
+  readonly property string radioGlyph: {
+    if (!root.enabled) return "bluetooth_disabled"
+    if (root.connected.length > 0) return "bluetooth_connected"
+    return "bluetooth"
+  }
+
   // what the collapsed row says on the right. the first connected device, because
   // the row has space for one name and that is the one worth having.
   readonly property string summary: {
@@ -98,6 +108,13 @@ Singleton {
     if (!shown) return ""
 
     return root.devices.find(d => d.dbusPath === shown.path)?.name ?? shown.address
+  }
+
+  // "482 913". the design splits a six-digit code in the middle, which is how a
+  // phone shows the same number; anything else is a legacy pin, shown whole. the
+  // card and the toast both write the code this way.
+  function spacedCode(code: string): string {
+    return code.length === 6 ? `${code.slice(0, 3)} ${code.slice(3)}` : code
   }
 
   function isConnected(device: var): bool {

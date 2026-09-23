@@ -158,8 +158,8 @@ Column {
           text: Network.error
           color: Theme.sysError
           font.family: Theme.uiFont
+          font.variableAxes: Theme.uiAxesMedium
           font.pixelSize: Theme.sysErrorSize
-          font.weight: Font.Medium
         }
       }
     }

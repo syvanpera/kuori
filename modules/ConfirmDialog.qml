@@ -11,9 +11,7 @@ Rectangle {
 
   required property var action
 
-  // which button the keyboard is on. it wears the hover look, because that is
-  // already the shell's way of saying "this is the one you are about to press" and
-  // a second vocabulary for the same statement would be one too many.
+  // which button the keyboard is on: the confirming one, or Cancel.
   property bool confirming: true
 
   signal accepted()
@@ -29,6 +27,14 @@ Rectangle {
   // the shadow alone leaves the card's edge indistinct against a dimmed desktop.
   border.width: 1
   border.color: Theme.pkOutline
+
+  // the card sits on the scrim that cancels it, so a click on its title or its
+  // padding would otherwise fall through and count as a click outside. declared
+  // first, so the buttons are above it.
+  MouseArea {
+    anchors.fill: parent
+    acceptedButtons: Qt.AllButtons
+  }
 
   Column {
     id: layout
@@ -94,76 +100,35 @@ Rectangle {
       topPadding: Theme.cfButtonsTop
       spacing: Theme.cfButtonsGap
 
-      Rectangle {
-        id: cancel
+      PillButton {
+        label: "Cancel"
+        fill: Theme.pkCancelFill
+        hoverFill: Theme.pkCancelHover
+        textColor: Theme.pkCancelText
+        textSize: Theme.cfButtonSize
+        paddingH: Theme.cfButtonPaddingH
+        paddingV: Theme.cfButtonPaddingV
+        fade: Theme.pkFade
+        selected: !root.confirming
 
-        width: cancelLabel.implicitWidth + Theme.cfButtonPaddingH * 2
-        height: cancelLabel.implicitHeight + Theme.cfButtonPaddingV * 2
-
-        // a pill is its own height, not a number: the design writes 999 for the
-        // radius, which is css for "as round as it goes".
-        radius: height / 2
-        color: cancelHover.containsMouse || !root.confirming ? Theme.pkCancelHover : Theme.pkCancelFill
-
-        Behavior on color {
-          ColorAnimation { duration: Theme.pkFade }
-        }
-
-        Text {
-          id: cancelLabel
-
-          anchors.centerIn: parent
-
-          text: "Cancel"
-          color: Theme.pkCancelText
-          font.family: Theme.uiFont
-          font.pixelSize: Theme.cfButtonSize
-          font.variableAxes: Theme.uiAxesSemiBold
-        }
-
-        MouseArea {
-          id: cancelHover
-
-          anchors.fill: parent
-          hoverEnabled: true
-
-          onClicked: root.rejected()
-        }
+        onClicked: root.rejected()
       }
 
-      Rectangle {
-        width: confirmLabel.implicitWidth + Theme.cfButtonPaddingH * 2
-        height: confirmLabel.implicitHeight + Theme.cfButtonPaddingV * 2
-        radius: height / 2
-        color: confirmHover.containsMouse || root.confirming ? Theme.accentLift : Theme.accent
+      // the action's own name, so the button says what it will do rather than
+      // "OK". the last thing read before a machine turns off should be the words
+      // "Power off".
+      PillButton {
+        label: root.action?.name ?? ""
+        fill: Theme.accent
+        hoverFill: Theme.accentLift
+        textColor: Theme.litText
+        textSize: Theme.cfButtonSize
+        paddingH: Theme.cfButtonPaddingH
+        paddingV: Theme.cfButtonPaddingV
+        fade: Theme.pkFade
+        selected: root.confirming
 
-        Behavior on color {
-          ColorAnimation { duration: Theme.pkFade }
-        }
-
-        Text {
-          id: confirmLabel
-
-          anchors.centerIn: parent
-
-          // the action's own name, so the button says what it will do rather than
-          // "OK". the last thing read before a machine turns off should be the
-          // words "Power off".
-          text: root.action?.name ?? ""
-          color: Theme.litText
-          font.family: Theme.uiFont
-          font.pixelSize: Theme.cfButtonSize
-          font.variableAxes: Theme.uiAxesSemiBold
-        }
-
-        MouseArea {
-          id: confirmHover
-
-          anchors.fill: parent
-          hoverEnabled: true
-
-          onClicked: root.accepted()
-        }
+        onClicked: root.accepted()
       }
     }
 

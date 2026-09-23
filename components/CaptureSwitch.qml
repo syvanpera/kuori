@@ -23,8 +23,8 @@ Item {
     text: root.label
     color: Theme.capSwitchLabel
     font.family: Theme.uiFont
+    font.variableAxes: Theme.uiAxesMedium
     font.pixelSize: Theme.capSwitchLabelSize
-    font.weight: Font.Medium
   }
 
   Switch {

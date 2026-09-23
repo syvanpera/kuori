@@ -58,8 +58,8 @@ Rectangle {
     text: root.label
     color: root.selected ? Theme.text : Theme.capTileText
     font.family: Theme.uiFont
+    font.variableAxes: Theme.uiAxesMedium
     font.pixelSize: Theme.capTileLabelSize
-    font.weight: Font.Medium
   }
 
   MouseArea {

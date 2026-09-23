@@ -33,6 +33,14 @@ Singleton {
   // press too long should not leave a black screen and no way to see the way back.
   property real floorLevel: 0.01
 
+  // the brightness glyph for a level, in thirds -- the osd's, and the counterpart
+  // of Audio.levelGlyph, so the ladder lives with the thing it describes.
+  function levelGlyph(level: real): string {
+    if (level < 0.34) return "brightness_low"
+    if (level < 0.67) return "brightness_medium"
+    return "brightness_high"
+  }
+
   function step(direction: int): void {
     if (!root.known) return
 

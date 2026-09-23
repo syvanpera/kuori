@@ -42,8 +42,8 @@ Rectangle {
 
   function send(): void {
     if (root.busy || root.ok) return
-    root.submitted(input.text)
-    input.text = ""
+    root.submitted(field.text)
+    field.text = ""
   }
 
   Column {
@@ -105,11 +105,9 @@ Rectangle {
           text: root.flow?.message ?? ""
           color: Theme.pkMessageText
           font.family: Theme.uiFont
+          font.variableAxes: Theme.uiAxesRegular
           font.pixelSize: Theme.pkMessageSize
-          // css line-height:1.5. qmls lineHeight multiplies the fonts own line
-          // spacing, which is already taller than the pixel size, so the ratio has
-          // to be turned into a fixed box or the paragraph comes out airy.
-          lineHeight: Math.round(Theme.pkMessageSize * 1.5)
+          lineHeight: Theme.pkMessageLine
           lineHeightMode: Text.FixedHeight
           wrapMode: Text.WordWrap
         }
@@ -194,159 +192,56 @@ Rectangle {
       width: parent.width
       height: Theme.pkFieldTop + field.height + Theme.pkFieldGap + Theme.pkNoteHeight
 
-      Rectangle {
+      SecretField {
         id: field
 
         x: Theme.pkGutter
         y: Theme.pkFieldTop
-
         width: parent.width - Theme.pkGutter * 2
-        height: Theme.pkFieldHeight
-        radius: Theme.pkFieldRadius
-        color: Theme.pkFieldFill
 
-        border.width: 1
-        border.color: {
-          if (root.errored) return Theme.pkFieldBorderError
-          if (root.ok) return Theme.pkFieldBorderOk
-          return Theme.pkFieldBorder
-        }
+        inputFocus: true
+        revealed: root.echo
+        busy: root.busy
+        errored: root.errored
+        ok: root.ok
 
-        Behavior on border.color {
-          ColorAnimation { duration: Theme.pkFade }
-        }
+        // pam says what it wants. the design hardcodes "Root password".
+        placeholder: root.flow?.inputPrompt || "Password"
 
-        Glyph {
-          id: keyGlyph
+        Component.onCompleted: field.take()
 
-          x: Theme.pkFieldPaddingH
-          anchors.verticalCenter: parent.verticalCenter
-
-          size: Theme.pkFieldGlyph
-          icon: "key"
-          iconColor: Theme.pkFieldGlyphColor
-        }
-
-        TextInput {
-          id: input
-
-          anchors.left: keyGlyph.right
-          anchors.leftMargin: Theme.pkFieldIconGap
-          anchors.right: eye.left
-          anchors.rightMargin: Theme.pkFieldIconGap
-          anchors.verticalCenter: parent.verticalCenter
-
-          focus: true
-          enabled: !root.busy && !root.ok
-          echoMode: root.echo ? TextInput.Normal : TextInput.Password
-          color: Theme.tintBright
-          font.family: Theme.monoFont
-          font.pixelSize: Theme.pkFieldSize
-          font.weight: Font.Medium
-          selectByMouse: true
-
-          Component.onCompleted: input.forceActiveFocus()
-
-          Keys.onReturnPressed: root.send()
-
-          // the numpad's enter is a different key.
-          Keys.onEnterPressed: root.send()
-
-          Keys.onEscapePressed: root.cancelled()
-
-          cursorDelegate: Rectangle {
-            width: 1
-            color: Theme.accent
-          }
-
-          Text {
-            anchors.fill: parent
-            visible: input.text.length === 0
-
-            // pam says what it wants. the design hardcodes "Root password".
-            text: root.flow?.inputPrompt || "Password"
-            color: Theme.pkFieldGlyphColor
-            font: input.font
-            verticalAlignment: Text.AlignVCenter
-            elide: Text.ElideRight
-          }
-        }
-
-        Glyph {
-          id: eye
-
-          x: field.width - Theme.pkFieldPaddingH - width
-          anchors.verticalCenter: parent.verticalCenter
-
-          size: Theme.pkEyeSize
-          icon: root.echo ? "visibility_off" : "visibility"
-          iconColor: eyeHover.containsMouse ? Theme.pkEyeHover : Theme.pkEye
-
-          MouseArea {
-            id: eyeHover
-
-            anchors.fill: parent
-            hoverEnabled: true
-
-            onClicked: root.revealed = !root.revealed
-          }
-        }
+        onAccepted: root.send()
+        onEscaped: root.cancelled()
+        onRevealToggled: root.revealed = !root.revealed
       }
 
-      Item {
+      StatusNote {
         id: note
 
         x: Theme.pkGutter
         y: field.y + field.height + Theme.pkFieldGap
-
         width: parent.width - Theme.pkGutter * 2
-        height: Theme.pkNoteHeight
 
-        readonly property string text: {
+        text: {
           if (root.ok) return "Authenticated"
           if (root.busy) return "Verifying…"
           return root.flow?.supplementaryMessage ?? ""
         }
-
-        readonly property color shade: {
+        shade: {
           if (root.ok) return Theme.success
           if (root.errored) return Theme.sysError
           return Theme.pkNoteIdle
+        }
+        icon: {
+          if (root.ok) return "check_circle"
+          if (root.errored) return "error"
+          return "hourglass_top"
         }
 
         opacity: note.text === "" ? 0 : 1
 
         Behavior on opacity {
           NumberAnimation { duration: Theme.pkFade }
-        }
-
-        Glyph {
-          id: noteGlyph
-
-          anchors.verticalCenter: parent.verticalCenter
-
-          size: Theme.pkNoteIcon
-          filled: true
-          iconColor: note.shade
-          icon: {
-            if (root.ok) return "check_circle"
-            if (root.errored) return "error"
-            return "hourglass_top"
-          }
-        }
-
-        Text {
-          anchors.left: noteGlyph.right
-          anchors.leftMargin: Theme.pkNoteGap
-          anchors.right: parent.right
-          anchors.verticalCenter: parent.verticalCenter
-
-          text: note.text
-          color: note.shade
-          font.family: Theme.uiFont
-          font.pixelSize: Theme.pkNoteSize
-          font.weight: Font.Medium
-          elide: Text.ElideRight
         }
       }
     }
@@ -488,73 +383,39 @@ Rectangle {
 
       readonly property real cell: (parent.width - Theme.pkGutter * 2 - Theme.pkButtonsGap) / 2
 
-      Rectangle {
+      PillButton {
         id: cancel
 
         x: Theme.pkGutter
         y: Theme.pkButtonsTop
-
         width: parent.cell
-        height: cancelLabel.implicitHeight + Theme.pkButtonPaddingV * 2
+
+        label: "Cancel"
+        fill: Theme.pkCancelFill
+        hoverFill: Theme.pkCancelHover
+        textColor: Theme.pkCancelText
+        textSize: Theme.pkButtonSize
+        paddingV: Theme.pkButtonPaddingV
         radius: Theme.pkButtonRadius
-        color: cancelHover.containsMouse ? Theme.pkCancelHover : Theme.pkCancelFill
+        fade: Theme.pkFade
 
-        Behavior on color {
-          ColorAnimation { duration: Theme.pkFade }
-        }
-
-        Text {
-          id: cancelLabel
-
-          anchors.centerIn: parent
-
-          text: "Cancel"
-          color: Theme.pkCancelText
-          font.family: Theme.uiFont
-          font.pixelSize: Theme.pkButtonSize
-          font.variableAxes: Theme.uiAxesSemiBold
-        }
-
-        MouseArea {
-          id: cancelHover
-
-          anchors.fill: parent
-          hoverEnabled: true
-
-          onClicked: root.cancelled()
-        }
+        onClicked: root.cancelled()
       }
 
-      Rectangle {
-        id: confirm
-
+      PillButton {
         x: cancel.x + cancel.width + Theme.pkButtonsGap
         y: Theme.pkButtonsTop
-
         width: parent.cell
         height: cancel.height
+
+        label: root.ok ? "Authenticated" : "Authenticate"
+        fill: root.ok ? Theme.pkDoneFill : Theme.accent
+        textColor: root.ok ? Theme.success : Theme.litText
+        textSize: Theme.pkButtonSize
         radius: Theme.pkButtonRadius
-        color: root.ok ? Theme.pkDoneFill : Theme.accent
+        fade: Theme.pkFade
 
-        Behavior on color {
-          ColorAnimation { duration: Theme.pkFade }
-        }
-
-        Text {
-          anchors.centerIn: parent
-
-          text: root.ok ? "Authenticated" : "Authenticate"
-          color: root.ok ? Theme.success : Theme.litText
-          font.family: Theme.uiFont
-          font.pixelSize: Theme.pkButtonSize
-          font.variableAxes: Theme.uiAxesSemiBold
-        }
-
-        MouseArea {
-          anchors.fill: parent
-
-          onClicked: root.send()
-        }
+        onClicked: root.send()
       }
     }
   }

@@ -23,6 +23,10 @@ Singleton {
   readonly property bool sourceReady: root.source?.ready ?? false
 
   readonly property bool muted: root.sinkReady && root.sink.audio.muted
+
+  // a sink that is muted and one that is not there yet say the same thing: no
+  // sound is coming out. the strip, the panel row and its switch all ask this.
+  readonly property bool silent: !root.sinkReady || root.muted
   readonly property real volume: root.sinkReady ? root.sink.audio.volume : 0
   readonly property real gain: root.sourceReady ? root.source.audio.volume : 0
 

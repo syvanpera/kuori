@@ -447,7 +447,7 @@ Rectangle {
         size: Theme.launcherSearchIcon
       }
 
-      TextInput {
+      Field {
         id: input
 
         anchors.left: searchIcon.right
@@ -547,22 +547,7 @@ Rectangle {
           }
         }
 
-        // TextInput paints its caret in the text colour, and a delegate is the only
-        // way to get the design's accent caret.
-        cursorDelegate: Rectangle {
-          width: 1
-          color: Theme.accent
-        }
-
-        Text {
-          anchors.fill: parent
-          visible: input.text.length === 0
-
-          text: "Search apps and commands"
-          color: Theme.launcherDimText
-          font: input.font
-          verticalAlignment: Text.AlignVCenter
-        }
+        placeholder: "Search apps and commands"
       }
 
       KeyCap {

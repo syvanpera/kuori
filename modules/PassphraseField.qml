@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.services
 import qs.theme
 
@@ -13,41 +14,22 @@ Item {
 
   implicitHeight: Theme.sysFieldHeight
 
-  Rectangle {
+  PillButton {
     id: join
 
     x: root.width - Theme.sysFieldPaddingH - width
     y: root.midline - height / 2
 
-    width: joinLabel.implicitWidth + Theme.sysJoinPaddingH * 2
-    height: joinLabel.implicitHeight + Theme.sysJoinPaddingV * 2
+    label: "Connect"
+    fill: Theme.sysJoinFill
+    hoverFill: Theme.sysJoinHover
+    textColor: Theme.accent
+    textSize: Theme.sysJoinSize
+    paddingH: Theme.sysJoinPaddingH
+    paddingV: Theme.sysJoinPaddingV
     radius: Theme.sysFieldRadius
-    color: joinHover.containsMouse ? Theme.sysJoinHover : Theme.sysJoinFill
 
-    Behavior on color {
-      ColorAnimation { duration: Theme.notchFadeDuration }
-    }
-
-    Text {
-      id: joinLabel
-
-      anchors.centerIn: parent
-
-      text: "Connect"
-      color: Theme.accent
-      font.family: Theme.uiFont
-      font.pixelSize: Theme.sysJoinSize
-      font.variableAxes: Theme.uiAxesSemiBold
-    }
-
-    MouseArea {
-      id: joinHover
-
-      anchors.fill: parent
-      hoverEnabled: true
-
-      onClicked: Network.join(input.text)
-    }
+    onClicked: Network.join(input.text)
   }
 
   Rectangle {
@@ -63,7 +45,7 @@ Item {
     border.width: 1
     border.color: Theme.sysFieldBorder
 
-    TextInput {
+    Field {
       id: input
 
       anchors.left: parent.left
@@ -93,22 +75,11 @@ Item {
       // panel is still where you were, and one more escape leaves it.
       Keys.onEscapePressed: Network.selected = ""
 
-      // TextInput paints its caret in the text colour, and a delegate is the only
-      // way to get the design's accent caret.
-      cursorDelegate: Rectangle {
-        width: 1
-        color: Theme.accent
-      }
+      placeholder: "Passphrase"
 
-      Text {
-        anchors.fill: parent
-        visible: input.text.length === 0
-
-        text: "Passphrase"
-        color: Theme.launcherDimText
-        font: input.font
-        verticalAlignment: Text.AlignVCenter
-      }
+      // the frame's key sink is what hears escape once this is gone, and it will
+      // not take the keyboard back on its own.
+      Component.onDestruction: Notches.refocus()
     }
   }
 }

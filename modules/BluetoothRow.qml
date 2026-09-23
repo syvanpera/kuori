@@ -7,7 +7,7 @@ import qs.services
 PanelRow {
   id: root
 
-  icon: Bluez.enabled ? "bluetooth" : "bluetooth_disabled"
+  icon: Bluez.radioGlyph
   label: "Bluetooth"
   lit: Bluez.enabled
   value: Bluez.summary

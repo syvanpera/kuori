@@ -50,8 +50,8 @@ Item {
       elide: Text.ElideRight
       color: Theme.dispToggleLabel
       font.family: Theme.uiFont
+      font.variableAxes: Theme.uiAxesMedium
       font.pixelSize: Theme.dispToggleLabelSize
-      font.weight: Font.Medium
     }
 
     Text {

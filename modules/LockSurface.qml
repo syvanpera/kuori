@@ -33,9 +33,9 @@ Item {
   }
 
   // the prompt belongs to whichever screen has the keyboard, and follows it.
-  onPrimaryChanged: if (root.primary) input.forceActiveFocus()
+  onPrimaryChanged: if (root.primary) field.take()
 
-  Component.onCompleted: if (root.primary) input.forceActiveFocus()
+  Component.onCompleted: if (root.primary) field.take()
 
   Rectangle {
     anchors.fill: parent
@@ -94,7 +94,7 @@ Item {
 
     onClicked: {
       Lock.prompt = true
-      input.forceActiveFocus()
+      field.take()
     }
   }
 
@@ -276,137 +276,49 @@ Item {
         width: parent.width
         spacing: Theme.lockFieldGap
 
-        Rectangle {
+        SecretField {
           id: field
 
           width: parent.width
-          height: Theme.pkFieldHeight
-          radius: Theme.pkFieldRadius
-          color: Theme.lockFieldFill
 
-          border.width: 1
-          border.color: {
-            if (root.errored) return Theme.pkFieldBorderError
-            if (root.busy) return Theme.lockFieldBusy
-            return Theme.pkFieldBorder
+          // the field takes every key the lock hears, visible or not: that is how
+          // the first key of a password both raises the prompt and is typed.
+          inputFocus: root.primary
+          locked: Lock.leaving
+          revealed: Lock.revealed
+          busy: root.busy
+          errored: root.errored
+          eyeEnabled: root.prompting
+
+          fill: Theme.lockFieldFill
+          busyBorder: Theme.lockFieldBusy
+          busyOpacity: 0.5
+          fade: Theme.notchFadeDuration
+
+          onTextChanged: {
+            if (field.text.length === 0) return
+
+            Lock.prompt = true
+            if (root.errored) Lock.status = ""
           }
 
-          Behavior on border.color {
-            ColorAnimation { duration: Theme.notchFadeDuration }
-          }
+          onEscaped: Lock.rest()
+          onAccepted: root.enter()
+          onRevealToggled: Lock.revealed = !Lock.revealed
 
-          transform: Translate { id: fieldShift }
-
-          Shake {
-            id: fieldShake
-
-            shift: fieldShift
-          }
+          // every key is a chance caps lock changed, and the only way to find out.
+          onKeyPressed: Lock.probeCaps()
 
           Connections {
             target: Lock
 
             function onFailuresChanged(): void {
-              if (root.primary) fieldShake.restart()
+              if (root.primary) field.shake()
             }
 
             // a wrong password, escape, or a preview scene with something typed.
             function onFill(text: string): void {
-              input.text = text
-              input.cursorPosition = text.length
-            }
-          }
-
-          Glyph {
-            id: keyGlyph
-
-            x: Theme.pkFieldPaddingH
-            anchors.verticalCenter: parent.verticalCenter
-
-            size: Theme.pkFieldGlyph
-            icon: "key"
-            iconColor: Theme.pkFieldGlyphColor
-          }
-
-          TextInput {
-            id: input
-
-            anchors.left: keyGlyph.right
-            anchors.leftMargin: Theme.pkFieldIconGap
-            anchors.right: eye.left
-            anchors.rightMargin: Theme.pkFieldIconGap
-            anchors.verticalCenter: parent.verticalCenter
-
-            // the field takes every key the lock hears, visible or not: that is how
-            // the first key of a password both raises the prompt and is typed. read
-            // only rather than disabled while pam is thinking, because a disabled
-            // item gives its focus away and nothing would take it back.
-            focus: root.primary
-            readOnly: root.busy || Lock.leaving
-            echoMode: Lock.revealed ? TextInput.Normal : TextInput.Password
-            color: Theme.tintBright
-            opacity: root.busy ? 0.5 : 1
-            font.family: Theme.monoFont
-            font.pixelSize: Theme.pkFieldSize
-            font.weight: Font.Medium
-
-            onTextChanged: {
-              if (input.text.length === 0) return
-
-              Lock.prompt = true
-              if (root.errored) Lock.status = ""
-            }
-
-            // the specific handlers run before Keys.onPressed and accept the key,
-            // so each answers for itself.
-            Keys.onEscapePressed: Lock.rest()
-            Keys.onReturnPressed: root.enter()
-            Keys.onEnterPressed: root.enter()
-
-            // every key is a chance caps lock changed, and the only way to find out.
-            Keys.onPressed: event => {
-              Lock.probeCaps()
-              event.accepted = false
-            }
-
-            cursorDelegate: Rectangle {
-              width: 1
-              color: Theme.accent
-              visible: input.cursorVisible && !root.busy
-            }
-
-            Text {
-              anchors.fill: parent
-              visible: input.text.length === 0
-
-              text: "Password"
-              color: Theme.pkFieldGlyphColor
-              font: input.font
-              verticalAlignment: Text.AlignVCenter
-            }
-          }
-
-          Glyph {
-            id: eye
-
-            x: field.width - Theme.pkFieldPaddingH - width
-            anchors.verticalCenter: parent.verticalCenter
-
-            size: Theme.pkEyeSize
-            icon: Lock.revealed ? "visibility_off" : "visibility"
-            iconColor: eyeHover.containsMouse ? Theme.pkEyeHover : Theme.pkEye
-
-            MouseArea {
-              id: eyeHover
-
-              anchors.fill: parent
-              enabled: root.prompting
-              hoverEnabled: true
-
-              onClicked: {
-                Lock.revealed = !Lock.revealed
-                input.forceActiveFocus()
-              }
+              field.setText(text)
             }
           }
         }
@@ -437,55 +349,20 @@ Item {
 
         // verifying, or what pam said about the last try. its height is kept while
         // empty so the column does not jump when something arrives in it.
-        Item {
-          id: note
-
+        StatusNote {
           width: parent.width
-          height: Math.max(Theme.pkNoteHeight, noteText.implicitHeight)
 
-          readonly property color shade: root.errored ? Theme.sysError : Theme.pkNoteIdle
+          wraps: true
+          line: Theme.lockNoteLine
+          text: root.errored ? Lock.message : "Verifying…"
+          shade: root.errored ? Theme.sysError : Theme.pkNoteIdle
+          icon: root.errored ? "error" : "progress_activity"
+          spinning: root.busy && root.prompting
 
           opacity: root.busy || root.errored ? 1 : 0
 
           Behavior on opacity {
             NumberAnimation { duration: Theme.notchFadeDuration }
-          }
-
-          Glyph {
-            id: noteGlyph
-
-            y: 1.5
-
-            size: Theme.pkNoteIcon
-            filled: true
-            icon: root.errored ? "error" : "progress_activity"
-            iconColor: note.shade
-
-            RotationAnimation on rotation {
-              running: root.busy && root.prompting
-              loops: Animation.Infinite
-              from: 0
-              to: 360
-              duration: 900
-              onStopped: noteGlyph.rotation = 0
-            }
-          }
-
-          Text {
-            id: noteText
-
-            anchors.left: noteGlyph.right
-            anchors.leftMargin: Theme.pkNoteGap
-            anchors.right: parent.right
-
-            text: root.errored ? Lock.message : "Verifying…"
-            color: note.shade
-            wrapMode: Text.Wrap
-            font.family: Theme.uiFont
-            font.pixelSize: Theme.pkNoteSize
-            font.variableAxes: Theme.uiAxesMedium
-            lineHeightMode: Text.FixedHeight
-            lineHeight: Theme.lockNoteLine
           }
         }
       }
@@ -576,6 +453,6 @@ Item {
       return
     }
 
-    Lock.submit(input.text)
+    Lock.submit(field.text)
   }
 }

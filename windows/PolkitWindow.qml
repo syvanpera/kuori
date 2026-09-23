@@ -1,5 +1,3 @@
-import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Effects
@@ -7,96 +5,25 @@ import qs.modules
 import qs.services
 import qs.theme
 
-// the surface the authentication dialog lives on. the same shape as the launcher
-// window, and for the same reasons -- see LauncherWindow for the long versions.
-PanelWindow {
+// the surface the authentication dialog lives on: a ModalWindow whose scrim does
+// not dismiss it, because polkit has a caller waiting on an answer.
+ModalWindow {
   id: root
 
-  property bool shown: false
+  fade: Theme.pkFade
+  scrimColor: Theme.pkScrim
 
-  signal dismissed()
-
-  anchors {
-    top: true
-    bottom: true
-    left: true
-    right: true
-  }
-
-  exclusionMode: ExclusionMode.Ignore
-  color: "transparent"
-
-  // Overlay, not Top: a password prompt that a fullscreen window can cover is
-  // worse than no prompt at all.
-  WlrLayershell.layer: WlrLayer.Overlay
   WlrLayershell.namespace: "qs-polkit"
 
-  // whatever was focused when this appeared did not ask for the next keystroke,
-  // and the next keystroke is a password.
-  WlrLayershell.keyboardFocus: root.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-  mask: Region { item: root.shown ? scrim : null }
-
-  Component.onCompleted: root.shown = true
-
-  onShownChanged: {
-    if (root.shown) {
-      exit.stop()
-      return
-    }
-
-    grab.active = false
-    exit.restart()
-  }
-
-  // a Behavior runs its animation without ever emitting finished(), so the
-  // teardown is timed rather than chained off it.
-  Timer {
-    id: exit
-
-    interval: Theme.pkFade
-
-    onTriggered: root.dismissed()
-  }
+  // clicking away does not answer the question. polkit is still waiting, so the
+  // card stays and only Cancel or a password ends it.
+  onGrabCleared: root.holdGrab()
 
   Connections {
     target: Polkit
 
     function onFlowChanged(): void {
       root.shown = Polkit.flow !== null
-    }
-  }
-
-  HyprlandFocusGrab {
-    id: grab
-
-    windows: [root]
-
-    // clicking away does not answer the question. polkit is still waiting, so the
-    // card stays and only Cancel or a password ends it.
-    onCleared: grab.active = true
-  }
-
-  Timer {
-    interval: 1
-    running: root.shown
-
-    onTriggered: grab.active = true
-  }
-
-  MouseArea {
-    id: scrim
-
-    anchors.fill: parent
-    opacity: root.shown ? 1 : 0
-
-    Behavior on opacity {
-      NumberAnimation { duration: Theme.pkFade }
-    }
-
-    Rectangle {
-      anchors.fill: parent
-      color: Theme.pkScrim
     }
   }
 
@@ -111,6 +38,7 @@ PanelWindow {
     offset.y: Theme.pkShadowOffset
     color: Theme.pkShadow
     opacity: dialog.opacity
+    scale: dialog.scale
   }
 
   PolkitDialog {

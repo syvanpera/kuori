@@ -467,6 +467,7 @@ Column {
       text: root.emptyText
       color: Theme.eventEmptyText
       font.family: Theme.uiFont
+      font.variableAxes: Theme.uiAxesRegular
       font.pixelSize: Theme.eventDetailSize
     }
 
@@ -511,6 +512,7 @@ Column {
           verticalAlignment: Text.AlignVCenter
           color: Theme.eventText
           font.family: Theme.uiFont
+          font.variableAxes: Theme.uiAxesRegular
           font.pixelSize: Theme.eventDetailSize
         }
       }
@@ -522,6 +524,7 @@ Column {
       text: `+${root.shownEvents.length - Theme.eventMax} more`
       color: Theme.eventEmptyText
       font.family: Theme.uiFont
+      font.variableAxes: Theme.uiAxesRegular
       font.pixelSize: Theme.eventDetailSize
     }
 

@@ -94,11 +94,7 @@ Item {
       anchors.verticalCenter: column.verticalCenter
 
       icon: {
-        if (!root.volume) {
-          if (root.value < 34) return "brightness_low"
-          if (root.value < 67) return "brightness_medium"
-          return "brightness_high"
-        }
+        if (!root.volume) return Backlight.levelGlyph(Backlight.level)
 
         // the real level and the mute flag rather than the zeroed reading above:
         // the shared ladder is the one that decides what muted looks like.
@@ -147,22 +143,15 @@ Item {
         }
       }
 
-      Rectangle {
+      Meter {
         width: parent.width
         height: Theme.osdTrack
         radius: Theme.osdTrackRadius
         color: Theme.osdRail
 
-        Rectangle {
-          width: parent.width * root.value / 100
-          height: parent.height
-          radius: parent.radius
-          color: root.fill
-
-          Behavior on width {
-            NumberAnimation { duration: Theme.osdFillDuration }
-          }
-        }
+        value: root.value / 100
+        tint: root.fill
+        fillDuration: Theme.osdFillDuration
       }
     }
   }

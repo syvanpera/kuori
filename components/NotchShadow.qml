@@ -24,8 +24,11 @@ Item {
   // with; anything else that hangs off the band -- the osd -- says what it is.
   property real topLeftRadius: root.notch.flushLeft ? Theme.screenInnerRadius : 0
   property real topRightRadius: root.notch.flushRight ? Theme.screenInnerRadius : 0
-  property real bottomLeftRadius: root.notch.flushLeft ? 0 : Theme.notchRadius
-  property real bottomRightRadius: root.notch.flushRight ? 0 : Theme.notchRadius
+  // and square along the bottom while something hangs below it, as the body is.
+  readonly property bool hanging: (root.notch.hangHeight ?? 0) > 0
+
+  property real bottomLeftRadius: root.notch.flushLeft || root.hanging ? 0 : Theme.notchRadius
+  property real bottomRightRadius: root.notch.flushRight || root.hanging ? 0 : Theme.notchRadius
 
   // the shadow is cast by the notch's body, so it tracks the body's box rather
   // than the notch item, which is taller than the body once a panel opens.

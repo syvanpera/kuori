@@ -13,12 +13,7 @@ Row {
   // monitor hyprland happens to think is focused.
   property string screenName: ""
 
-  readonly property bool btEnabled: Bluez.enabled
-  readonly property bool btConnected: Bluez.connected.length > 0
-
-  // a sink that is muted and one that is not there yet say the same thing here:
-  // no sound is coming out, and the glyph and its colour both follow from that.
-  readonly property bool silent: !Audio.sinkReady || Audio.muted
+  readonly property bool silent: Audio.silent
 
   readonly property bool charging: Power.charging
   readonly property int level: Power.percent
@@ -54,15 +49,11 @@ Row {
     onClicked: Notches.toggleRow("bluetooth", root.screenName)
 
     Glyph {
-      icon: {
-        if (!root.btEnabled) return "bluetooth_disabled"
-        if (root.btConnected) return "bluetooth_connected"
-        return "bluetooth"
-      }
+      icon: Bluez.radioGlyph
 
       iconColor: {
         if (root.showing("bluetooth")) return Theme.accent
-        return root.btEnabled ? Theme.glyph : Theme.textDim
+        return Bluez.enabled ? Theme.glyph : Theme.textDim
       }
     }
   }

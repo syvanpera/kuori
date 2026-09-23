@@ -81,6 +81,7 @@ PanelRow {
       text: "No notifications"
       color: Theme.notifEmpty
       font.family: Theme.uiFont
+      font.variableAxes: Theme.uiAxesRegular
       font.pixelSize: Theme.notifEmptySize
     }
 
