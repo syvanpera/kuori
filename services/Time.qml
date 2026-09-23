@@ -1,4 +1,5 @@
 pragma Singleton
+import QtQuick
 import Quickshell
 
 // one clock for the shell. the tab shows the time and the panel it opens onto
@@ -20,6 +21,43 @@ Singleton {
     if (seconds < 86400) return `${Math.round(seconds / 3600)} h`
 
     return `${Math.round(seconds / 86400)} d`
+  }
+
+  // iso weeks belong to the year holding their thursday, which is the whole reason
+  // this is not just "days since january the first over seven".
+  function isoWeek(day: date): int {
+    const d = new Date(day.getFullYear(), day.getMonth(), day.getDate())
+
+    d.setDate(d.getDate() + 4 - ((d.getDay() + 6) % 7 + 1))
+
+    const start = new Date(d.getFullYear(), 0, 1)
+
+    return Math.ceil(((d - start) / 86400000 + 1) / 7)
+  }
+
+  // a month as the calendar draws it: one entry per week, its iso number and seven
+  // day numbers, with nulls for the days that belong to the neighbouring months.
+  function monthWeeks(year: int, month: int): var {
+    // getDay() counts from sunday and the design's grid starts on monday.
+    const lead = (new Date(year, month, 1).getDay() + 6) % 7
+
+    // day zero of the next month is the last day of this one.
+    const length = new Date(year, month + 1, 0).getDate()
+
+    const days = []
+    for (let i = 0; i < lead; i++) days.push(null)
+    for (let day = 1; day <= length; day++) days.push(day)
+    while (days.length % 7) days.push(null)
+
+    const out = []
+    for (let w = 0; w * 7 < days.length; w++) {
+      const row = days.slice(w * 7, w * 7 + 7)
+      const first = row.find(day => day !== null)
+
+      out.push({ week: first ? root.isoWeek(new Date(year, month, first)) : 0, days: row })
+    }
+
+    return out
   }
 
   SystemClock {

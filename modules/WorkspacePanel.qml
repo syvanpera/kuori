@@ -27,7 +27,7 @@ Row {
       required property int index
       required property var modelData
 
-      readonly property int id: pill.index + 1
+      readonly property int number: pill.index + 1
       readonly property bool occupied: pill.modelData !== null
       readonly property bool active: pill.modelData?.active ?? false
       readonly property bool urgent: pill.modelData?.urgent ?? false
@@ -53,7 +53,7 @@ Row {
       Text {
         anchors.centerIn: parent
 
-        text: pill.id
+        text: pill.number
         color: {
           if (pill.lit) return Theme.litText
           if (pill.occupied) return Theme.workspaceOccupied
@@ -73,8 +73,8 @@ Row {
         anchors.fill: parent
 
         // a workspace hyprland has never heard of has no object to activate, so it
-        // has to be summoned by id the way the dots do it.
-        onClicked: Workspaces.focus(pill.id)
+        // has to be summoned by number the way the dots do it.
+        onClicked: Workspaces.focus(pill.number)
       }
     }
   }

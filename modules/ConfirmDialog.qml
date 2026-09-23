@@ -79,7 +79,6 @@ Rectangle {
         color: Theme.tintBright
         font.family: Theme.uiFont
         font.pixelSize: Theme.cfTitleSize
-        font.weight: Font.Bold
         font.variableAxes: Theme.uiAxesBold
       }
 

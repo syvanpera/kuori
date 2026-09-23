@@ -49,7 +49,6 @@ Column {
     color: Theme.textDim
     font.family: Theme.uiFont
     font.pixelSize: Theme.clockPeekSize
-    font.weight: Font.Medium
     font.variableAxes: Theme.uiAxesMedium
     font.letterSpacing: Theme.clockPeekSpacing
 

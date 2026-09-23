@@ -265,6 +265,15 @@ Singleton {
   property int clockBigSize: 30
   property int clockDateSize: 12
   property int clockDateGap: 6
+
+  // the clock panel's vertical rhythm, top to bottom: under the date, above the
+  // month, between the month's name and its grid, under the grid, and above the
+  // events. the design writes each as its own margin.
+  property int clockRuleTop: 12
+  property int calTop: 10
+  property int calNavBottom: 8
+  property int calBottom: 13
+  property int eventTop: 11
   property int dateUndoSize: 13
   property int dateUndoGap: 5
 

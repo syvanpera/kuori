@@ -118,7 +118,6 @@ Rectangle {
       color: root.selected ? Theme.notch : Theme.launcherNameText
       font.family: Theme.uiFont
       font.pixelSize: Theme.launcherNameSize
-      font.weight: Font.DemiBold
       font.variableAxes: Theme.uiAxesSemiBold
     }
   }
@@ -140,10 +139,9 @@ Rectangle {
       color: root.selected ? Theme.tintBright : Theme.launcherNameText
       font.family: Theme.uiFont
       font.pixelSize: Theme.launcherNameSize
-      font.weight: Font.DemiBold
 
-      // Manrope's default instance is its lightest one, so the weight has to be
-      // pinned on the axis as well as asked for by name.
+      // Manrope's default instance is its lightest one, so the weight is pinned on
+      // the axis; asking for it by name as well changes nothing.
       font.variableAxes: Theme.uiAxesSemiBold
 
       Behavior on color {

@@ -70,12 +70,10 @@ Rectangle {
       text: root.label
 
       // brighter and heavier than anything in the fold below it. Manrope's default
-      // instance is its lightest, so the weight has to be pinned on the axis as
-      // well as asked for by name.
+      // instance is its lightest, so the weight is pinned on the axis.
       color: Theme.tintBright
       font.family: Theme.uiFont
       font.pixelSize: Theme.sysRowLabelSize
-      font.weight: Font.DemiBold
       font.variableAxes: Theme.uiAxesSemiBold
     }
 
