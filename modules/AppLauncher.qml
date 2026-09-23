@@ -317,15 +317,36 @@ Rectangle {
   // one item per press, not one visual row. the grid is a ranked list folded into
   // two columns, so "down" means the next best match; moving by a row would skip
   // every second result and leave the other column reachable only with left and
-  // right, which belong to the caret. wrapping at both ends because a box showing
-  // five and a half rows of a longer list gives no hint that you have hit the
-  // bottom, and a dead arrow key reads as a bug.
+  // right, which belong to the caret. ctrl+j and ctrl+k are the exception, with
+  // ctrl+h and ctrl+l beside them to reach the other column. wrapping at both
+  // ends because a box showing five and a half rows of a longer list gives no
+  // hint that you have hit the bottom, and a dead arrow key reads as a bug.
   function step(delta: int): void {
     if (root.count === 0) return
 
     const next = (root.selectedIndex + delta) % root.count
 
     root.selectedIndex = next < 0 ? next + root.count : next
+    root.mouseArmed = false
+  }
+
+  // a whole row, staying in the same column. it wraps to the far end of that
+  // column rather than by the list's length, which with an odd count would land
+  // in the other one.
+  function stepRow(delta: int): void {
+    if (root.count === 0) return
+
+    const column = root.selectedIndex % grid.columns
+    let next = root.selectedIndex + delta * grid.columns
+
+    if (next >= root.count) {
+      next = column
+    } else if (next < 0) {
+      next = (Math.ceil(root.count / grid.columns) - 1) * grid.columns + column
+      if (next >= root.count) next -= grid.columns
+    }
+
+    root.selectedIndex = next
     root.mouseArmed = false
   }
 
@@ -456,8 +477,11 @@ Rectangle {
         Keys.onEnterPressed: root.answer()
         Keys.onUpPressed: if (!root.pending) root.step(-1)
         Keys.onDownPressed: if (!root.pending) root.step(1)
-        Keys.onTabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.step(1)
-        Keys.onBacktabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.step(-1)
+
+        // tab walks the chips rather than the results: the arrows and ctrl+hjkl
+        // already cover the list, and the chips are otherwise mouse only.
+        Keys.onTabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.stepCategory(1)
+        Keys.onBacktabPressed: root.pending ? root.confirmChoice = !root.confirmChoice : root.stepCategory(-1)
 
         Keys.onPressed: event => {
           // a confirmation owns the keyboard while it is up: the arrows move between
@@ -484,22 +508,27 @@ Rectangle {
           // and editor here already answers to. they keep the hands on the home row
           // while typing a query, which is the whole point of a launcher.
           //
-          // ctrl+hjkl is the same idea for vim hands, with one difference: j and k
-          // step the results like everything else, but h and l move between the
-          // category chips. left and right have no meaning in a ranked list folded
-          // into two columns -- the chips are the only thing on this panel actually
-          // laid out that way.
-          if ((event.key === Qt.Key_N || event.key === Qt.Key_J) && jump) {
+          // ctrl+hjkl is the same idea for vim hands, but spatial: it moves over the
+          // grid as drawn, h and l across the two columns and j and k a whole row.
+          // the plain arrows keep to reading order, because bare left and right
+          // belong to the caret.
+          if (event.key === Qt.Key_N && jump) {
             root.step(1)
             event.accepted = true
-          } else if ((event.key === Qt.Key_P || event.key === Qt.Key_K) && jump) {
+          } else if (event.key === Qt.Key_P && jump) {
             root.step(-1)
             event.accepted = true
+          } else if (event.key === Qt.Key_J && jump) {
+            root.stepRow(1)
+            event.accepted = true
+          } else if (event.key === Qt.Key_K && jump) {
+            root.stepRow(-1)
+            event.accepted = true
           } else if (event.key === Qt.Key_H && jump) {
-            root.stepCategory(-1)
+            root.step(-1)
             event.accepted = true
           } else if (event.key === Qt.Key_L && jump) {
-            root.stepCategory(1)
+            root.step(1)
             event.accepted = true
           } else if (event.key === Qt.Key_Home && jump) {
             root.selectedIndex = 0
@@ -602,8 +631,10 @@ Rectangle {
       GridView {
         id: grid
 
-        // how far a page key moves: whole rows of two, at least one row.
-        readonly property int pageStep: Math.max(2, Math.floor(grid.height / grid.cellHeight) * 2)
+        readonly property int columns: 2
+
+        // how far a page key moves: whole rows, at least one.
+        readonly property int pageStep: Math.max(1, Math.floor(grid.height / grid.cellHeight)) * grid.columns
 
         // each cell carries half the design's 4px gutter on every side, so the view
         // starts half a gutter outside the 10px padding and the gap between two
@@ -613,7 +644,7 @@ Rectangle {
         width: parent.width - grid.x * 2
         height: Math.min(grid.contentHeight, resultsBox.viewport)
 
-        cellWidth: grid.width / 2
+        cellWidth: grid.width / grid.columns
         cellHeight: Theme.launcherRowHeight + Theme.launcherGridGap
 
         clip: true

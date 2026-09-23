@@ -219,8 +219,9 @@ hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(kuori .. "launcher wallpapers"))
 
 | Keys | Does |
 |---|---|
-| `↑` `↓`, `Tab` / `Shift+Tab`, `Ctrl+n` / `Ctrl+p`, `Ctrl+j` / `Ctrl+k` | Move through the results, one at a time, wrapping at both ends |
-| `Ctrl+h` / `Ctrl+l` | Move between category chips |
+| `↑` `↓`, `Ctrl+n` / `Ctrl+p` | Move through the results, one at a time, wrapping at both ends |
+| `Ctrl+h` `Ctrl+j` `Ctrl+k` `Ctrl+l` | Move over the grid as drawn: left, down a row, up a row, right |
+| `Tab` / `Shift+Tab` | Next and previous category chip, wrapping |
 | `Page Up` / `Page Down` | Move by whole rows |
 | `Ctrl+Home` / `Ctrl+End` | First and last result (bare `Home`/`End` belong to the text caret) |
 | `Enter` | Run the selected row |
