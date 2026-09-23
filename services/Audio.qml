@@ -16,8 +16,15 @@ Singleton {
   // then, so a shut panel tracks the two default nodes and nothing else.
   property bool detailed: false
 
-  readonly property var sink: Pipewire.defaultAudioSink
-  readonly property var source: Pipewire.defaultAudioSource
+  // pipewire keeps the default as a node *name*, and quickshell resolves it to the
+  // first node answering to that name. a filter chain names its sink and the
+  // stream it plays through alike -- the Framework Speakers convolver is
+  // audio_effect.laptop-convolver on both sides -- and the stream is what came
+  // back: a node at a fixed 1.00 that no volume key ever touches, while wpctl's
+  // own @DEFAULT_AUDIO_SINK@ went to the sink. so a default that turns out to be a
+  // stream is traded for the device of the same name.
+  readonly property var sink: root.device(Pipewire.defaultAudioSink, true)
+  readonly property var source: root.device(Pipewire.defaultAudioSource, false)
 
   readonly property bool sinkReady: root.sink?.ready ?? false
   readonly property bool sourceReady: root.source?.ready ?? false
@@ -42,6 +49,13 @@ Singleton {
   readonly property var sources: Pipewire.nodes.values
     .filter(n => !n.isSink && !n.isStream && (n.type & PwNodeType.AudioSource) === PwNodeType.AudioSource)
     .sort((a, b) => root.label(a).localeCompare(root.label(b)))
+
+  function device(named: var, sink: bool): var {
+    if (!named?.isStream) return named
+
+    return Pipewire.nodes.values.find(node => !node.isStream && node.isSink === sink
+      && (node.type & PwNodeType.Audio) && node.name === named.name) ?? named
+  }
 
   // the nick is what the design writes -- "ALC285 Analog" rather than "Built-in
   // Audio Analog Stereo" -- and not every node has one.
