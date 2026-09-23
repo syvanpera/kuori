@@ -345,9 +345,10 @@ a recording is running. It opens a panel of rows, one folded open at a time:
   the known and available networks. Clicking an open network joins it with **no confirmation**.
 - **Bluetooth** — paired devices first. A device that has stopped advertising will refuse to connect;
   the row says so rather than looking dead. Clicking a device that was never paired pairs it, trusts
-  it so it reconnects by itself, then connects. That works for mice and most headphones; a keyboard
-  that asks for a passkey to be typed is refused ("Could not pair"), because the shell has no pairing
-  agent to show the code. Pair one of those once with `bluetoothctl` (`pair`, `trust`, `connect`).
+  it so it reconnects by itself, then connects. **Until the shell has a pairing agent this
+  fails for everything** ("Could not pair"): bluez asks an agent to confirm even a pairing with no code,
+  and with none registered it refuses. Pair a device once with `bluetoothctl` (`pair`, `trust`,
+  `connect`); after that the panel connects and disconnects it.
 - **Audio** — output and input devices, volume, and a switch that is mute read the right way up.
 - **Battery** — level, time remaining, health, rate, and power profiles when a daemon offers them.
 - **Display** — night light, stay awake, brightness, and a colour temperature slider that appears

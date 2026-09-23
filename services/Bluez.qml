@@ -25,8 +25,8 @@ Singleton {
   property string failed: ""
 
   // whether that last attempt died pairing rather than connecting, so the row can
-  // say which. they fail for different reasons: a pairing is refused by a device
-  // that wants a passkey typed, which nothing here can show.
+  // say which. they fail for different reasons: a pairing needs an agent to
+  // answer bluez, a connection needs the device to be listening.
   property bool failedPairing: false
 
   readonly property var adapter: Bluetooth.defaultAdapter
@@ -65,9 +65,9 @@ Singleton {
 
   // a click on a device is a request to change its mind about being connected.
   // one that was never paired is paired first, and trusted once it is, which is
-  // what lets a mouse or a keyboard reconnect by itself after that. this shell
-  // registers no pairing agent, so bluez pairs as a device with no display and no
-  // keyboard: fine for a mouse, refused by a keyboard that wants a code typed.
+  // what lets a mouse or a keyboard reconnect by itself after that. bluez asks a
+  // pairing agent to confirm every pairing, even one with no code, and refuses
+  // when none is registered -- so without one this always ends "could not pair".
   function toggle(device: var): void {
     if (!device) return
 
