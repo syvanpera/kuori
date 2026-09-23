@@ -12,19 +12,19 @@ Scope {
   // every time focus wanders is worse than one on the wrong monitor.
   property var openScreen: null
 
-  Connections {
-    target: Notifications
+  // a bluetooth pairing question is a card on this surface too, though it is not
+  // a notification.
+  readonly property bool wanted: Notifications.popups.length > 0 || Bluez.asking
 
-    function onPopupsChanged(): void {
-      if (Notifications.popups.length === 0) {
-        loader.active = false
-        return
-      }
-
-      if (!loader.active) root.openScreen = Screens.focused
-
-      loader.active = true
+  onWantedChanged: {
+    if (!root.wanted) {
+      loader.active = false
+      return
     }
+
+    if (!loader.active) root.openScreen = Screens.focused
+
+    loader.active = true
   }
 
   Connections {

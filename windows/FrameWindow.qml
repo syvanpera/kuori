@@ -76,9 +76,40 @@ PanelWindow {
   // no size: this exists to hold focus, and an item filling the window would sit
   // over the tabs for no reason.
   Item {
+    id: keySink
+
+    // a bluetooth pairing card is up on the row that is showing. it owns the keys
+    // it has a meaning for, the way the launcher's confirmation does -- and each is
+    // answered in its own handler, because those run before Keys.onPressed and a
+    // guard written there would never see them.
+    readonly property bool pairing: Bluez.asking && Notches.open === "system" && Notches.row === "bluetooth"
+    readonly property bool choosing: keySink.pairing && Bluez.request.kind !== "type"
+
     focus: true
 
-    Keys.onEscapePressed: Notches.close()
+    Keys.onEscapePressed: keySink.pairing ? Bluez.reject() : Notches.close()
+
+    // a keyboard being paired types its code on itself, and enter there is the
+    // device's. an enter reaching the shell is some other keyboard's, and means
+    // nothing to that card.
+    Keys.onReturnPressed: if (keySink.choosing) keySink.choose()
+    Keys.onEnterPressed: if (keySink.choosing) keySink.choose()
+    Keys.onTabPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
+    Keys.onLeftPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
+    Keys.onRightPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
+
+    function choose(): void {
+      if (Bluez.selected === 0) Bluez.accept()
+      else Bluez.reject()
+    }
+
+    Connections {
+      target: Notches
+
+      function onRefocus(): void {
+        keySink.forceActiveFocus()
+      }
+    }
   }
 
   // the launcher's window is built and thrown away on every open, and the decoded

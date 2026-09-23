@@ -578,6 +578,50 @@ Singleton {
   readonly property color sysJoinHover: root.accent.alpha(0.26)
   readonly property color sysError: "#e06c75"
 
+  // the card a bluetooth device opens under itself while bluez has a question.
+  // its left inset is the row's own padding, glyph and gap, so the card's text
+  // starts under the device's name rather than under its icon.
+  readonly property int btCardInset: root.sysNetPaddingH + root.sysNetIcon + root.sysNetGap
+  property int btCardTop: 3
+  property int btCardBottom: 9
+  property int btCardGap: 10
+  property int btCardTextGap: 7
+  property int btCardTextSize: 11
+  property int btCardTextLine: 15
+  property int btCodeSize: 22
+  readonly property real btCodeSpacing: root.btCodeSize * 0.08
+  property int btDigitWidth: 15
+  property int btDigitSplit: 9
+  property real btCounterSize: 9.5
+  property int btButtonGap: 6
+  property int btButtonPaddingH: 11
+  property int btButtonPaddingV: 7
+  property int btButtonRadius: 8
+  property int btButtonSize: 10
+  property real btButtonRing: 1.5
+  property int btFieldPaddingH: 8
+  property int btFieldPaddingV: 6
+  property real btFieldSize: 10.5
+  property int btCancelledIcon: 13
+  property int btCancelledSize: 10
+  property real btLockedOpacity: 0.45
+  property real btPrimaryDisabledOpacity: 0.45
+  property int btFold: 240
+
+  // how long a refusal stays on a row, and how long "pairing cancelled" is shown
+  // before its card folds away.
+  property int btFailLinger: 2600
+  property int btCancelLinger: 1500
+
+  readonly property color btCardText: root.tint.alpha(0.72)
+  readonly property color btCode: root.tintBright
+  readonly property color btDigitDim: root.tint.alpha(0.3)
+  readonly property color btCounter: root.tint.alpha(0.4)
+  readonly property color btSecondaryText: root.tint.alpha(0.7)
+  readonly property color btSecondaryRing: root.tint.alpha(0.55)
+  readonly property color btCancelledIconColor: root.tint.alpha(0.5)
+  readonly property color btCancelledText: root.tint.alpha(0.6)
+
   readonly property color sysRowOpen: root.sheen.alpha(0.05)
 
   // sunk into the row rather than lifted off it. .42 in the design at first, where
@@ -867,6 +911,12 @@ Singleton {
 
   // four on screen, and the ones behind the first sit back a little further with
   // every card, which is how the design says a stack rather than a list.
+  // the bluetooth toast's "OPEN BLUETOOTH", which stands where an ordinary
+  // toast's buttons would.
+  property real toastLinkSize: 9.5
+  readonly property real toastLinkSpacing: root.toastLinkSize * 0.07
+  property int toastLinkTop: 2
+
   property int toastMax: 4
   property real toastFadeStep: 0.04
   property int toastSlide: 20

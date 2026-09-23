@@ -17,6 +17,7 @@ provides an application launcher, a notification daemon, and an authentication a
 - **Notifications**: kuori *is* the session's notification daemon. Toasts appear top-right, and the
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
+- **A Bluetooth pairing agent**: pairing codes and confirmations appear in the system panel.
 - **A focus indicator** on the active window, either a corner wedge or a strip along one edge.
 
 ## Screenshots
@@ -78,6 +79,7 @@ scanning if something looks dead.
 | Knowing where captures go | `xdg-user-dirs` |
 | Night light | `hyprsunset` |
 | Calendar events | `python3`, and a Google OAuth client — see *Calendar* |
+| Pairing Bluetooth devices | `python3` with `jeepney` — `python3.withPackages (ps: [ ps.jeepney ])` |
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
 | Text | `JetBrainsMono Nerd Font` and `Manrope` |
@@ -281,6 +283,19 @@ looked at without a real one. `close` puts it away.
 
 A real request from polkit raises the same dialog on its own; nothing here is needed for that.
 
+### `bluetooth`
+
+Fakes each question the pairing agent can ask, against the first device in AVAILABLE, so the cards
+can be looked at without a device that wants pairing. Open the section first with
+`system toggle bluetooth`. Answering one goes nowhere: the real agent has no question waiting.
+
+| Call | Does |
+|---|---|
+| `mock confirm \| compare \| type \| pin \| incoming` | Raise that card |
+| `typed <n>` | Light the first `n` digits of a `type` card |
+| `cancel` | Show the card being called off from the device's side |
+| `fail` | Show "Could not pair" on the row |
+
 ### `display`
 
 | Call | Does |
@@ -345,10 +360,14 @@ a recording is running. It opens a panel of rows, one folded open at a time:
   the known and available networks. Clicking an open network joins it with **no confirmation**.
 - **Bluetooth** — paired devices first. A device that has stopped advertising will refuse to connect;
   the row says so rather than looking dead. Clicking a device that was never paired pairs it, trusts
-  it so it reconnects by itself, then connects. **Until the shell has a pairing agent this
-  fails for everything** ("Could not pair"): bluez asks an agent to confirm even a pairing with no code,
-  and with none registered it refuses. Pair a device once with `bluetoothctl` (`pair`, `trust`,
-  `connect`); after that the panel connects and disconnects it.
+  it so it reconnects by itself, then connects. Whatever the device wants on the way opens as a card
+  under its row: a yes or no for a mouse or headphones, a code to compare for a phone, a code to type
+  on a keyboard (its digits light up as you type them), or a field for a PIN. A device that starts
+  pairing by itself asks to be allowed. Enter picks the ringed button, Tab or the arrows move the
+  ring, Escape cancels. While the panel is not showing Bluetooth, the question appears as a toast;
+  clicking it opens the section. kuori is the session's pairing agent, through
+  `scripts/kuori-btagent`, which it runs itself — `bluetoothctl` and `bluetui` register their own
+  while they are open, and take the questions until they close.
 - **Audio** — output and input devices, volume, and a switch that is mute read the right way up.
 - **Battery** — level, time remaining, health, rate, and power profiles when a daemon offers them.
 - **Display** — night light, stay awake, brightness, and a colour temperature slider that appears
@@ -528,5 +547,6 @@ components/     reusable pieces with no domain knowledge
 modules/        the contents of a tab, a panel or a dialog
 services/       singletons: shared state, and everything that talks to the system
 theme/Theme.qml every colour, size, duration and font
-scripts/        what runs outside the shell: the calendar fetcher
+scripts/        what runs outside the shell: the calendar fetcher, and the bluetooth
+                pairing agent the shell starts itself
 ```

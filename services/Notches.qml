@@ -18,6 +18,11 @@ Singleton {
   // after the tab is open.
   property string row: ""
 
+  // asks the frame's key sink to take the keyboard back. a field inside a panel
+  // takes it for itself, and when the field goes away qt hands focus to nobody --
+  // after which escape stops reaching anything.
+  signal refocus()
+
   // a row cannot be out while the panel it is in is away.
   onOpenChanged: if (root.open !== "system") root.row = ""
 

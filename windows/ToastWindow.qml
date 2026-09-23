@@ -78,6 +78,12 @@ PanelWindow {
 
     spacing: Theme.toastGap
 
+    // first, over the notifications: bluez is waiting on this one, and gives up
+    // after a minute or so.
+    PairingToast {
+      visible: Bluez.asking
+    }
+
     Repeater {
       model: Notifications.popups
 
