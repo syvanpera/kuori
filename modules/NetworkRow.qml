@@ -3,20 +3,18 @@ import qs.components
 import qs.services
 import qs.theme
 
-// the wi-fi row of the system panel: the link at a glance, and what the design
-// folds out under it -- the radio switch, six readings, and the air around you
-// split into networks you have joined before and networks you have not.
+// the network row of the system panel: the link at a glance, and what the design
+// folds out under it -- the wire, the radio switch, six readings about whichever
+// of the two is carrying traffic, and the air around you split into networks you
+// have joined before and networks you have not.
 PanelRow {
   id: root
 
-  icon: Network.enabled ? "wifi" : "wifi_off"
-  label: "Wi-Fi"
-  lit: Network.enabled
+  icon: Network.linkGlyph
+  label: "Network"
+  lit: Network.online
 
-  value: {
-    if (!Network.enabled) return "Off"
-    return Network.ssid || "Not connected"
-  }
+  value: Network.linkName
 
   // the scan, the ping and the counter poll all run off this. nothing in the
   // service ticks while the row is folded away.
@@ -26,17 +24,42 @@ PanelRow {
     value: root.expanded
   }
 
+  // the section is the machine's ethernet ports, and a laptop without one has no
+  // business showing a switch for it.
+  DeviceSection {
+    width: root.bodyWidth
+    heading: "ETHERNET"
+    model: Network.wiredDevices
+    ruled: false
+
+    delegate: WiredEntry {
+      required property var modelData
+
+      width: root.bodyWidth
+      device: modelData
+    }
+  }
+
+  Rectangle {
+    width: root.bodyWidth
+    height: 1
+    visible: Network.wiredDevices.length > 0
+
+    color: Theme.sysLine
+  }
+
   SectionSwitch {
     width: root.bodyWidth
+    label: "WI-FI"
     checked: Network.enabled
 
     onToggled: Network.setEnabled(!Network.enabled)
   }
 
-  // the readings describe an association, so there is nothing to say without one.
+  // the readings describe a link, so there is nothing to say without one.
   Grid {
     width: root.bodyWidth
-    visible: Network.connected
+    visible: Network.online
 
     columns: 2
     columnSpacing: Theme.sysStatGapH
@@ -77,8 +100,9 @@ PanelRow {
 
     StatPair {
       width: parent.cell
-      key: "Band"
-      value: Network.band || "--"
+      // a wire has no band, and what it has instead is how fast it negotiated.
+      key: Network.onWire ? "Link" : "Band"
+      value: (Network.onWire ? Network.speedName(Network.wired.linkSpeed) : Network.band) || "--"
     }
   }
 

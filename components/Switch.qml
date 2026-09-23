@@ -18,6 +18,11 @@ Rectangle {
   radius: height / 2
   color: root.checked ? Theme.accent : Theme.switchTrack
 
+  // a switch with nothing behind it -- an ethernet port with no cable in it -- is
+  // shown rather than hidden, so the row keeps its shape, and says so by fading.
+  // the MouseArea below inherits `enabled`, so a faded switch takes no clicks.
+  opacity: root.enabled ? 1 : Theme.switchDisabledOpacity
+
   Behavior on color {
     ColorAnimation { duration: Theme.notchFadeDuration }
   }

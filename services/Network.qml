@@ -4,7 +4,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
 
-// everything the system tab knows about the wireless link.
+// everything the system tab knows about the network: the wire, the radio, and
+// whichever of the two is carrying traffic.
 //
 // Quickshell.Networking answers most of it from NetworkManager directly. four of
 // the things the design's panel shows are not in that api at all: the round trip
@@ -50,6 +51,20 @@ Singleton {
   property string error: ""
 
   readonly property var device: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
+
+  // every ethernet interface, which on a laptop is usually none and sometimes a
+  // dock. the panel hides its section when there are none, rather than offering a
+  // switch for a port the machine does not have.
+  readonly property var wiredDevices: Networking.devices.values.filter(d => d.type === DeviceType.Wired)
+
+  // the wire wins when both are up, which is also what NetworkManager's default
+  // route metrics say: ethernet is 100, wifi 600. so the readings follow the
+  // interface the packets actually leave by.
+  readonly property var wired: root.wiredDevices.find(d => d.connected) ?? null
+  readonly property bool onWire: root.wired !== null
+  readonly property var linkDevice: root.onWire ? root.wired : (root.connected ? root.device : null)
+  readonly property bool online: root.linkDevice !== null
+
   readonly property bool enabled: Networking.wifiEnabled
   readonly property bool connected: root.device?.connected ?? false
   readonly property var network: root.device?.networks.values.find(n => n.connected) ?? null
@@ -65,6 +80,20 @@ Singleton {
   // what a radio with no link looks like, kept beside those two so the whole glyph
   // family lives in one place -- glyph() below is the rest of it.
   readonly property string offGlyph: "wifi_off"
+
+  // the one glyph for the network as a whole, which the strip and the row header
+  // both show. the design's own ladder: the wire, then the radio, then nothing.
+  readonly property string linkGlyph: {
+    if (root.onWire) return "lan"
+    return root.linked ? root.glyph(root.strength) : root.offGlyph
+  }
+
+  // what the row header says beside it.
+  readonly property string linkName: {
+    if (root.onWire) return "Ethernet"
+    if (root.linked) return root.ssid
+    return root.enabled ? "Not connected" : "Offline"
+  }
 
   // one entry per ssid in range, the connected one first and the rest by signal.
   // sorted here rather than in the view because this only re-runs when the scan
@@ -92,6 +121,50 @@ Singleton {
 
   function setEnabled(on: bool): void {
     Networking.wifiEnabled = on
+  }
+
+  // NetworkManager answers a device disconnect by blocking autoconnect on it, so
+  // switched off stays off until switched on again, cable or no cable. coming back
+  // means activating the profile the device would have chosen for itself.
+  function setWired(dev: var, on: bool): void {
+    if (!dev || !dev.hasLink) return
+
+    if (!on) {
+      dev.disconnect()
+      return
+    }
+
+    if (dev.network) {
+      dev.network.connect()
+      return
+    }
+
+    // a wire with no saved profile to hand yet: nmcli lets NetworkManager pick or
+    // make one, which is what plugging in would have done.
+    wiredUp.command = ["nmcli", "device", "connect", dev.name]
+    wiredUp.running = true
+  }
+
+  // "1 Gbps", "100 Mbps". NetworkManager reports the negotiated speed in Mb/s,
+  // and 0 when it does not know.
+  function speedName(mbps: int): string {
+    if (mbps <= 0) return ""
+    if (mbps >= 1000) return `${+(mbps / 1000).toFixed(1)} Gbps`
+    return `${mbps} Mbps`
+  }
+
+  function wiredConnecting(dev: var): bool {
+    return dev?.state === ConnectionState.Connecting
+  }
+
+  // the line under an ethernet row, in the design's three states plus the one
+  // between them: dhcp can take a few seconds, and a switch that moved with
+  // nothing to say for itself looks like it did nothing.
+  function wiredDetail(dev: var): string {
+    if (!dev?.hasLink) return "Cable unplugged"
+    if (dev.connected) return ["Connected", root.speedName(dev.linkSpeed)].filter(part => part).join(" · ")
+    if (root.wiredConnecting(dev)) return "Connecting…"
+    return "Disconnected"
   }
 
   // what a click on a network does. one we have credentials for -- saved, or not
@@ -224,7 +297,7 @@ Singleton {
 
   onDetailedChanged: {
     if (root.detailed) {
-      addr.running = true
+      root.readAddress()
       return
     }
 
@@ -239,8 +312,17 @@ Singleton {
   }
 
   // the address belongs to an association rather than to the moment, so it is
-  // read when one appears instead of on every tick.
-  onSsidChanged: if (root.detailed) addr.running = true
+  // read when one appears instead of on every tick -- and again when the traffic
+  // moves between the wire and the radio.
+  onSsidChanged: root.readAddress()
+  onLinkDeviceChanged: root.readAddress()
+
+  function readAddress(): void {
+    if (!root.detailed) return
+
+    root.ip = ""
+    if (root.linkDevice) addr.running = true
+  }
 
   // a refusal is reported by the network that refused, so this follows whichever
   // one the field is open for.
@@ -278,14 +360,14 @@ Singleton {
     interval: 10000
     repeat: true
     triggeredOnStart: true
-    running: root.detailed && root.enabled
+    running: root.detailed
 
     onTriggered: {
       // the band table is polled rather than read once: the list grows as the
       // scan finds things, and a row without its band looks broken.
-      if (!scan.running) scan.running = true
+      if (root.enabled && !scan.running) scan.running = true
 
-      if (!root.connected) return
+      if (!root.online) return
 
       rx.reload()
       tx.reload()
@@ -296,11 +378,12 @@ Singleton {
     }
   }
 
-  // the kernel's own counters, which are free to read and need no process.
+  // the kernel's own counters, which are free to read and need no process. they
+  // follow the link rather than the radio, so on a cable they count the cable.
   FileView {
     id: rx
 
-    path: root.device ? `/sys/class/net/${root.device.name}/statistics/rx_bytes` : ""
+    path: root.linkDevice ? `/sys/class/net/${root.linkDevice.name}/statistics/rx_bytes` : ""
 
     // FileView.text() is a function, not a notifying property, so a binding on it
     // would read once and never update. push instead.
@@ -310,7 +393,7 @@ Singleton {
   FileView {
     id: tx
 
-    path: root.device ? `/sys/class/net/${root.device.name}/statistics/tx_bytes` : ""
+    path: root.linkDevice ? `/sys/class/net/${root.linkDevice.name}/statistics/tx_bytes` : ""
 
     onLoaded: root.txBytes = parseFloat(tx.text()) || 0
   }
@@ -371,7 +454,7 @@ Singleton {
   Process {
     id: addr
 
-    command: ["nmcli", "-t", "-f", "IP4.ADDRESS", "device", "show", root.device?.name ?? ""]
+    command: ["nmcli", "-t", "-f", "IP4.ADDRESS", "device", "show", root.linkDevice?.name ?? ""]
 
     stdout: StdioCollector {
       id: addrOut
@@ -384,5 +467,9 @@ Singleton {
         root.ip = line ? line.slice(line.indexOf(":") + 1).split("/")[0] : ""
       }
     }
+  }
+
+  Process {
+    id: wiredUp
   }
 }

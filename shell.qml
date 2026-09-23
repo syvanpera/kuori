@@ -163,6 +163,16 @@ ShellRoot {
     }
   }
 
+  // the system tab onto one of its rows, exactly as that row's icon on the strip
+  // would -- which is otherwise a click, and a click is ydotool and a password.
+  IpcHandler {
+    target: "system"
+
+    function toggle(row: string): void {
+      Notches.toggleRow(row)
+    }
+  }
+
   // notifications are the one thing here with no window of its own to click: a
   // toast is gone by the time you reach for it, and the switch is three folds deep
   // in a panel. so the two verbs worth binding a key to live here.

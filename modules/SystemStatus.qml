@@ -3,7 +3,7 @@ import qs.components
 import qs.services
 import qs.theme
 
-// the right tab: wifi, bluetooth, volume, notifications and battery. every one of
+// the right tab: network, bluetooth, volume, notifications and battery. every one of
 // them reports something and opens the section of the panel that is about it. the
 // switches live in their own tab beside this one.
 Row {
@@ -34,12 +34,12 @@ Row {
     onClicked: Notches.toggleRow("wifi")
 
     Glyph {
-      icon: Network.linked ? Network.glyph(Network.strength) : Network.offGlyph
+      icon: Network.linkGlyph
       // the design paints every glyph the same shade. dimming rather than
-      // reddening is the smallest deviation that still makes a dead radio legible.
+      // reddening is the smallest deviation that still makes a dead link legible.
       iconColor: {
         if (root.showing("wifi")) return Theme.accent
-        return Network.linked ? Theme.glyph : Theme.textDim
+        return Network.online ? Theme.glyph : Theme.textDim
       }
     }
   }

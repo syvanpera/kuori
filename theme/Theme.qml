@@ -507,6 +507,7 @@ Singleton {
   property int switchHeight: 15
   property int switchPadding: 2
   property int switchKnob: 11
+  property real switchDisabledOpacity: 0.4
 
   readonly property color sysDim: root.tint.alpha(0.4)
   readonly property color sysValue: root.tint.alpha(0.55)

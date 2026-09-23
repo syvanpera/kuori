@@ -64,7 +64,7 @@ scanning if something looks dead.
 |---|---|
 | Everything | `quickshell`, Hyprland, a running Wayland session |
 | Launching applications | `uwsm` |
-| Wi-Fi details (band, IPv4) | `nmcli` (NetworkManager) |
+| Network details (band, IPv4) | `nmcli` (NetworkManager) |
 | Latency reading | `ping` |
 | The backlight | `acpilight`, and your user in the `video` group |
 | Naming the backlight device | `brightnessctl` |
@@ -239,6 +239,12 @@ different one while the launcher is open switches category without closing it.
 |---|---|
 | `toggle` | Open or close the clock tab's calendar |
 
+### `system`
+
+| Call | Does |
+|---|---|
+| `toggle <row>` | Open the system panel on `wifi` (the network row), `bluetooth`, `audio`, `battery`, `display` or `notifications`; the same row again closes it |
+
 ### `notifications`
 
 | Call | Does |
@@ -328,11 +334,15 @@ night light, a cup for the idle inhibitor and a crossed circle for Do Not Distur
 while on and dim while off, and a click toggles it. The tab steps out of the way while the system
 panel is open or the on-screen display is out, both of which grow over it.
 
-**System** (far right) shows Wi-Fi, Bluetooth, volume, notifications and battery, and a red dot while
+**System** (far right) shows the network, Bluetooth, volume, notifications and battery, and a red dot while
 a recording is running. It opens a panel of rows, one folded open at a time:
 
-- **Wi-Fi** — known and available networks, signal, band, IPv4 and a latency reading. Clicking an
-  open network joins it with **no confirmation**.
+- **Network** — Ethernet first, then Wi-Fi. A connected cable wins: the strip shows a wired glyph,
+  and the readings (IPv4, traffic, link speed, latency) describe the wire rather than the radio. Each
+  Ethernet port has a switch that disconnects it and stays off until switched back on, even across
+  re-plugging; the switch is greyed out while no cable is in. The Ethernet section only appears when
+  the machine has a wired interface, a USB adapter or dock included. Under it are the Wi-Fi switch and
+  the known and available networks. Clicking an open network joins it with **no confirmation**.
 - **Bluetooth** — paired devices first. A device that has stopped advertising will refuse to connect;
   the row says so rather than looking dead.
 - **Audio** — output and input devices, volume, and a switch that is mute read the right way up.
