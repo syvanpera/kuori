@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.services
+import qs.theme
 
 // the clipboard history, as cliphist keeps it.
 //
@@ -54,6 +55,11 @@ Singleton {
   }
 
   function decode(): void {
+    // one decode at a time. a process that is still running cannot be handed a
+    // new command -- the assignment would be dropped and its answer shown for the
+    // wrong entry -- so the one in flight finishes and its onExited asks again.
+    if (toFile.running || toText.running) return
+
     const entry = root.entries.find(e => e.id === root.previewId)
 
     if (!entry) return
@@ -70,11 +76,13 @@ Singleton {
       // without anyone here hearing about it.
       toFile.command = ["sh", "-c", `cliphist decode "$1" > "$2"`, "sh", entry.id, path]
       toFile.target = path
+      toFile.entry = entry.id
       toFile.running = true
       return
     }
 
     toText.command = ["cliphist", "decode", entry.id]
+    toText.entry = entry.id
     toText.running = true
   }
 
@@ -97,8 +105,7 @@ Singleton {
   // image anyway. a shell because the whole point is the pipe -- decode writes
   // bytes, including binary ones, that must not pass through a string.
   function copy(id: string): void {
-    restore.command = ["sh", "-c", `cliphist decode "$1" | wl-copy`, "sh", id]
-    restore.running = true
+    Quickshell.execDetached(["sh", "-c", `cliphist decode "$1" | wl-copy`, "sh", id])
   }
 
   function wipe(): void {
@@ -166,10 +173,6 @@ Singleton {
     }
   }
 
-  Process {
-    id: restore
-  }
-
   // every previewed image is decoded to a file of its own, so that switching back
   // to one costs nothing and QML never has to notice a file changing under a URL
   // it has already cached. they are droppings, but they are in the cache
@@ -187,7 +190,7 @@ Singleton {
   Timer {
     id: settle
 
-    interval: 120
+    interval: Theme.clipSettle
 
     onTriggered: root.decode()
   }
@@ -195,9 +198,18 @@ Singleton {
   Process {
     id: toText
 
+    // the entry this run is decoding, which by the time it exits may no longer be
+    // the one on screen.
+    property string entry: ""
+
     stdout: StdioCollector { id: decoded }
 
     onExited: exitCode => {
+      if (toText.entry !== root.previewId) {
+        root.decode()
+        return
+      }
+
       if (exitCode !== 0) return
 
       root.previewText = decoded.text
@@ -209,8 +221,14 @@ Singleton {
     id: toFile
 
     property string target: ""
+    property string entry: ""
 
     onExited: exitCode => {
+      if (toFile.entry !== root.previewId) {
+        root.decode()
+        return
+      }
+
       if (exitCode !== 0) return
 
       root.previewImage = `file://${toFile.target}`

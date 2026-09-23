@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
+import qs.theme
 
 // everything the system tab knows about the network: the wire, the radio, and
 // whichever of the two is carrying traffic.
@@ -96,10 +97,19 @@ Singleton {
   }
 
   // one entry per ssid in range, the connected one first and the rest by signal.
-  // sorted here rather than in the view because this only re-runs when the scan
-  // finds or loses an access point: signalStrength moves constantly, and sorting
-  // on that directly would have the rows swapping places under the pointer.
-  readonly property var scanned: {
+  // set by sortScan() rather than bound, and on purpose: a binding that read
+  // signalStrength would re-sort on every strength update, and signalStrength
+  // moves constantly -- the rows would swap places under the pointer. so the order
+  // is taken when the scan finds or loses an access point, or the association
+  // changes, and held until then.
+  property var scanned: []
+
+  // the design splits the list in two: what NetworkManager has a saved profile
+  // for, and what is merely in the air.
+  readonly property var known: root.scanned.filter(n => n.known)
+  readonly property var available: root.scanned.filter(n => !n.known)
+
+  function sortScan(): void {
     const seen = new Map()
 
     for (const net of root.device?.networks.values ?? []) {
@@ -111,13 +121,8 @@ Singleton {
       if (!best || net.signalStrength > best.signalStrength) seen.set(net.name, net)
     }
 
-    return [...seen.values()].sort((a, b) => (b.connected - a.connected) || (b.signalStrength - a.signalStrength))
+    root.scanned = [...seen.values()].sort((a, b) => (b.connected - a.connected) || (b.signalStrength - a.signalStrength))
   }
-
-  // the design splits the list in two: what NetworkManager has a saved profile
-  // for, and what is merely in the air.
-  readonly property var known: root.scanned.filter(n => n.known)
-  readonly property var available: root.scanned.filter(n => !n.known)
 
   function setEnabled(on: bool): void {
     Networking.wifiEnabled = on
@@ -141,8 +146,7 @@ Singleton {
 
     // a wire with no saved profile to hand yet: nmcli lets NetworkManager pick or
     // make one, which is what plugging in would have done.
-    wiredUp.command = ["nmcli", "device", "connect", dev.name]
-    wiredUp.running = true
+    Quickshell.execDetached(["nmcli", "device", "connect", dev.name])
   }
 
   // "1 Gbps", "100 Mbps". NetworkManager reports the negotiated speed in Mb/s,
@@ -313,8 +317,12 @@ Singleton {
 
   // the address belongs to an association rather than to the moment, so it is
   // read when one appears instead of on every tick -- and again when the traffic
-  // moves between the wire and the radio.
-  onSsidChanged: root.readAddress()
+  // moves between the wire and the radio. a new association also moves the
+  // connected network to the top of the list.
+  onSsidChanged: {
+    root.readAddress()
+    root.sortScan()
+  }
   onLinkDeviceChanged: root.readAddress()
 
   function readAddress(): void {
@@ -322,6 +330,17 @@ Singleton {
 
     root.ip = ""
     if (root.linkDevice) addr.running = true
+  }
+
+  onDeviceChanged: root.sortScan()
+  Component.onCompleted: root.sortScan()
+
+  Connections {
+    target: root.device?.networks ?? null
+
+    function onValuesChanged(): void {
+      root.sortScan()
+    }
   }
 
   // a refusal is reported by the network that refused, so this follows whichever
@@ -338,7 +357,7 @@ Singleton {
   Timer {
     id: linger
 
-    interval: 1800
+    interval: Theme.sysErrorLinger
 
     onTriggered: root.error = ""
   }
@@ -467,9 +486,5 @@ Singleton {
         root.ip = line ? line.slice(line.indexOf(":") + 1).split("/")[0] : ""
       }
     }
-  }
-
-  Process {
-    id: wiredUp
   }
 }

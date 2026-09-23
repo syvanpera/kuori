@@ -11,13 +11,7 @@ PanelRow {
   icon: Notifications.dnd ? "notifications_off" : "notifications"
   label: "Notifications"
 
-  // the design's three states, in its own words.
-  value: {
-    if (Notifications.dnd) return "Silenced"
-    if (Notifications.history.length === 0) return "None"
-
-    return `${Notifications.history.length} recent`
-  }
+  value: Notifications.summary
 
   // the icon is accented unless the whole thing is muted, which is the only state
   // the collapsed row can show.

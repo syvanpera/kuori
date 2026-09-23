@@ -575,6 +575,9 @@ Singleton {
   property int sysErrorIcon: 13
   property int sysErrorSize: 10
 
+  // how long a refused join's reason stays under its row.
+  property int sysErrorLinger: 1800
+
 
   readonly property color sysFieldBorder: root.sheen.alpha(0.12)
   readonly property color sysFieldFill: root.sheen.alpha(0.05)
@@ -863,6 +866,10 @@ Singleton {
   property real clipPreviewMetaSize: 9.5
   property int clipPreviewFootGap: 8
 
+  // the preview decodes this long after the selection stops moving, so arrowing
+  // through the list does not run a process per keystroke.
+  property int clipSettle: 120
+
   readonly property color clipPreviewFill: root.sysWell
   readonly property color clipPreviewText: root.tint.alpha(0.86)
   readonly property color clipPreviewMeta: root.tint.alpha(0.35)
@@ -917,6 +924,10 @@ Singleton {
   // slurp cannot have the pointer while the panel is holding a focus grab.
   readonly property int capSettle: root.notchExpandDuration + 60
 
+  // how long after hyprpicker starts before the pointer is nudged: long enough for
+  // its overlay to be up and listening for the motion.
+  property int capNudge: 400
+
   readonly property color capTileOn: root.accent.alpha(0.12)
   readonly property color capTileOff: root.sheen.alpha(0.04)
   readonly property color capChipOff: root.sheen.alpha(0.07)
@@ -942,6 +953,9 @@ Singleton {
   property int dispTempMin: 2500
   property int dispTempMax: 6500
   property int dispTempDefault: 4200
+
+  // a drag reaches hyprsunset and the state file this long after it stops moving.
+  property int dispSettle: 120
 
   readonly property color dispToggleLabel: root.tint.alpha(0.82)
   readonly property color dispToggleSub: root.tint.alpha(0.4)

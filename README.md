@@ -373,7 +373,8 @@ one panel is open at a time, on the screen it was opened from. Clicking a tab op
 keybind or an IPC call (`calendar toggle`, `system toggle <row>`) opens it on the focused monitor.
 The same tab on another screen moves the panel there rather than opening a second one, and unplugging
 the monitor a panel is on closes it. The launcher, the polkit dialog and the toasts appear on the
-focused monitor.
+focused monitor. Unplugging that monitor closes the launcher and moves the other two to whichever
+monitor is focused then; plugging one in, or unplugging a different one, leaves them where they are.
 
 **Clock** (centre) opens a calendar. The month arrows page; the date line is clickable to come back
 to today, but only when you have paged away from it. Clicking the time again closes the panel.

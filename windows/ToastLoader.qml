@@ -27,11 +27,19 @@ Scope {
     loader.active = true
   }
 
+  // the toasts' monitor unplugged. the notifications go, as they always have --
+  // they are in the history -- but a pairing question is still waiting on an
+  // answer and keeps `wanted` up, so the surface has to follow it somewhere that
+  // exists rather than stay on a screen that does not.
   Connections {
     target: Quickshell
 
     function onScreensChanged(): void {
+      if (Array.from(Quickshell.screens).includes(root.openScreen)) return
+
       Notifications.dismissAll()
+
+      if (loader.active) root.openScreen = Screens.focused
     }
   }
 

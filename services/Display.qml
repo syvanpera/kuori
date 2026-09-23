@@ -29,6 +29,9 @@ Singleton {
   property bool night: false
   property int temperature: Theme.dispTempDefault
 
+  // the slider's side of the temperature: where it sits on the 2500K..6500K track.
+  readonly property real temperatureFraction: (root.temperature - Theme.dispTempMin) / (Theme.dispTempMax - Theme.dispTempMin)
+
   // an idle inhibitor has to hang off a surface, so the flag lives here and
   // windows/FrameWindow.qml holds the inhibitor itself.
   property bool awake: false
@@ -43,15 +46,24 @@ Singleton {
   FileView {
     id: state
 
+    // not watched: this shell is the only writer, and a watch would answer its own
+    // save by applying the same thing again.
     path: Quickshell.statePath("display.json")
-    watchChanges: true
 
     // a machine that has never touched these switches has no file, and saying so
     // at every startup is noise rather than news. onLoadFailed is the report.
     printErrors: false
 
     onLoaded: {
-      const saved = JSON.parse(state.text() || "{}")
+      // a hand-edited file that no longer parses is a machine with no saved
+      // state, not a reason to skip applying the defaults.
+      let saved = {}
+
+      try {
+        saved = JSON.parse(state.text() || "{}")
+      } catch (e) {
+        console.warn(`display: ignoring unreadable ${state.path}: ${e}`)
+      }
 
       root.temperature = saved.temperature ?? Theme.dispTempDefault
       root.night = saved.night === true
@@ -72,11 +84,9 @@ Singleton {
   // hyprctl rather than Hyprland.dispatch: hyprsunset listens on a socket of its
   // own, and a dispatcher would only be asking hyprland to run this same command.
   function apply(): void {
-    sunset.command = root.night
+    Quickshell.execDetached(root.night
       ? ["hyprctl", "hyprsunset", "temperature", `${root.temperature}`]
-      : ["hyprctl", "hyprsunset", "identity"]
-
-    sunset.running = true
+      : ["hyprctl", "hyprsunset", "identity"])
   }
 
   function setNight(on: bool): void {
@@ -95,6 +105,10 @@ Singleton {
     settle.restart()
   }
 
+  function setTemperatureFraction(fraction: real): void {
+    root.setTemperature(Theme.dispTempMin + fraction * (Theme.dispTempMax - Theme.dispTempMin))
+  }
+
   function setAwake(on: bool): void {
     root.awake = on
   }
@@ -102,16 +116,12 @@ Singleton {
   Timer {
     id: settle
 
-    interval: 120
+    interval: Theme.dispSettle
 
     onTriggered: {
       if (root.night) root.apply()
 
       root.save()
     }
-  }
-
-  Process {
-    id: sunset
   }
 }

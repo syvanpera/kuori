@@ -31,6 +31,14 @@ Singleton {
 
   readonly property int maxHistory: 50
 
+  // the design's three states for the panel row, in its own words.
+  readonly property string summary: {
+    if (root.dnd) return "Silenced"
+    if (root.history.length === 0) return "None"
+
+    return `${root.history.length} recent`
+  }
+
   // the id every popup and history entry is found by. a notification object can be
   // withdrawn out from under a toast, so this is the only handle safe to keep.
   property int nextKey: 1
@@ -93,6 +101,17 @@ Singleton {
     action.invoke()
 
     if (!popup.notification.resident) root.dismiss(key)
+  }
+
+  // urgency is the only thing a notification says about itself that belongs in a
+  // colour. the design colours each app differently, which it can do because it
+  // knows its four mock apps by name. the toast and the history entry both ask
+  // here, so the two can never disagree about what critical looks like.
+  function urgencyColour(urgency: int): color {
+    if (urgency === NotificationUrgency.Critical) return Theme.urgent
+    if (urgency === NotificationUrgency.Low) return Theme.notifDim
+
+    return Theme.accent
   }
 
   // the design's second line is one sentence, and a real notification arrives as
@@ -199,12 +218,19 @@ Singleton {
       const forever = wanted === 0 || notification.urgency === NotificationUrgency.Critical
       const timeout = wanted > 0 ? wanted : Theme.toastTimeout
 
-      root.popups = [{
+      const stacked = [{
         key: key,
         notification: notification,
         at: at,
         expires: forever ? 0 : at + timeout
-      }].concat(root.popups).slice(0, Theme.toastMax)
+      }].concat(root.popups)
+
+      root.popups = stacked.slice(0, Theme.toastMax)
+
+      // a toast pushed off the bottom of the stack has timed out as far as anyone
+      // can see. saying so is what untracks it: a card merely sliced away would
+      // stay tracked for the life of the shell, and its client would never hear.
+      for (const popup of stacked.slice(Theme.toastMax)) popup.notification.expire()
 
       // a client can withdraw a notification it already sent, and then the object
       // under our toast is gone. only the key is safe to use in here.

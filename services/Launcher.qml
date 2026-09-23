@@ -14,6 +14,11 @@ Singleton {
   id: root
 
   property bool opened: false
+
+  // true from the open until the window has finished fading out, which outlasts
+  // `opened` by one exit animation. what the rows are built from has to stay put
+  // for exactly that long, or the panel empties itself on the way out.
+  property bool mapped: false
   property string category: "all"
 
   function open(category: string): void {

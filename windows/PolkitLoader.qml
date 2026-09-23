@@ -24,6 +24,18 @@ Scope {
     }
   }
 
+  // a monitor unplugged under the dialog leaves it on a screen that no longer
+  // exists, with polkit still waiting on it. moving it costs whatever was typed,
+  // because a new screen is a new surface, and that is still better than a prompt
+  // nobody can see.
+  Connections {
+    target: Quickshell
+
+    function onScreensChanged(): void {
+      if (loader.active && !Array.from(Quickshell.screens).includes(root.openScreen)) root.openScreen = Screens.focused
+    }
+  }
+
   LazyLoader {
     id: loader
 

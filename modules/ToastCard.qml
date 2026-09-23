@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell.Widgets
-import Quickshell.Services.Notifications
 import qs.components
 import qs.services
 import qs.theme
@@ -23,15 +22,7 @@ Rectangle {
   // to notify-send arrives here as "image://icon/firefox", which Image can load.
   readonly property string image: root.notification?.image ?? ""
 
-  // urgency is the only thing a notification says about itself that belongs in a
-  // colour. the design colours each app differently, which it can do because it
-  // knows its four mock apps by name.
-  readonly property color accent: {
-    if (root.notification?.urgency === NotificationUrgency.Critical) return Theme.urgent
-    if (root.notification?.urgency === NotificationUrgency.Low) return Theme.notifDim
-
-    return Theme.accent
-  }
+  readonly property color accent: Notifications.urgencyColour(root.notification?.urgency ?? -1)
 
   width: Theme.toastWidth
   implicitHeight: body.implicitHeight + Theme.toastPaddingV * 2

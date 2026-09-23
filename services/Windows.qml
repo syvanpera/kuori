@@ -14,7 +14,14 @@ Singleton {
   id: root
 
   // one record per window: { toplevel, cls, title, workspace, history }
+  //
+  // empty while the launcher is not on screen. every title is read in here, and
+  // titles change constantly -- a terminal with a spinner in it renames itself
+  // several times a second -- so a list nobody is looking at would be rebuilt and
+  // re-sorted on every one of them.
   readonly property var entries: {
+    if (!Launcher.mapped) return []
+
     const list = []
 
     for (const toplevel of Hyprland.toplevels.values) {

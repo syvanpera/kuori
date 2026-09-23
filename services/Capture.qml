@@ -34,19 +34,6 @@ Singleton {
   // feedback a screenshot gives from inside the panel.
   property bool flashing: false
 
-  // hex whatever the chosen format, because the swatch needs a colour QML can
-  // parse and one pick has to answer both. Qt's colour carries its own HSL, so
-  // the other two formats are arithmetic rather than a second invocation.
-  property string format: "hex"
-  property string picked: ""
-  property real pickedAt: 0
-
-  readonly property var formats: ["hex", "rgb", "hsl"]
-
-  // the picked colour written the way the panel is showing it, which is also what
-  // reaches the clipboard.
-  readonly property string pickedText: root.formatted(root.picked, root.format)
-
   readonly property bool manyMonitors: Hyprland.monitors.values.length > 1
 
   readonly property var targets: [
@@ -56,6 +43,16 @@ Singleton {
   ]
 
   readonly property string home: Quickshell.env("HOME") ?? ""
+
+  // `slurp < /dev/null`, and the redirect is the whole point: slurp reads its
+  // list of selectable boxes from stdin, and Process hands it a pipe that is
+  // never written to and never closed, so it blocks in read() forever. the
+  // process runs, maps no surface, dims nothing, and the screen looks untouched
+  // while a capture is supposedly in progress. `stdinEnabled: false` does not
+  // help -- the pipe is still there. every caller that feeds slurp boxes reaches
+  // it through a shell pipeline, which closes stdin for them, which is why this
+  // only appeared when region stopped going through grimblast.
+  readonly property var bareSlurp: ["sh", "-c", "exec slurp < /dev/null"]
 
   readonly property string renderNode: "/dev/dri/renderD128"
 
@@ -96,20 +93,6 @@ Singleton {
     root.fire()
   }
 
-  // the design's own strings: "#7aa2f7", "rgb(122, 162, 247)", "hsl(219, 88%, 72%)".
-  function formatted(hex: string, format: string): string {
-    if (hex.length === 0) return ""
-    if (format === "hex") return hex
-
-    const c = Qt.color(hex)
-
-    if (format === "rgb") {
-      return `rgb(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)})`
-    }
-
-    return `hsl(${Math.round(c.hslHue * 360)}, ${Math.round(c.hslSaturation * 100)}%, ${Math.round(c.hslLightness * 100)}%)`
-  }
-
   function stop(): void {
     // SIGINT, not kill: it is what makes wf-recorder finalise the file instead of
     // leaving an unplayable one.
@@ -129,6 +112,21 @@ Singleton {
       .join("\n")
   }
 
+  // every window that is actually on screen. hyprland lists the ones on hidden
+  // workspaces too, at coordinates that overlap the visible ones, and a box slurp
+  // offers over an empty desktop -- or over another window -- records the wrong
+  // thing. grimblast's own `active` does the same filtering for a screenshot.
+  function windowRects(): string {
+    const shown = Hyprland.monitors.values.map(m => m.activeWorkspace?.id)
+
+    return Hyprland.toplevels.values
+      .filter(t => shown.includes(t.workspace?.id))
+      .map(t => t.lastIpcObject)
+      .filter(w => w?.at && w?.size)
+      .map(w => `${w.at[0]},${w.at[1]} ${w.size[0]}x${w.size[1]}`)
+      .join("\n")
+  }
+
   function shoot(): void {
     // a free-form drag cannot go through grimblast, which always passes slurp -o
     // -- "select a display output". with boxes to choose from that is harmless,
@@ -136,7 +134,7 @@ Singleton {
     // moves, and slurp draws a selection by *not* dimming it: the veil vanishes
     // and you are dragging blind. so region runs slurp itself, without -o.
     if (root.target === "region") {
-      regionPicker.running = true
+      shotArea.running = true
       return
     }
 
@@ -184,7 +182,7 @@ Singleton {
   }
 
   // wf-recorder knows nothing about windows or pickers, so the geometry is drawn
-  // first and the recording starts in the picker's onExited. the targets mean the
+  // first and the recording starts in recordArea's onExited. the targets mean the
   // same here as they do for a screenshot: region drags, app and monitor pick.
   function record(): void {
     if (root.target === "monitor" && !root.manyMonitors) {
@@ -194,22 +192,16 @@ Singleton {
 
     // one box per window, from hyprland, which reports them in the layout
     // coordinates both slurp and wf-recorder speak.
-    const rects = root.target === "app"
-      ? Hyprland.toplevels.values
-        .map(t => t.lastIpcObject)
-        .filter(w => w)
-        .map(w => `${w.at[0]},${w.at[1]} ${w.size[0]}x${w.size[1]}`)
-        .join("\n")
-      : root.monitorRects()
+    const rects = root.target === "app" ? root.windowRects() : root.monitorRects()
 
     // both go through a shell, and for the same reason: slurp blocks forever on a
-    // stdin that is an open pipe (see regionPicker below). the boxes reach it as
+    // stdin that is an open pipe (see bareSlurp above). the boxes reach it as
     // an argument printf expands, so a geometry can never be read as script.
-    picker.command = root.target === "region"
-      ? ["sh", "-c", "exec slurp < /dev/null"]
+    recordArea.command = root.target === "region"
+      ? root.bareSlurp
       : ["sh", "-c", `printf '%s' "$1" | slurp -r -f '%x,%y %wx%h'`, "sh", rects]
 
-    picker.running = true
+    recordArea.running = true
   }
 
   function launch(geometry: string): void {
@@ -243,12 +235,6 @@ Singleton {
     return root.mic ? (Audio.source?.name ?? "") : ""
   }
 
-  // hyprpicker freezes the screen, magnifies what is under the pointer and prints
-  // the colour. what it is invoked with, and why, is over picker2 below.
-  function pick(): void {
-    picker2.running = true
-  }
-
   // through notify-send rather than into the history directly: this shell is the
   // notification server, so the message comes back through the same door every
   // other application's does, and gets a toast and a history entry for free.
@@ -260,8 +246,7 @@ Singleton {
 
     if (image.length > 0) argv.push("-i", image)
 
-    announce.command = argv.concat([summary, body])
-    announce.running = true
+    Quickshell.execDetached(argv.concat([summary, body]))
   }
 
   function shorten(path: string): string {
@@ -283,7 +268,7 @@ Singleton {
 
     onTriggered: {
       if (root.mode === "rec") root.record()
-      else if (root.mode === "pick") root.pick()
+      else if (root.mode === "pick") ColourPicker.pick()
       else root.shoot()
     }
   }
@@ -305,6 +290,9 @@ Singleton {
     watchChanges: true
     printErrors: false
 
+    // a FileView only says the file changed; reading it again is up to us.
+    onFileChanged: dirs.reload()
+
     onLoaded: {
       const text = dirs.text()
       const videos = /^XDG_VIDEOS_DIR="(.*)"$/m.exec(text)
@@ -315,19 +303,11 @@ Singleton {
     }
   }
 
-  // plain slurp, and the one place -o must not appear.
+  // plain slurp for a screenshot, and the one place -o must not appear.
   Process {
-    id: regionPicker
+    id: shotArea
 
-    // `slurp < /dev/null`, and the redirect is the whole point: slurp reads its
-    // list of selectable boxes from stdin, and Process hands it a pipe that is
-    // never written to and never closed, so it blocks in read() forever. the
-    // process runs, maps no surface, dims nothing, and the screen looks untouched
-    // while a capture is supposedly in progress. `stdinEnabled: false` does not
-    // help -- the pipe is still there. every other caller here reaches slurp
-    // through a shell pipeline, which closes stdin for them, which is why this
-    // only appeared when region stopped going through grimblast.
-    command: ["sh", "-c", "exec slurp < /dev/null"]
+    command: root.bareSlurp
 
     stdout: StdioCollector { id: regionGeometry }
     stderr: StdioCollector { id: regionError }
@@ -395,7 +375,7 @@ Singleton {
   // slurp writes "x,y WxH" on stdout, which is exactly what wf-recorder's -g
   // wants. a cancelled selection exits non-zero and records nothing.
   Process {
-    id: picker
+    id: recordArea
 
     stdout: StdioCollector { id: region }
 
@@ -407,89 +387,5 @@ Singleton {
 
       root.launch(region.text.trim())
     }
-  }
-
-  // hyprpicker only learns where the pointer is from motion events it receives
-  // after its own surface is up. click without moving first -- to take the colour
-  // already under the cursor, which is a reasonable thing to want -- and it has no
-  // position at all and reports #000000. so the pointer is nudged one pixel once
-  // the overlay exists, which is imperceptible and is a real motion event.
-  Timer {
-    id: nudge
-
-    interval: 400
-
-    onTriggered: wake.running = true
-  }
-
-  Process {
-    id: wake
-
-    // out one pixel and straight back: the move away is the event hyprpicker needs,
-    // and the move back is what makes the colour the one that was under the
-    // pointer rather than its neighbour.
-    //
-    // concatenation rather than the backtick literal used everywhere else here:
-    // this script is mostly `${...}` parameter expansions, every one of which a
-    // template literal would try to evaluate as javascript.
-    command: ["sh", "-c",
-      "pos=$(hyprctl cursorpos); x=${pos%%,*}; y=${pos##*, };"
-      + " hyprctl dispatch \"hl.dsp.cursor.move({ x = $((x + 1)), y = $y })\";"
-      + " hyprctl dispatch \"hl.dsp.cursor.move({ x = $x, y = $y })\""]
-  }
-
-  Process {
-    id: picker2
-
-    onStarted: nudge.restart()
-
-    // -b is not cosmetic: without it hyprpicker wraps the value in ANSI truecolor
-    // escapes to print it in its own colour, and what arrives is
-    // "\e[38;2;122;162;247m#7aa2f7\e[0m" rather than a hex.
-    //
-    // and -q is deliberately absent, however tempting "disable most logs" sounds:
-    // the colour is printed through the same logger, so quiet means it prints
-    // nothing at all and the pick silently does nothing. its logs go to stderr.
-    command: ["hyprpicker", "-f", "hex", "-b"]
-
-    stdout: StdioCollector { id: colour }
-
-    onExited: exitCode => {
-      // right-click or escape, which is how you change your mind about a colour.
-      if (exitCode !== 0) return
-
-      // and the hex is dug out rather than trimmed, so any decoration hyprpicker
-      // grows later cannot turn the swatch into an invalid colour again.
-      const found = /#[0-9a-fA-F]{6}/.exec(colour.text)
-
-      if (!found) {
-        root.notify("Colour picker", `hyprpicker said something unexpected: ${colour.text.trim()}`, "")
-        return
-      }
-
-      const hex = found[0].toLowerCase()
-
-      root.picked = hex
-      root.pickedAt = Date.now()
-      root.flash()
-
-      // copied here rather than with hyprpicker's own -a, because the format on
-      // the clipboard has to be the one the panel is showing, and that conversion
-      // happens on this side.
-      const value = root.formatted(hex, root.format)
-
-      copy.command = ["wl-copy", "--", value]
-      copy.running = true
-
-      root.notify("Colour picked", value, "")
-    }
-  }
-
-  Process {
-    id: copy
-  }
-
-  Process {
-    id: announce
   }
 }

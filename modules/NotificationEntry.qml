@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Services.Notifications
 import qs.components
 import qs.services
 import qs.theme
@@ -11,12 +10,7 @@ Rectangle {
 
   required property var entry
 
-  readonly property color accent: {
-    if (root.entry?.urgency === NotificationUrgency.Critical) return Theme.urgent
-    if (root.entry?.urgency === NotificationUrgency.Low) return Theme.notifDim
-
-    return Theme.accent
-  }
+  readonly property color accent: Notifications.urgencyColour(root.entry?.urgency ?? -1)
 
   implicitHeight: body.implicitHeight + Theme.notifEntryPaddingV * 2
 
@@ -102,6 +96,6 @@ Rectangle {
     anchors.fill: parent
     hoverEnabled: true
 
-    onClicked: Notifications.forget(root.entry.key)
+    onClicked: Notifications.forget(root.entry?.key ?? -1)
   }
 }

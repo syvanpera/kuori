@@ -106,10 +106,10 @@ Column {
         anchors.verticalCenter: parent.verticalCenter
 
         mono: true
-        model: Capture.formats.map(f => ({ label: f.toUpperCase(), value: f }))
-        current: Capture.format
+        model: ColourPicker.formats.map(f => ({ label: f.toUpperCase(), value: f }))
+        current: ColourPicker.format
 
-        onPicked: value => Capture.format = value
+        onPicked: value => ColourPicker.format = value
       }
     }
 
@@ -132,7 +132,7 @@ Column {
 
         // nothing picked yet has no colour to show, and a swatch of the panel's
         // own surface would read as black rather than as empty.
-        color: Capture.picked.length > 0 ? Capture.picked : "transparent"
+        color: ColourPicker.picked.length > 0 ? ColourPicker.picked : "transparent"
 
         border.width: 1
         border.color: Theme.clipPreviewRing
@@ -152,9 +152,9 @@ Column {
         Text {
           width: parent.width
 
-          text: Capture.picked.length > 0 ? Capture.pickedText : "Nothing picked yet"
+          text: ColourPicker.picked.length > 0 ? ColourPicker.pickedText : "Nothing picked yet"
           elide: Text.ElideRight
-          color: Capture.picked.length > 0 ? Theme.text : Theme.clipPreviewMeta
+          color: ColourPicker.picked.length > 0 ? Theme.text : Theme.clipPreviewMeta
           font.family: Theme.monoFont
           font.pixelSize: Theme.capPickValueSize
           font.weight: Font.Medium
@@ -167,10 +167,10 @@ Column {
           // long ago it last did it.
           text: {
             if (Capture.flashing) return "hyprpicker · copied to clipboard"
-            if (Capture.picked.length === 0) return "hyprpicker"
+            if (ColourPicker.picked.length === 0) return "hyprpicker"
 
             // "now ago" is not a thing anyone says.
-            const when = Time.ago(Capture.pickedAt, Time.date)
+            const when = Time.ago(ColourPicker.pickedAt, Time.date)
 
             return `hyprpicker · last pick ${when === "now" ? "just now" : `${when} ago`}`
           }

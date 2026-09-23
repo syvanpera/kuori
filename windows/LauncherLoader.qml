@@ -24,18 +24,20 @@ Scope {
     function onOpenedChanged(): void {
       if (Launcher.opened) {
         root.openScreen = Screens.focused
+        Launcher.mapped = true
         loader.active = true
       }
     }
   }
 
   // a monitor unplugged while the launcher is open leaves the window pointing at
-  // a screen that no longer exists. closing is the only sane recovery.
+  // a screen that no longer exists. closing is the only sane recovery -- and only
+  // that monitor: one plugged in, or another one leaving, changes nothing here.
   Connections {
     target: Quickshell
 
     function onScreensChanged(): void {
-      Launcher.close()
+      if (!Array.from(Quickshell.screens).includes(root.openScreen)) Launcher.close()
     }
   }
 
@@ -48,7 +50,10 @@ Scope {
     LauncherWindow {
       screen: root.openScreen
 
-      onDismissed: loader.active = false
+      onDismissed: {
+        loader.active = false
+        Launcher.mapped = false
+      }
     }
   }
 }

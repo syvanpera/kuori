@@ -34,7 +34,7 @@ PanelRow {
 
       icon: "coffee"
       label: "Stay awake"
-      detail: Display.awake ? "Idle inhibited" : `Idle after ${Math.round(Theme.lockIdle / 60)} min`
+      detail: Display.awake ? "Idle inhibited" : (Theme.lockIdle > 0 ? `Idle after ${Math.round(Theme.lockIdle / 60)} min` : "Never idles")
       checked: Display.awake
 
       onToggled: Display.setAwake(!Display.awake)
@@ -77,10 +77,10 @@ PanelRow {
       icon: "nightlight"
       tint: Theme.elevated
       labelWidth: Theme.dispTempLabelWidth
-      value: (Display.temperature - Theme.dispTempMin) / (Theme.dispTempMax - Theme.dispTempMin)
+      value: Display.temperatureFraction
       reading: `${Display.temperature}K`
 
-      onMoved: fraction => Display.setTemperature(Theme.dispTempMin + fraction * (Theme.dispTempMax - Theme.dispTempMin))
+      onMoved: fraction => Display.setTemperatureFraction(fraction)
     }
   }
 }
