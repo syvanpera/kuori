@@ -25,8 +25,6 @@ Rectangle {
   property bool revealed: false
   readonly property bool echo: (root.flow?.responseVisible ?? false) || root.revealed
 
-  property bool detailed: false
-
   signal submitted(string value)
   signal cancelled()
 
@@ -246,134 +244,17 @@ Rectangle {
       }
     }
 
-    // what is actually being authorised
-    Item {
+    // what is actually being authorised. the design also lists COMMAND, PROGRAM,
+    // VENDOR and PID; polkit hands those to the agent in a details map that
+    // AuthFlow does not expose, so the block shows what is actually known rather
+    // than inventing the rest.
+    PolkitDetails {
       width: parent.width
-      height: Theme.pkDetailsTop + disclosure.height + (root.detailed ? Theme.pkDetailsBoxTop + rows.height : 0)
 
-      Behavior on height {
-        NumberAnimation {
-          duration: Theme.pkRise
-          easing.type: Easing.Bezier
-          easing.bezierCurve: Theme.easeStandard
-        }
-      }
-
-      clip: true
-
-      Item {
-        id: disclosure
-
-        x: Theme.pkGutter
-        y: Theme.pkDetailsTop
-
-        width: chevron.width + Theme.pkDetailsGap + caption.implicitWidth
-        height: Math.max(chevron.height, caption.implicitHeight)
-
-        Glyph {
-          id: chevron
-
-          anchors.verticalCenter: parent.verticalCenter
-
-          size: Theme.pkDetailsChevron
-          icon: "keyboard_arrow_down"
-          iconColor: Theme.pkDetailsCap
-          rotation: root.detailed ? 180 : 0
-
-          Behavior on rotation {
-            NumberAnimation { duration: Theme.pkRise }
-          }
-        }
-
-        Caption {
-          id: caption
-
-          anchors.left: chevron.right
-          anchors.leftMargin: Theme.pkDetailsGap
-          anchors.verticalCenter: parent.verticalCenter
-
-          text: "DETAILS"
-          color: Theme.pkDetailsCap
-          font.pixelSize: Theme.pkDetailsCapSize
-        }
-
-        MouseArea {
-          anchors.fill: parent
-
-          onClicked: root.detailed = !root.detailed
-        }
-      }
-
-      Rectangle {
-        id: rows
-
-        x: Theme.pkGutter
-        y: disclosure.y + disclosure.height + Theme.pkDetailsBoxTop
-
-        width: parent.width - Theme.pkGutter * 2
-        height: rowsColumn.implicitHeight + Theme.pkDetailsBoxPaddingV * 2
-
-        radius: Theme.pkDetailsBoxRadius
-        color: Theme.pkDetailsFill
-
-        Column {
-          id: rowsColumn
-
-          x: Theme.pkDetailsBoxPaddingH
-          y: Theme.pkDetailsBoxPaddingV
-
-          width: rows.width - Theme.pkDetailsBoxPaddingH * 2
-          spacing: Theme.pkDetailsRowGap
-
-          // the design also lists COMMAND, PROGRAM, VENDOR and PID. polkit hands
-          // those to the agent in a details map that AuthFlow does not expose, so
-          // the block shows what is actually known rather than inventing the rest.
-          Repeater {
-            model: [
-              { key: "ACTION", value: root.flow?.actionId ?? "" },
-              { key: "COOKIE", value: root.flow?.cookie ?? "" }
-            ]
-
-            Item {
-              required property var modelData
-
-              width: rowsColumn.width
-              height: Math.max(rowKey.implicitHeight, rowValue.implicitHeight)
-
-              Text {
-                id: rowKey
-
-                width: Theme.pkDetailsKeyWidth
-
-                text: modelData.key
-                color: Theme.pkDetailsKey
-                font.family: Theme.monoFont
-                font.pixelSize: Theme.pkDetailsKeySize
-                font.weight: Font.Medium
-                font.letterSpacing: Theme.pkDetailsKeySpacing
-                lineHeight: Theme.pkDetailsLine
-                lineHeightMode: Text.FixedHeight
-              }
-
-              Text {
-                id: rowValue
-
-                anchors.left: rowKey.right
-                anchors.leftMargin: Theme.pkDetailsColGap
-                anchors.right: parent.right
-
-                text: modelData.value
-                color: Theme.pkDetailsValue
-                font.family: Theme.monoFont
-                font.pixelSize: Theme.pkDetailsValueSize
-                lineHeight: Theme.pkDetailsLine
-                lineHeightMode: Text.FixedHeight
-                wrapMode: Text.WrapAnywhere
-              }
-            }
-          }
-        }
-      }
+      rows: [
+        { key: "ACTION", value: root.flow?.actionId ?? "" },
+        { key: "COOKIE", value: root.flow?.cookie ?? "" }
+      ]
     }
 
     // cancel, and go
