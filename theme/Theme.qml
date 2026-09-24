@@ -61,7 +61,7 @@ Singleton {
   // how solid that grey is, on the same terms as focusOpacity: alpha in the fill,
   // because UnfocusedIndicators drives each mark's opacity to fade it in. 0.67 is
   // hyprland's own aa.
-  property real focusUnfocusedOpacity: 0.67
+  property real focusUnfocusedOpacity: 1.0
   readonly property color focusUnfocusedBase: "#595959"
   readonly property color focusUnfocusedColor: root.focusUnfocusedBase.alpha(root.focusUnfocusedOpacity)
 
