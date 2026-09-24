@@ -625,7 +625,7 @@ every colour, size, duration and font in one place.
 | Want to change | Look at |
 |---|---|
 | Colours, sizes, animation timing | `theme/Theme.qml` |
-| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused` and `focusUnfocusedColor` for the other windows |
+| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |

@@ -57,7 +57,13 @@ Singleton {
   // inactive_border, rgba(595959aa) in looknfeel.lua -- the other half of the
   // border the focused mark stands in for. false marks the focused window only.
   property bool focusMarkUnfocused: true
-  readonly property color focusUnfocusedColor: "#aa595959"
+
+  // how solid that grey is, on the same terms as focusOpacity: alpha in the fill,
+  // because UnfocusedIndicators drives each mark's opacity to fade it in. 0.67 is
+  // hyprland's own aa.
+  property real focusUnfocusedOpacity: 0.67
+  readonly property color focusUnfocusedBase: "#595959"
+  readonly property color focusUnfocusedColor: root.focusUnfocusedBase.alpha(root.focusUnfocusedOpacity)
 
   property int borderWidth: 5
 
