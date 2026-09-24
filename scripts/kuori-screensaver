@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+"""Answer org.freedesktop.ScreenSaver, so an application can keep the screen awake.
+
+The shell's idle timer only hears the wayland idle-inhibit protocol. A good many
+applications ask over d-bus instead -- directly, or through the portal, whose gtk
+backend forwards an idle inhibit to whoever owns org.freedesktop.ScreenSaver on
+the session bus. With nobody owning it the request was dropped, and a video
+playing through one of those was locked over at ten minutes.
+
+Quickshell cannot export a d-bus object, so this owns the name and tells the
+shell who is holding the screen awake; the shell holds the inhibitor itself.
+
+Out, one object per line:
+  {"type": "ready"}
+  {"type": "held", "by": [{"app": "...", "reason": "..."}, ...]}
+
+Nothing comes in. An inhibit ends when its owner calls UnInhibit or leaves the
+bus, whichever comes first -- an application that crashes holding one would
+otherwise keep the machine awake until the shell restarts.
+
+It lives as long as the shell's pipe does: stdin closing is the shell going away.
+"""
+
+import select
+import sys
+
+from jeepney import HeaderFields, MatchRule, MessageType, new_error, new_method_return
+from jeepney.bus_messages import message_bus
+from jeepney.io.blocking import open_dbus_connection
+
+# run from a terminal as well as from the shell, and neither should leave a
+# __pycache__ in the config directory.
+sys.dont_write_bytecode = True
+
+from kuori_bus import Lines, drain, emit, logger  # noqa: E402
+
+NAME = "org.freedesktop.ScreenSaver"
+
+# the portal and freedesktop callers use the long path, kde's own the short one.
+PATHS = ("/org/freedesktop/ScreenSaver", "/ScreenSaver")
+
+INTROSPECTION = f"""<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="{NAME}">
+    <method name="Inhibit">
+      <arg name="application_name" type="s" direction="in"/>
+      <arg name="reason_for_inhibit" type="s" direction="in"/>
+      <arg name="cookie" type="u" direction="out"/>
+    </method>
+    <method name="UnInhibit">
+      <arg name="cookie" type="u" direction="in"/>
+    </method>
+    <method name="GetActive">
+      <arg type="b" direction="out"/>
+    </method>
+    <method name="SimulateUserActivity"/>
+  </interface>
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg name="xml_data" type="s" direction="out"/>
+    </method>
+  </interface>
+</node>
+"""
+
+
+log = logger("kuori-screensaver")
+
+
+class Holds:
+    """Every inhibit held, by cookie, and who holds it."""
+
+    def __init__(self):
+        self.by_cookie = {}
+        # 0 reads as a failure to some callers.
+        self.next = 1
+
+    def add(self, sender, app, reason):
+        cookie = self.next
+        self.next += 1
+        self.by_cookie[cookie] = (sender, app, reason)
+        return cookie
+
+    def remove(self, cookie):
+        return self.by_cookie.pop(cookie, None) is not None
+
+    def drop_sender(self, sender):
+        gone = [cookie for cookie, (owner, _, _) in self.by_cookie.items() if owner == sender]
+        for cookie in gone:
+            del self.by_cookie[cookie]
+        return bool(gone)
+
+    def report(self):
+        emit(type="held", by=[{"app": app, "reason": reason} for _, app, reason in self.by_cookie.values()])
+
+
+def answer(conn, holds, msg):
+    """Reply to one method call; True when the set of holds changed."""
+    fields = msg.header.fields
+    member = fields.get(HeaderFields.member)
+    interface = fields.get(HeaderFields.interface)
+    sender = fields.get(HeaderFields.sender)
+
+    if fields.get(HeaderFields.path) not in PATHS:
+        conn.send(new_error(msg, "org.freedesktop.DBus.Error.UnknownObject"))
+        return False
+
+    if member == "Introspect" and interface in (None, "org.freedesktop.DBus.Introspectable"):
+        conn.send(new_method_return(msg, "s", (INTROSPECTION,)))
+        return False
+
+    if interface not in (None, NAME):
+        conn.send(new_error(msg, "org.freedesktop.DBus.Error.UnknownInterface"))
+        return False
+
+    if member == "Inhibit":
+        app, reason = msg.body
+        cookie = holds.add(sender, app, reason)
+        log(f"inhibit {cookie} from {app or sender}: {reason}")
+        conn.send(new_method_return(msg, "u", (cookie,)))
+        return True
+
+    if member == "UnInhibit":
+        (cookie,) = msg.body
+        changed = holds.remove(cookie)
+        if changed:
+            log(f"uninhibit {cookie}")
+        conn.send(new_method_return(msg))
+        return changed
+
+    # the shell's lock is not a screensaver this reports on, and a caller asking
+    # is only deciding whether to bother inhibiting.
+    if member == "GetActive":
+        conn.send(new_method_return(msg, "b", (False,)))
+        return False
+
+    # asking to reset the idle timer. a caller that wants the screen kept on
+    # inhibits; this one is answered and otherwise ignored.
+    if member == "SimulateUserActivity":
+        conn.send(new_method_return(msg))
+        return False
+
+    conn.send(new_error(msg, "org.freedesktop.DBus.Error.UnknownMethod"))
+    return False
+
+
+def main():
+    conn = open_dbus_connection(bus="SESSION")
+
+    conn.send_and_get_reply(message_bus.AddMatch(MatchRule(
+        type="signal", sender="org.freedesktop.DBus", interface="org.freedesktop.DBus",
+        member="NameOwnerChanged", path="/org/freedesktop/DBus",
+    )), timeout=5)
+
+    # queued rather than refused when someone else has it: hypridle, or a second
+    # shell, and whoever it is may well let go. exiting would have the shell
+    # restart this every few seconds for a name that is not coming free.
+    (result,) = conn.send_and_get_reply(message_bus.RequestName(NAME, 0), timeout=5).body
+    if result == 2:
+        log(f"{NAME} is already owned; waiting for it")
+
+    holds = Holds()
+    emit(type="ready")
+
+    shell = Lines()
+
+    while True:
+        readable, _, _ = select.select([conn.sock, shell.fd], [], [])
+
+        if shell.fd in readable and shell.read() is None:
+            return
+
+        if conn.sock not in readable:
+            continue
+
+        changed = False
+
+        for msg in drain(conn):
+            kind = msg.header.message_type
+
+            if kind == MessageType.method_call:
+                changed |= answer(conn, holds, msg)
+            elif kind == MessageType.signal:
+                member = msg.header.fields.get(HeaderFields.member)
+
+                if member == "NameOwnerChanged":
+                    name, _, new = msg.body
+                    # a unique name that leaves the bus is an application gone,
+                    # and whatever it held goes with it.
+                    if name.startswith(":") and not new and holds.drop_sender(name):
+                        log(f"{name} left the bus holding an inhibit")
+                        changed = True
+                elif member == "NameAcquired" and msg.body[0] == NAME:
+                    log(f"owning {NAME}")
+
+        if changed:
+            holds.report()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

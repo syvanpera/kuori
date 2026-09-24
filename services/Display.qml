@@ -36,6 +36,16 @@ Singleton {
   // windows/FrameWindow.qml holds the inhibitor itself.
   property bool awake: false
 
+  // who else is keeping it awake: applications that asked over d-bus, as
+  // [{ app, reason }]. kuori-screensaver owns org.freedesktop.ScreenSaver for
+  // them, since the idle timer only hears the wayland protocol and quickshell
+  // cannot export the object those callers look for.
+  property var heldBy: []
+
+  // what the inhibitor follows and the toggles tab's glyph lights for. awake is
+  // still only the switch: an application letting go must not leave it thrown.
+  readonly property bool inhibited: root.awake || (Theme.appInhibit && root.heldBy.length > 0)
+
   // hyprsunset cannot be asked whether it is applying anything: after `identity`
   // it still reports the last temperature it was given. so this is the only record
   // of whether the night light is on, and it has to survive a restart of the shell
@@ -111,6 +121,20 @@ Singleton {
 
   function setAwake(on: bool): void {
     root.awake = on
+  }
+
+  // runs whether or not Theme.appInhibit honours it, so a caller always gets an
+  // answer rather than a failed call in the portal's log.
+  Helper {
+    script: "kuori-screensaver"
+    name: "screensaver"
+
+    onEvent: message => {
+      if (message.type === "held") root.heldBy = message.by
+    }
+
+    // whatever it held went with it: a restarted helper starts with no cookies.
+    onExited: root.heldBy = []
   }
 
   Timer {

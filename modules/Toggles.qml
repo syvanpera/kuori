@@ -21,12 +21,14 @@ Row {
     }
   }
 
+  // lit while anything holds the screen awake, an application's own inhibit
+  // included; the click still only throws the switch.
   StripButton {
     onClicked: Display.setAwake(!Display.awake)
 
     Glyph {
       icon: "coffee"
-      iconColor: Display.awake ? Theme.accent : Theme.stripOff
+      iconColor: Display.inhibited ? Theme.accent : Theme.stripOff
       filled: true
     }
   }

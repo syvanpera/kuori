@@ -9,8 +9,8 @@ import qs.theme
 // and die with the shell, so a helper that exits is started again, though not in
 // a tight loop.
 //
-// the one file in services/ that is not a singleton. the lock and the pairing
-// agent own one each, and a component in qs.components would have the services
+// the one file in services/ that is not a singleton. the lock, the pairing
+// agent and the screensaver own one each, and a component in qs.components would have the services
 // importing the module that imports them.
 Scope {
   id: root

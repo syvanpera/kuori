@@ -83,7 +83,7 @@ PanelWindow {
   // the service, where the switch that sets it can reach it.
   IdleInhibitor {
     window: root
-    enabled: Display.awake
+    enabled: Display.inhibited
   }
 
   // escape shuts whatever is latched open. the grab above is what makes this

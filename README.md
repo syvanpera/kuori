@@ -89,6 +89,7 @@ scanning if something looks dead.
 | Pairing Bluetooth devices | `python3` with `jeepney` — `python3.withPackages (ps: [ ps.jeepney ])` |
 | Locking at all | the PAM services `kuori` and `kuori-fingerprint` — see *Lock screen* |
 | Locking on lid close and before sleep | `python3` with `jeepney`, as above |
+| Applications keeping the screen awake over D-Bus | `python3` with `jeepney`, as above |
 | Fingerprint unlock | `fprintd`, and a finger enrolled with `fprintd-enroll` |
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
@@ -418,7 +419,9 @@ nothing while you are not.
 
 **Toggles** (right, just left of the system tab) is three switches and nothing else — a moon for the
 night light, a cup for the idle inhibitor and a crossed circle for Do Not Disturb. Each is accent
-while on and dim while off, and a click toggles it. The tab steps out of the way while the system
+while on and dim while off, and a click toggles it. The cup is also lit while an application is
+keeping the screen awake over D-Bus — a video playing, say — though its switch is still off, and the
+Display section's Stay awake row says who ("Held by …"). The tab steps out of the way while the system
 panel is open or the on-screen display is out, both of which grow over it.
 
 **System** (far right) shows the network, Bluetooth, volume, notifications and battery, and a red dot while
@@ -591,7 +594,9 @@ The screen **locks** after ten minutes with nobody at the keyboard, when the lid
 docked, when closing it does not suspend), before the machine goes to sleep, on `loginctl
 lock-session`, and on `lock now`. Once locked, the screen **goes off** after another minute idle and
 comes back on at the first key or movement. Anything that inhibits idle — the **Stay awake** switch, a
-playing video — holds off both.
+playing video — holds off both. That includes an application asking over D-Bus, directly or through
+the portal: kuori owns `org.freedesktop.ScreenSaver` through `scripts/kuori-screensaver`, which it
+runs itself, so no idle daemon is needed.
 
 At rest it is the clock and the date over your wallpaper, blurred. The first key you type brings up
 the prompt *and* is typed into it; a click does the same without typing anything. Escape puts the
@@ -638,6 +643,7 @@ every colour, size, duration and font in one place.
 | How many events a day lists before `+N more` | `Theme.eventMax` |
 | How many clipboard entries the launcher shows | `cliphist`'s own `-max-items` |
 | How long before it locks, and then how long before the screen goes off | `Theme.lockIdle`, `Theme.lockBlank`, in seconds |
+| Whether applications may hold idle off over D-Bus | `Theme.appInhibit` (they are still answered when false) |
 | Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
 State that has to survive a restart — the night light and its colour temperature, and whether the

@@ -837,11 +837,16 @@ Singleton {
   // long the lock may then sit idle before the screen goes off -- in seconds,
   // which is what IdleMonitor counts in. the design's stay awake row says "idle
   // after 10 min", and this is that ten minutes.
-  // how long a python helper -- the lock's, the pairing agent -- stays down after
+  // how long a python helper -- the lock's, the pairing agent, the screensaver -- stays down after
   // it exits before it is started again.
   property int helperRespawn: 5000
 
   property int lockIdle: 600
+
+  // whether an application asking over d-bus -- org.freedesktop.ScreenSaver,
+  // directly or through the portal -- holds idle off the way the stay awake
+  // switch does. false still answers them, and ignores what they ask.
+  property bool appInhibit: true
   property int lockBlank: 60
 
   // the design's column starts 208px down a 900px screen. a fraction rather than
