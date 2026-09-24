@@ -54,6 +54,13 @@ Singleton {
   readonly property color focusColor: root.accent.alpha(root.focusOpacity)
 
   property int borderWidth: 5
+
+  // which monitors carry the tabs. "main" puts the tabs, their panels and the osd
+  // on the main monitor -- the one workspace 1 is on, since hyprland has no
+  // primary of its own -- and leaves the others the bare border, their top edge
+  // given back to windows. "all" gives every monitor its own set of tabs, with
+  // keybinds, ipc and the osd going to whichever one is focused.
+  property string tabScreens: "main"
   property int screenCornerRadius: 12
 
   // the design draws a 5px border inside a 12px corner, which leaves the

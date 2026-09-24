@@ -22,6 +22,10 @@ PanelWindow {
   // what Notches knows this screen by.
   readonly property string screenName: root.screen?.name ?? ""
 
+  // whether the tabs are drawn here at all (Theme.tabScreens). the border, the
+  // focus indicator and the key sink are on every screen either way.
+  property bool tabs: true
+
   // whether this is the first screen at its scale, and so the one that keeps the
   // launcher's icons decoded for every screen at that scale.
   readonly property bool holdsIcons: Array.from(Quickshell.screens)
@@ -45,10 +49,12 @@ PanelWindow {
   // stage 2 only works for what is listed here. the focus mark is deliberately
   // absent: it sits on top of a window and must never eat its clicks.
   mask: Region {
-    Region { item: workspaces.hitArea }
-    Region { item: clock.hitArea }
-    Region { item: system.hitArea }
-    Region { item: toggles.hitArea }
+    // a hidden tab still has a size, so a screen without tabs takes itself out of
+    // the region rather than trusting visibility to.
+    Region { item: root.tabs ? workspaces.hitArea : null }
+    Region { item: root.tabs ? clock.hitArea : null }
+    Region { item: root.tabs ? system.hitArea : null }
+    Region { item: root.tabs ? toggles.hitArea : null }
   }
 
   WlrLayershell.layer: WlrLayer.Top
@@ -176,9 +182,9 @@ PanelWindow {
 
   // before the frame on purpose: the band is drawn over the top of these, so a
   // notch casts onto the desktop below it without smearing the rail it hangs off.
-  NotchShadow { notch: workspaces }
-  NotchShadow { notch: clock }
-  NotchShadow { notch: system }
+  NotchShadow { notch: workspaces; visible: root.tabs }
+  NotchShadow { notch: clock; visible: root.tabs }
+  NotchShadow { notch: system; visible: root.tabs }
 
   NotchShadow {
     notch: toggles
@@ -194,7 +200,7 @@ PanelWindow {
   NotchShadow {
     notch: osd
 
-    visible: osd.visible
+    visible: root.tabs && osd.visible
     opacity: osd.opacity
 
     topLeftRadius: Theme.notchRadius
@@ -216,6 +222,8 @@ PanelWindow {
   Notch {
     id: workspaces
 
+    visible: root.tabs
+
     x: Theme.borderWidth
     y: Theme.borderWidth
     placement: "left"
@@ -231,6 +239,8 @@ PanelWindow {
 
   Notch {
     id: clock
+
+    visible: root.tabs
 
     x: Math.round((root.width - width) / 2)
     y: Theme.borderWidth
@@ -267,14 +277,18 @@ PanelWindow {
     // carry glyphs rather than like the clock.
     padding: Theme.notchPadding
 
-    // both of the things that would grow over it.
-    aside: Notches.openOn(root.screenName) === "system" || osd.visible
+    // both of the things that would grow over it -- and on a screen without tabs,
+    // always. aside rather than visible, because the tab's own visibility follows
+    // its fade.
+    aside: !root.tabs || Notches.openOn(root.screenName) === "system" || osd.visible
 
     Toggles {}
   }
 
   Notch {
     id: system
+
+    visible: root.tabs
 
     x: root.width - width - Theme.borderWidth
     y: Theme.borderWidth
@@ -305,7 +319,9 @@ PanelWindow {
     id: osd
 
     stripWidth: system.width
-    here: Screens.focused?.name === root.screenName
+    // where the system tab it hangs from is: the main screen, or with tabs on
+    // every screen, the focused one.
+    here: root.tabs && root.screenName === Screens.tabsName
     x: root.width - width - Theme.borderWidth
     y: Theme.borderWidth + system.bodyHeight
   }

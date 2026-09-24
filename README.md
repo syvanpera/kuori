@@ -381,12 +381,19 @@ and stops at 1% so a key held one press too long cannot leave a dark screen.
 **Workspaces** (left) opens on hover, since it has nothing to click. The others latch open on a
 click, and a click anywhere else closes them.
 
-**With more than one monitor** every screen has its own frame and its own copy of every tab, but only
-one panel is open at a time, on the screen it was opened from. Clicking a tab opens it there; a
-keybind or an IPC call (`calendar toggle`, `system toggle <row>`) opens it on the focused monitor.
-The same tab on another screen moves the panel there rather than opening a second one, and unplugging
-the monitor a panel is on closes it. The launcher, the polkit dialog and the toasts appear on the
-focused monitor. Unplugging that monitor closes the launcher and moves the other two to whichever
+**With more than one monitor**, `tabScreens` in `theme/Theme.qml` decides where the tabs go:
+
+- `"main"` (the default): the tabs, their panels and the on-screen display are on the **main
+  monitor**, which is the one workspace 1 is on. Hyprland has no primary monitor, and your own
+  workspace rules already say which screen that is. Every other monitor keeps the border alone, and
+  windows get the band the tabs would have hung in. A keybind or an IPC call (`calendar toggle`,
+  `system toggle <row>`) opens its panel on the main monitor wherever you are working.
+- `"all"`: every monitor has its own copy of every tab. Keybinds and IPC calls open on the focused
+  monitor, and the on-screen display appears there.
+
+Either way only one panel is open at a time, on the screen it was opened from. The same tab on another
+screen moves the panel there rather than opening a second one, and unplugging the monitor a panel is
+on closes it. The launcher, the polkit dialog and the toasts appear on the focused monitor. Unplugging that monitor closes the launcher and moves the other two to whichever
 monitor is focused then; plugging one in, or unplugging a different one, leaves them where they are.
 
 **Clock** (centre) opens a calendar. The month arrows page; the date line is clickable to come back

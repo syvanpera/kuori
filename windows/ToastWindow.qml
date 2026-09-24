@@ -21,6 +21,11 @@ PanelWindow {
   // re-entered its own binding every time a toast appeared.
   property string screenName: ""
 
+  // whether this screen has the tabs, and so whether the osd can drop out of the
+  // corner these hang in.
+  readonly property bool tabs: Screens.hasTabs(root.screenName)
+  readonly property bool osdHere: Osd.shown && root.tabs && root.screenName === Screens.tabsName
+
   anchors {
     top: true
     right: true
@@ -29,7 +34,9 @@ PanelWindow {
   margins {
     // the osd drops out of the same corner, so the toasts move down out of its way
     // while it is up rather than being covered by it.
-    top: Osd.shown ? Theme.toastTopOsd : Theme.toastTop
+    // and on a screen with no tabs there is no strip to clear, so the stack comes
+    // up by the height of one.
+    top: (root.osdHere ? Theme.toastTopOsd : Theme.toastTop) - (root.tabs ? 0 : Theme.notchHeight)
     right: Theme.toastRight
 
     Behavior on top {

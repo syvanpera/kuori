@@ -11,6 +11,10 @@ import qs.theme
 ModalWindow {
   id: root
 
+  // the band the tabs hang in, on a screen that has them. on one that does not,
+  // windows get that space and the panel is placed in it too.
+  readonly property int band: Screens.hasTabs(root.screen?.name ?? "") ? Theme.notchHeight : 0
+
   fade: Theme.launcherFade
   scrimColor: Theme.launcherScrim
 
@@ -56,8 +60,8 @@ ModalWindow {
     // one run under the tabs. fullHeight rather than the panel's own height, so
     // neither a query that shortens the grid nor the clipboard's preview slides
     // the whole thing.
-    y: Theme.borderWidth + Theme.notchHeight
-      + Math.round((root.height - Theme.borderWidth * 2 - Theme.notchHeight - panel.fullHeight) * Theme.launcherBias)
+    y: Theme.borderWidth + root.band
+      + Math.round((root.height - Theme.borderWidth * 2 - root.band - panel.fullHeight) * Theme.launcherBias)
       - (root.shown ? 0 : Theme.launcherRise)
     opacity: root.shown ? 1 : 0
 

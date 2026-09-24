@@ -44,9 +44,10 @@ Singleton {
     return root.screen === screen ? root.open : ""
   }
 
-  // a keybind or an ipc call names no screen, and means the one being worked on.
+  // a keybind or an ipc call names no screen, and means the one with the tabs on
+  // it -- or, with tabs on every screen, the one being worked on.
   function resolve(screen: string): string {
-    return screen !== "" ? screen : (Screens.focused?.name ?? "")
+    return screen !== "" ? screen : Screens.tabsName
   }
 
   // the screen is set before the tab, so the frame that is about to open never
