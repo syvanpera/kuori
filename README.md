@@ -424,7 +424,7 @@ keeping the screen awake over D-Bus — a video playing, say — though its swit
 Display section's Stay awake row says who ("Held by …"). The tab steps out of the way while the system
 panel is open or the on-screen display is out, both of which grow over it.
 
-**System** (far right) shows the network, Bluetooth, volume, notifications and battery, and a red dot while
+**System** (far right) shows the network, Bluetooth, volume, notifications, display and battery, and a red dot while
 a recording is running. It opens a panel of rows, one folded open at a time:
 
 - **Network** — Ethernet first, then Wi-Fi. A connected cable wins: the strip shows a wired glyph,
