@@ -29,6 +29,8 @@ Row {
 
   StripButton {
     active: root.showing("wifi")
+    screenName: root.screenName
+    tip: Network.onWire ? "Ethernet" : (Network.enabled ? "Wi-Fi" : "Offline")
 
     onClicked: Notches.toggleRow("wifi", root.screenName)
 
@@ -45,6 +47,8 @@ Row {
 
   StripButton {
     active: root.showing("bluetooth")
+    screenName: root.screenName
+    tip: "Bluetooth"
 
     onClicked: Notches.toggleRow("bluetooth", root.screenName)
 
@@ -60,6 +64,8 @@ Row {
 
   StripButton {
     active: root.showing("audio")
+    screenName: root.screenName
+    tip: "Audio"
 
     onClicked: Notches.toggleRow("audio", root.screenName)
 
@@ -77,6 +83,8 @@ Row {
   // the toggles tab beside this one only half covers.
   StripButton {
     active: root.showing("display")
+    screenName: root.screenName
+    tip: "Display"
 
     onClicked: Notches.toggleRow("display", root.screenName)
 
@@ -91,6 +99,8 @@ Row {
   // or not, which is the design's own "hot".
   StripButton {
     active: root.showing("notifications")
+    screenName: root.screenName
+    tip: Notifications.history.length > 0 ? `${Notifications.history.length} notifications` : "No notifications"
 
     onClicked: Notches.toggleRow("notifications", root.screenName)
 
@@ -106,6 +116,8 @@ Row {
   // the glyph and the percentage are one target, the way the design has them.
   StripButton {
     active: root.showing("battery")
+    screenName: root.screenName
+    tip: "Battery"
 
     onClicked: Notches.toggleRow("battery", root.screenName)
 

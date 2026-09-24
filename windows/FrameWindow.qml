@@ -287,7 +287,9 @@ PanelWindow {
     // its fade.
     aside: !root.tabs || Notches.openOn(root.screenName) === "system" || osd.visible
 
-    Toggles {}
+    Toggles {
+      screenName: root.screenName
+    }
   }
 
   Notch {
@@ -329,5 +331,13 @@ PanelWindow {
     here: root.tabs && root.screenName === Screens.tabsName
     x: root.width - width - Theme.borderWidth
     y: Theme.borderWidth + system.bodyHeight
+  }
+
+  // the name of the strip icon under the pointer. after the osd and every tab, so
+  // nothing is drawn over it -- and out of the way of the osd, which hangs in the
+  // same place under the system tab.
+  StripTip {
+    screenName: root.screenName
+    blocked: osd.visible
   }
 }

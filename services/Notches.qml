@@ -30,6 +30,13 @@ Singleton {
   // after the tab is open.
   property string row: ""
 
+  // the strip button whose name is showing under it, and the screen it is on, so
+  // only that screen's frame draws it. one for the whole shell, because there is
+  // one pointer. tipGone is when the last one went, for Theme.tipWarm.
+  property Item tip: null
+  property string tipScreen: ""
+  property double tipGone: 0
+
   // asks the frame's key sink to take the keyboard back. a field inside a panel
   // takes it for itself, and when the field goes away qt hands focus to nobody --
   // after which escape stops reaching anything.

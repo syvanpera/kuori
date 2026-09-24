@@ -170,6 +170,26 @@ Singleton {
   property real stripUnderline: 1.5
   property int stripUnderlineGap: 4
 
+  // the name under a strip icon the pointer rests on. the design gives every icon
+  // a `title`, which a browser draws in its own chrome; this is the shell's own
+  // drawing of the same words. false puts them away.
+  property bool stripTips: true
+  // how long the pointer has to rest before one appears, and how long after one
+  // goes that the next appears at once -- sliding along the strip reads each icon
+  // without waiting on each, the way a native tooltip behaves.
+  property int tipDelay: 600
+  property int tipWarm: 400
+  // how far clear of the tab's bottom edge it hangs, and how far it keeps from the
+  // side border when the icon under it is at the very end of the strip.
+  property int tipGap: 6
+  property int tipMargin: 6
+  property int tipPaddingH: 8
+  property int tipPaddingV: 5
+  property int tipRadius: 7
+  property int tipSize: 11
+  property real tipShadowBlur: 10
+  property real tipShadowOffset: 3
+
   // font.pixelSize is an int, and a real handed to it is rounded half up: the
   // design's 9.5, 11.5 and 12.5 draw at 10, 12 and 13, measured. they are written
   // here as the design gives them, so the record of what it asked for survives,

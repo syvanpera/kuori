@@ -518,6 +518,12 @@ silence anything and does not clear anything. Do Not Disturb is the switch on th
 
 The red recording dot reports only; it is the one thing on the tab that opens nothing.
 
+**Resting the pointer on an icon names it**, on both the system and the toggles tab, after a little
+over half a second. Sliding along to the next icon names that one at once. A switch says which way it
+is set and what a click will do ("Night light off — click to turn on"), and the words change under
+the pointer when you click. The cup says whose hold is lighting it when that is an application's. No
+name appears while a panel is open or the on-screen display is out.
+
 Panels only do work while they are open: the Wi-Fi scan and the latency probe both stop when their row
 folds away.
 
@@ -704,6 +710,7 @@ every colour, size, duration and font in one place.
 | How long before it locks, and then how long before the screen goes off | `Theme.lockIdle`, `Theme.lockBlank`, in seconds |
 | Whether applications may hold idle off over D-Bus | `Theme.appInhibit` (they are still answered when false) |
 | Whether a feature whose daemon is down hides | `Theme.unavailableFeatures` (`"hide"` or `"show"`) |
+| Whether strip icons name themselves on hover, and how soon | `Theme.stripTips`, `Theme.tipDelay` |
 | Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
 State that has to survive a restart — the night light and its colour temperature, and whether the
