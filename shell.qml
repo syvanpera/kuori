@@ -1,3 +1,7 @@
+// a fixed id rather than one hashed from the config's path: run from the nix store
+// the path changes with every rebuild, and with it would go the state directory --
+// the night light, the lock -- and every ipc call looking for this instance.
+//@ pragma ShellId kuori
 import Quickshell
 import Quickshell.Io
 import qs.services

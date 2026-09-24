@@ -128,6 +128,49 @@ rather than broken.
 
 ## Installing
 
+### On NixOS, with the flake
+
+The flake carries everything that only matters to kuori: the shell as a user unit, the lock screen's
+PAM services, its fonts, the calendar timer, and the tools it runs that talk to no daemon — python
+with `jeepney`, `grim`, `slurp`, `grimblast`, `wf-recorder`, `hyprpicker`, `notify-send`, `wl-copy`,
+`brightnessctl` and the webp/tiff/jp2 image plugins. None of those need to be in your
+`systemPackages`.
+
+What is useful without kuori stays yours to set up: Hyprland, `uwsm`, NetworkManager, bluetooth,
+upower, power-profiles-daemon, `acpilight`, and the daemons under *Companion services*. Their clients
+(`awww`, `cliphist`) come from your system too, because each has to match the daemon or the database
+it talks to.
+
+```nix
+# flake.nix
+inputs.kuori.url = "github:syvanpera/kuori";
+inputs.kuori.inputs.nixpkgs.follows = "nixpkgs";
+
+# in nixosSystem's modules
+inputs.kuori.nixosModules.default
+
+# in your configuration
+programs.kuori.enable = true;
+```
+
+| Option | Default | Does |
+|---|---|---|
+| `enable` | `false` | installs `kuori` and `kuori-calendar`, and runs the shell as the `kuori` user unit |
+| `configDir` | `null` | `null` runs the copy in the package, from `/etc/kuori`. A path such as `"~/.config/kuori"` runs a checkout instead, which reloads on every save — for working on kuori itself |
+| `calendar.enable` | `false` | the sync service and its 15-minute timer; set up an account first (see *Calendar*) |
+| `lock.enable` | `true` | the `kuori` and `kuori-fingerprint` PAM services |
+| `fonts.enable` | `true` | Material Symbols, Manrope and JetBrainsMono Nerd Font |
+| `extraPackages` | `[]` | more programs on the shell's PATH |
+| `package` | built from your `pkgs` | the package, if you need to override it |
+
+The package's `kuori` is quickshell pointed at the right config, so every command here that says
+`qs … -p ~/.config/kuori` can be written without the path: `kuori ipc call launcher toggle`,
+`kuori log`. Use it in your keybinds. A rebuild that changes the package restarts the unit.
+
+`nix run github:syvanpera/kuori` runs it once, in the foreground, without installing anything.
+
+### By hand
+
 kuori is a Quickshell config rather than a program you build, so installing it is putting the files
 somewhere and pointing Quickshell at them. Everything below assumes `~/.config/kuori`:
 
@@ -183,8 +226,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now kuori
 ```
 
-On NixOS the same thing belongs in your configuration as a `systemd.user.services` block rather than
-a file — that is how this machine runs it — but the fields are the ones above, `Environment` included.
+On NixOS, use the flake above rather than writing this unit out.
 
 ## Running it
 
@@ -273,8 +315,9 @@ are the card's, as described under Bluetooth below.
 
 ## IPC
 
-Every call is `qs ipc -p ~/.config/kuori call <target> <function>`. `qs ipc -p ~/.config/kuori show`
-lists them, and `-p .` works from inside the directory.
+Every call is `qs ipc -p ~/.config/kuori call <target> <function>` — or `kuori ipc call <target>
+<function>` with the flake — and `… show` lists them. The path has to be spelled exactly as the
+running shell was started with it: `-p .` from inside the directory finds no instance.
 
 ### `launcher`
 
@@ -532,7 +575,8 @@ Nothing in the shell talks to Google. `scripts/kuori-calendar` does, on the `kuo
    scripts/kuori-calendar auth work client.json    # or reads them from the downloaded file
    ```
 
-   The account names are yours to choose; they only label the token. The refresh tokens land in
+   With the flake it is `kuori-calendar auth personal`, from anywhere. The account names are yours
+   to choose; they only label the token. The refresh tokens land in
    `~/.local/state/kuori/google-oauth.json`, mode 0600. Keep that file out of any repository.
 3. `scripts/kuori-calendar sync`, or `systemctl --user start kuori-calendar`, and open the clock tab.
 
@@ -623,7 +667,8 @@ only appears once `fprintd` is actually listening — with no finger enrolled it
 password is the only way in. Enrol one with `fprintd-enroll`.
 
 It needs two PAM services, one for each way in, because a single stack asks them in turn: with the
-fingerprint first, a typed password would sit unread for up to thirty seconds. On NixOS:
+fingerprint first, a typed password would sit unread for up to thirty seconds. The flake's module
+declares them (`programs.kuori.lock`); by hand on NixOS they are:
 
 ```nix
 security.pam.services.kuori = { fprintAuth = false; };
