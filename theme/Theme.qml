@@ -1148,9 +1148,9 @@ Singleton {
   property int toastSlide: 20
   property int toastEnter: 260
 
-  // 5.2 seconds is the design's. a client asking for its own timeout gets it, and
+  // notification toast timeout. a client asking for its own timeout gets it, and
   // a critical notification gets none at all.
-  property int toastTimeout: 5200
+  property int toastTimeout: 8000
 
   readonly property color toastFill: root.notch.alpha(0.94)
   readonly property color toastChipFill: root.sheen.alpha(0.06)
