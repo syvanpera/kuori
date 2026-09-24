@@ -521,7 +521,9 @@ The red recording dot reports only; it is the one thing on the tab that opens no
 **Resting the pointer on an icon names it**, on both the system and the toggles tab, after a little
 over half a second. Sliding along to the next icon names that one at once. A switch says which way it
 is set and what a click will do ("Night light off — click to turn on"), and the words change under
-the pointer when you click. The cup says whose hold is lighting it when that is an application's. No
+the pointer when you click. The network icon names the access point you are on, or says "Ethernet" and the
+link speed on a cable; the volume icon names the output it is playing through, and says when it is
+muted. The cup says whose hold is lighting it when that is an application's. No
 name appears while a panel is open or the on-screen display is out.
 
 Panels only do work while they are open: the Wi-Fi scan and the latency probe both stop when their row

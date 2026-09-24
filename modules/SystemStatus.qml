@@ -30,7 +30,11 @@ Row {
   StripButton {
     active: root.showing("wifi")
     screenName: root.screenName
-    tip: Network.onWire ? "Ethernet" : (Network.enabled ? "Wi-Fi" : "Offline")
+    // what it is on rather than the design's "Wi-Fi": the access point, or the
+    // wire and its speed.
+    tip: Network.onWire
+      ? ["Ethernet", Network.speedName(Network.wired.linkSpeed)].filter(part => part).join(" · ")
+      : Network.linkName
 
     onClicked: Notches.toggleRow("wifi", root.screenName)
 
@@ -65,7 +69,8 @@ Row {
   StripButton {
     active: root.showing("audio")
     screenName: root.screenName
-    tip: "Audio"
+    // the sink it is playing through, rather than the design's "Audio".
+    tip: Audio.muted ? `${Audio.summary} · muted` : Audio.summary
 
     onClicked: Notches.toggleRow("audio", root.screenName)
 
