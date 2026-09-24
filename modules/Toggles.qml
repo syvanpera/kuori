@@ -11,7 +11,11 @@ Row {
 
   spacing: Theme.togglesSpacing
 
+  // gone while hyprsunset is not running: a switch that cannot warm the screen
+  // is one that lies about it.
   StripButton {
+    visible: Theme.shows(Display.available)
+
     onClicked: Display.setNight(!Display.night)
 
     Glyph {

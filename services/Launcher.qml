@@ -1,4 +1,5 @@
 pragma Singleton
+import QtQuick
 import Quickshell
 
 // whether the launcher is open and which category it is showing, and nothing
@@ -21,10 +22,28 @@ Singleton {
   property bool mapped: false
   property string category: "all"
 
+  // what the last open asked for, which is not always what it got: a category
+  // that is not on offer opens on ALL. whether wallpapers are on offer is only
+  // re-asked as the launcher opens, so the answer that brings them back lands
+  // just after the open that wanted them -- and moves the launcher there.
+  property string requested: "all"
+
+  Connections {
+    target: LauncherRows
+
+    function onCategoriesChanged(): void {
+      if (root.opened && root.category === "all" && root.requested !== "all" && LauncherRows.offers(root.requested)) root.category = root.requested
+    }
+  }
+
   function open(category: string): void {
     // an empty argument means the whole list, which is also what a plain open
     // gives: the design resets the chips to ALL every time the launcher is raised.
-    root.category = category.length > 0 ? category : "all"
+    //
+    // a category that is not on offer -- wallpapers with no awww -- opens on ALL
+    // instead, so the keybind still visibly does something.
+    root.requested = category.length > 0 ? category : "all"
+    root.category = LauncherRows.offers(root.requested) ? root.requested : "all"
     root.opened = true
   }
 
@@ -36,13 +55,13 @@ Singleton {
   // launcher is already up switches to it rather than closing: the second press is
   // a request to see something, not to put the launcher away.
   function toggle(category: string): void {
-    const wanted = category.length > 0 ? category : "all"
+    const wanted = category.length > 0 && LauncherRows.offers(category) ? category : "all"
 
     if (root.opened && root.category === wanted) {
       root.close()
       return
     }
 
-    root.open(wanted)
+    root.open(category)
   }
 }

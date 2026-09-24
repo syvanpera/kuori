@@ -26,6 +26,14 @@ Singleton {
     return `${root.monitor.width}×${root.monitor.height}${hz > 0 ? ` · ${hz} Hz` : ""}`
   }
 
+  // whether hyprsunset is up to be talked to. it is the machine's daemon, not this
+  // shell's, so the night light hides without it (Theme.unavailableFeatures) and
+  // what was saved is applied the moment it appears -- which is also what puts the
+  // warmth back after hyprsunset restarts, since it comes back at identity.
+  property bool available: false
+
+  onAvailableChanged: if (root.available) root.apply()
+
   property bool night: false
   property int temperature: Theme.dispTempDefault
 
@@ -93,7 +101,10 @@ Singleton {
 
   // hyprctl rather than Hyprland.dispatch: hyprsunset listens on a socket of its
   // own, and a dispatcher would only be asking hyprland to run this same command.
+  // with nothing listening the state is still recorded, and applied on arrival.
   function apply(): void {
+    if (!root.available) return
+
     Quickshell.execDetached(root.night
       ? ["hyprctl", "hyprsunset", "temperature", `${root.temperature}`]
       : ["hyprctl", "hyprsunset", "identity"])
@@ -121,6 +132,36 @@ Singleton {
 
   function setAwake(on: bool): void {
     root.awake = on
+  }
+
+  // asked rather than looked for: hyprsunset leaves its socket behind when it
+  // stops, so the file existing says nothing. a query answers 0 from a live
+  // daemon and 3 ("couldn't connect") from a dead one. once at startup, on the
+  // shell's one clock every minute, and whenever the section opens, since the
+  // minute tick can leave it a minute behind a daemon that just started.
+  Process {
+    id: sunset
+
+    command: ["hyprctl", "hyprsunset", "temperature"]
+    running: true
+
+    onExited: code => root.available = code === 0
+  }
+
+  Connections {
+    target: Time
+
+    function onDateChanged(): void {
+      sunset.running = true
+    }
+  }
+
+  Connections {
+    target: Notches
+
+    function onRowChanged(): void {
+      if (Notches.row === "display") sunset.running = true
+    }
   }
 
   // runs whether or not Theme.appInhibit honours it, so a caller always gets an

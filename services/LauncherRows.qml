@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.services
+import qs.theme
 
 // everything the launcher can list, as rows. it lives here rather than in the
 // panel because the panel's window is destroyed on close: rows built there were
@@ -12,7 +13,9 @@ Singleton {
 
   // adding a category is adding a line here and a source below. these are all six
   // the design has, in its order -- it dropped ACTIONS before that one was built.
-  readonly property var categories: [
+  readonly property var categories: root.allCategories.filter(category => root.offers(category.id))
+
+  readonly property var allCategories: [
     { id: "all", label: "ALL" },
     { id: "apps", label: "APPS" },
 
@@ -226,7 +229,15 @@ Singleton {
     run: () => Quickshell.execDetached(action.command)
   }))
 
-  readonly property var rows: root.appRows.concat(root.wallpaperRows, root.clipboardRows, root.windowRows, root.powerRows)
+  readonly property var rows: root.appRows.concat(root.offers("wallpapers") ? root.wallpaperRows : [], root.clipboardRows, root.windowRows, root.powerRows)
+
+  // whether a category is on offer at all. wallpapers need awww's daemon; the
+  // clipboard is always offered, and is simply empty without cliphist.
+  function offers(id: string): bool {
+    if (id === "wallpapers") return Theme.shows(Wallpapers.available)
+
+    return true
+  }
 
   function launchEntry(entry: var): void {
     // uwsm puts the app in its own systemd scope, so it survives this shell being

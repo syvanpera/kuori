@@ -847,6 +847,17 @@ Singleton {
   // directly or through the portal -- holds idle off the way the stay awake
   // switch does. false still answers them, and ignores what they ask.
   property bool appInhibit: true
+
+  // what to do with a feature whose daemon is not running -- the night light
+  // without hyprsunset, the wallpapers without awww. "hide" takes it off screen
+  // until the daemon turns up; "show" draws it regardless, a switch that does
+  // nothing, which is how it was. the clipboard is never hidden: without
+  // cliphist its history is simply empty, which says so already.
+  property string unavailableFeatures: "hide"
+
+  function shows(available: bool): bool {
+    return available || root.unavailableFeatures === "show"
+  }
   property int lockBlank: 60
 
   // the design's column starts 208px down a 900px screen. a fraction rather than

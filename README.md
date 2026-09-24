@@ -99,6 +99,20 @@ scanning if something looks dead.
 Everything the shell shells out to must be on the **systemd unit's** PATH, which is not your login
 shell's. See *Running it*.
 
+**Two features hide while their daemon is not running**, rather than offering a switch that does
+nothing:
+
+- **The night light**, without `hyprsunset`: the moon in the toggles tab and the night light switch
+  and temperature slider in the display section. kuori asks hyprsunset once a minute and whenever
+  that section opens. When hyprsunset comes back, kuori re-applies whatever was saved — a restarted
+  hyprsunset starts at identity.
+- **The WALLPAPERS category**, without `awww-daemon`: it is checked each time the launcher opens.
+  `launcher wallpapers` opens on ALL instead, and moves to WALLPAPERS if the daemon turns out to be
+  back.
+
+The clipboard is never hidden. Without `cliphist`, or without the watchers feeding it, the history is
+simply empty. `Theme.unavailableFeatures: "show"` draws everything regardless.
+
 ### Companion services
 
 These run as systemd **user** units alongside kuori. Without them the corresponding feature is inert
@@ -644,6 +658,7 @@ every colour, size, duration and font in one place.
 | How many clipboard entries the launcher shows | `cliphist`'s own `-max-items` |
 | How long before it locks, and then how long before the screen goes off | `Theme.lockIdle`, `Theme.lockBlank`, in seconds |
 | Whether applications may hold idle off over D-Bus | `Theme.appInhibit` (they are still answered when false) |
+| Whether a feature whose daemon is down hides | `Theme.unavailableFeatures` (`"hide"` or `"show"`) |
 | Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
 
 State that has to survive a restart — the night light and its colour temperature, and whether the

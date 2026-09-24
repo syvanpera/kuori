@@ -26,6 +26,14 @@ Singleton {
   // and reload every thumbnail.
   property var files: []
 
+  // whether awww's daemon is there to be told anything. it is the machine's, not
+  // this shell's, so without it the launcher leaves the category out
+  // (Theme.unavailableFeatures) rather than offering pictures a click cannot set.
+  //
+  // told by `awww query` exiting 0, which it does not without the daemon. the
+  // query runs whenever the launcher opens, which is the only thing that asks.
+  property bool available: false
+
   // what qt can draw, not what awww can read. awww takes a wider set, but a
   // wallpaper qt cannot decode would be a row with an empty tile, which is worse
   // than not offering it. jp2, tiff and webp are here because qtimageformats is
@@ -113,6 +121,8 @@ Singleton {
 
     command: ["awww", "query"]
     running: true
+
+    onExited: code => root.available = code === 0
 
     stdout: StdioCollector {
       id: reply

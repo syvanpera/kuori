@@ -14,9 +14,11 @@ PanelRow {
   value: Display.summary
   lit: true
 
+  // hidden with its slider while hyprsunset is not running.
   DisplayToggle {
     width: root.bodyWidth
 
+    visible: Theme.shows(Display.available)
     icon: "nightlight"
     label: "Night light"
     detail: Display.night ? `Warm ${Display.temperature}K` : "Off"
@@ -59,7 +61,7 @@ PanelRow {
 
   // the design only offers a temperature while there is one being applied.
   Caption {
-    visible: Display.night
+    visible: Display.night && Theme.shows(Display.available)
 
     text: "TEMPERATURE"
   }
@@ -67,7 +69,7 @@ PanelRow {
   DisplaySlider {
     width: root.bodyWidth
 
-    visible: Display.night
+    visible: Display.night && Theme.shows(Display.available)
     icon: "nightlight"
     tint: Theme.elevated
     labelWidth: Theme.dispTempLabelWidth
