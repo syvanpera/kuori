@@ -18,7 +18,8 @@ provides an application launcher, a notification daemon, and an authentication a
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
 - **A Bluetooth pairing agent**: pairing codes and confirmations appear in the system panel.
-- **A focus indicator** on the active window, either a corner wedge or a strip along one edge.
+- **A focus indicator** on the active window, either a corner wedge or a strip along one edge, and
+  the same mark in grey on every other window on screen.
 - **A lock screen** that takes a password or a fingerprint. It locks after ten idle minutes, when the lid
   closes and before the machine sleeps, and turns the screen off a minute after locking.
 
@@ -33,7 +34,8 @@ clock in the middle, and the switches beside the system tab on the right.
 
 Which window has focus, said by kuori rather than by a window border: a strip along one edge, with
 horns at its ends that follow Hyprland's own corner radius. `Theme.focusStripEdge` moves it to the
-bottom.
+bottom. Every other window on screen carries the same mark in Hyprland's inactive-border grey;
+`Theme.focusMarkUnfocused: false` leaves only the focused one marked.
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
 
@@ -623,7 +625,7 @@ every colour, size, duration and font in one place.
 | Want to change | Look at |
 |---|---|
 | Colours, sizes, animation timing | `theme/Theme.qml` |
-| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge` |
+| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused` and `focusUnfocusedColor` for the other windows |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |

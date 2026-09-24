@@ -15,6 +15,10 @@ Shape {
 
   property real thickness: Theme.focusStripThickness
 
+  // the focused window's accent unless told otherwise; an unfocused window's strip
+  // is the same shape in Theme.focusUnfocusedColor.
+  property color color: Theme.focusColor
+
   // against the window's bottom edge instead of its top.
   property bool atBottom: false
 
@@ -53,7 +57,7 @@ Shape {
   }
 
   ShapePath {
-    fillColor: Theme.focusColor
+    fillColor: root.color
     strokeWidth: -1
 
     // just past the bar's rounded outer corner.

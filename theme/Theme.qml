@@ -53,6 +53,12 @@ Singleton {
   // stands in for was this exact colour.
   readonly property color focusColor: root.accent.alpha(root.focusOpacity)
 
+  // every other window on screen gets the same mark in hyprland's own
+  // inactive_border, rgba(595959aa) in looknfeel.lua -- the other half of the
+  // border the focused mark stands in for. false marks the focused window only.
+  property bool focusMarkUnfocused: true
+  readonly property color focusUnfocusedColor: "#aa595959"
+
   property int borderWidth: 5
 
   // which monitors carry the tabs. "main" puts the tabs, their panels and the osd

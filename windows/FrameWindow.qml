@@ -214,7 +214,12 @@ PanelWindow {
   }
 
   // between the frame and the notches, so a window sitting against the top edge
-  // gets its indicator drawn under the tabs rather than over them.
+  // gets its indicator drawn under the tabs rather than over them. the unfocused
+  // marks first, so the focused one is never under a neighbour's.
+  UnfocusedIndicators {
+    monitor: root.monitor
+  }
+
   FocusIndicator {
     monitor: root.monitor
   }

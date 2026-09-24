@@ -7,7 +7,8 @@ import qs.theme
 // decides whether the focused window should be marked on this monitor and where,
 // then draws whichever indicator the theme asks for. the two styles differ only in
 // what they paint: everything about when to show one, and the geometry to show it
-// against, is the same, so it lives here once.
+// against, is the same, so it lives here once. the unfocused windows are marked by
+// UnfocusedIndicators, which draws the same WindowMarker in another colour.
 Item {
   id: root
 
@@ -77,32 +78,10 @@ Item {
     onTriggered: root.swapping = false
   }
 
-  // the corner wedge, tucked into the window's top-right.
-  FocusMark {
-    visible: Theme.focusStyle === "mark"
-
-    x: root.windowX + root.windowWidth - width
-    y: root.windowY
-  }
-
-  // or the strip, sitting on the window's top edge. placed against that edge
-  // rather than inside the gap above it, so changing hyprland's gaps moves the
-  // window and the strip together and nothing here needs to know what they are.
-  // it is taller than the bar, by the horns that reach down into the window's
-  // rounded corners, so it is the bar that is positioned here and not the item.
-  FocusStrip {
-    id: strip
-
-    visible: Theme.focusStyle === "strip"
-    atBottom: Theme.focusStripEdge === "bottom"
-
-    width: root.windowWidth
-    x: root.windowX
-
-    // the item is taller than the bar by the horns, and mirroring puts the bar at
-    // whichever end is against the window, so each edge anchors from its own side.
-    y: strip.atBottom
-      ? root.windowY + root.windowHeight - strip.corner
-      : root.windowY - strip.thickness
+  WindowMarker {
+    windowX: root.windowX
+    windowY: root.windowY
+    windowWidth: root.windowWidth
+    windowHeight: root.windowHeight
   }
 }

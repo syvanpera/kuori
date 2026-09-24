@@ -12,6 +12,10 @@ import qs.theme
 Shape {
   id: root
 
+  // the focused window's accent unless told otherwise; an unfocused window's mark
+  // is the same shape in Theme.focusUnfocusedColor.
+  property color color: Theme.focusColor
+
   // the geometry renderer flattens arcs at build time and cannot re-tessellate for
   // a fractional device pixel ratio; the curve renderer evaluates them in the
   // fragment shader, so the corner stays smooth at whatever scale a monitor runs
@@ -27,7 +31,7 @@ Shape {
   // would allocate a framebuffer for a mark this size -- the trade WorkspaceDots
   // already makes for its dots.
   ShapePath {
-    fillColor: Theme.focusColor
+    fillColor: root.color
     strokeWidth: -1
 
     // the inner end of the top edge, where the hypotenuse meets it.
