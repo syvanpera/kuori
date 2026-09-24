@@ -3,7 +3,7 @@ import qs.components
 import qs.services
 import qs.theme
 
-// the right tab: network, bluetooth, volume, notifications, display and battery. every one of
+// the right tab: network, bluetooth, volume, display, notifications and battery. every one of
 // them reports something and opens the section of the panel that is about it. the
 // switches live in their own tab beside this one.
 Row {
@@ -73,6 +73,19 @@ Row {
     }
   }
 
+  // it reports nothing: a way into night light, stay awake and the sliders, which
+  // the toggles tab beside this one only half covers.
+  StripButton {
+    active: root.showing("display")
+
+    onClicked: Notches.toggleRow("display", root.screenName)
+
+    Glyph {
+      icon: "desktop_windows"
+      iconColor: root.showing("display") ? Theme.accent : Theme.glyph
+    }
+  }
+
   // what has arrived, and a way into it. it is the only one of the six that says
   // something when its row is shut: accent while there is a history behind it, open
   // or not, which is the design's own "hot".
@@ -87,19 +100,6 @@ Row {
         if (root.showing("notifications") || Notifications.history.length > 0) return Theme.accent
         return Theme.glyph
       }
-    }
-  }
-
-  // it reports nothing: a way into night light, stay awake and the sliders, which
-  // the toggles tab beside this one only half covers.
-  StripButton {
-    active: root.showing("display")
-
-    onClicked: Notches.toggleRow("display", root.screenName)
-
-    Glyph {
-      icon: "desktop_windows"
-      iconColor: root.showing("display") ? Theme.accent : Theme.glyph
     }
   }
 
