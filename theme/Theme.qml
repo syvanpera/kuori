@@ -58,11 +58,17 @@ Singleton {
   // border the focused mark stands in for. false marks the focused window only.
   property bool focusMarkUnfocused: true
 
+  // whether a floating window is marked at all. hyprland emits nothing while a
+  // window is dragged, so a mark cannot follow one being moved and is left behind
+  // until the next event; false leaves floating windows to hyprland's own border,
+  // which windows.lua turns on for them alone.
+  property bool focusMarkFloating: false
+
   // how solid that grey is, on the same terms as focusOpacity: alpha in the fill,
   // because UnfocusedIndicators drives each mark's opacity to fade it in. 0.67 is
   // hyprland's own aa.
   property real focusUnfocusedOpacity: 1.0
-  readonly property color focusUnfocusedBase: "#595959"
+  readonly property color focusUnfocusedBase: "#5a616b"
   readonly property color focusUnfocusedColor: root.focusUnfocusedBase.alpha(root.focusUnfocusedOpacity)
 
   property int borderWidth: 5

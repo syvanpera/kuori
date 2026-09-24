@@ -35,7 +35,10 @@ clock in the middle, and the switches beside the system tab on the right.
 Which window has focus, said by kuori rather than by a window border: a strip along one edge, with
 horns at its ends that follow Hyprland's own corner radius. `Theme.focusStripEdge` moves it to the
 bottom. Every other window on screen carries the same mark in Hyprland's inactive-border grey;
-`Theme.focusMarkUnfocused: false` leaves only the focused one marked.
+`Theme.focusMarkUnfocused: false` leaves only the focused one marked. Floating windows carry no kuori
+mark: Hyprland reports nothing while a window is dragged, so a mark could not follow one being moved.
+They get Hyprland's own border instead, from a `floating-border` window rule in the Hyprland config;
+`Theme.focusMarkFloating: true` marks them like any other window.
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
 
@@ -625,7 +628,7 @@ every colour, size, duration and font in one place.
 | Want to change | Look at |
 |---|---|
 | Colours, sizes, animation timing | `theme/Theme.qml` |
-| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows |
+| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |

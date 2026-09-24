@@ -55,6 +55,8 @@ Singleton {
   // disambiguate and nothing to mark.
   readonly property bool fullscreen: (root.toplevel?.lastIpcObject?.fullscreen ?? 0) !== 0
 
+  readonly property bool floating: root.toplevel?.lastIpcObject?.floating ?? false
+
   // every event that can move a window, and none that cannot. the omission that
   // matters is windowtitlev2: a terminal running anything with a spinner emits it
   // several times a second, and refreshing on it would mean an ipc round-trip plus

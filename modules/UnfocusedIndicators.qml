@@ -46,12 +46,14 @@ Item {
       }
 
       // a fullscreen window covers the rest of its workspace, so there is nothing
-      // on it left to mark; a hidden one is a group member behind its tab.
+      // on it left to mark; a hidden one is a group member behind its tab; a
+      // floating one is hyprland's to border, as in FocusIndicator.
       readonly property bool lit: marker.modelData !== FocusedWindow.toplevel
         && marker.modelData.monitor === root.monitor
         && marker.onShownWorkspace
         && !(marker.modelData.workspace?.hasFullscreen ?? false)
         && !(marker.ipc.hidden ?? false)
+        && (Theme.focusMarkFloating || !(marker.ipc.floating ?? false))
         && (marker.ipc.mapped ?? true)
         && (marker.ipc.size?.[0] ?? 0) > 0
 
