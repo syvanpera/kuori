@@ -71,10 +71,23 @@ Wi-Fi with the known and nearby networks; Bluetooth partway through pairing, wit
 drives, an unlocked LUKS disk beside a locked one asking for its passphrase; and the display, with
 the night light on and its colour temperature.
 
+![The on-screen display as a tab between the clock and the toggles, on a volume change](docs/osd-notch.webp)
+
+The on-screen display on a volume key, in its default `notch` style: a tab of its own between the
+clock and the toggles.
+
+![The same tab while voice typing, listening](docs/osd-voice.webp)
+
+Voice typing with voxtype: a red mic, how long it has been listening, and the microphone's level.
+
+![The voice typing display in the drop style, under the system tab](docs/osd-drop-voice.webp)
+
+The same in the `drop` style, falling out of the system tab.
+
 ![Toasts moved down by the on-screen display](docs/notifications.webp)
 
-The on-screen display in its `drop` style, falling out of the system tab on a volume key, with the
-toasts moved down out of its way. The top one is a drive just mounted, with its **Open** and **Eject** buttons.
+The `drop` style on a volume key, with the toasts moved down out of its way. The top one is a drive
+just mounted, with its **Open** and **Eject** buttons.
 
 ![The clock tab, showing the calendar](docs/calendar.webp)
 
