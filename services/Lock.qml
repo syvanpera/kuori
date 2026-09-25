@@ -185,12 +185,22 @@ Singleton {
   // one conversation for the password and another for a finger, side by side. a
   // single pam stack asks them in turn, and pam_fprintd waits up to half a minute
   // for a finger before the password is ever read.
+  //
+  // aborting is a SIGKILL to pam_fprintd, and fprintd only lets go of the reader
+  // once it notices that client has left the bus. a conversation started in the
+  // same breath asks for a reader that is still claimed, is refused ("Device was
+  // already claimed") and fails without a word -- which reads as nothing enrolled,
+  // so it is never asked again. a conversation that replaces a live one waits.
   function listen(): void {
+    const replacing = finger.active
+
     root.fingerReady = false
     root.fingerOk = false
     fingerRetry.stop()
     finger.abort()
-    finger.start()
+
+    if (replacing) fingerRetry.restart()
+    else finger.start()
   }
 
   function preview(scene: string): void {
@@ -310,10 +320,12 @@ Singleton {
     } else if (event.type === "lock") {
       root.lock(event.reason)
     } else if (event.type === "wake") {
-      // hyprland brings the outputs back on resume, and the reader may have gone
-      // away under a conversation that is still waiting on it.
+      // a conversation started as the lid closed is still listening on resume --
+      // fprintd suspends and resumes its own verify -- and is left alone. one that
+      // lost its reader across the sleep has already ended and been retried, so
+      // only a lock with no conversation at all needs one started.
       root.blanked = false
-      if (root.shown && !root.leaving) root.listen()
+      if (root.shown && !root.leaving && !finger.active) root.listen()
     }
   }
 
