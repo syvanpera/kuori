@@ -632,6 +632,34 @@ Singleton {
 
   readonly property color sysSliderRail: root.sheen.alpha(0.1)
 
+  // the microphone's level under the INPUT slider: 24 segments, the last five
+  // warm and the last two of those hot. it is as wide as the slider's track, the
+  // design's empty spacer standing in for the reading beside it, and it tucks up
+  // 3 under the section's own gap.
+  // false leaves the meter out, and with it the capture stream that feeds it:
+  // pipewire lists the shell as recording from the mic while the row is open.
+  property bool micMeter: true
+  property int micMeterSegments: 24
+  property int micMeterHeight: 4
+  property int micMeterGap: 2
+  property int micMeterRadius: 1
+  property int micMeterTop: 6
+  property int micMeterWarm: 5
+  property int micMeterHot: 2
+
+  // how far the bar closes on the reading each 60th of a second, rising and
+  // falling: it jumps up and sinks back, the way the design's does.
+  property real micMeterAttack: 0.45
+  property real micMeterRelease: 0.12
+
+  // the peak segment stays lit this long, and starts sinking this long before
+  // it would snap to the level.
+  property int micMeterHold: 700
+  property int micMeterFall: 200
+  property real micMeterFallStep: 0.01
+
+  readonly property color micMeterOff: root.sheen.alpha(0.08)
+
   // the glyph beside a slider in the display section. it outlived the brightness
   // row it was named for: the design folded that row into display, and what is left
   // of it is components/DisplaySlider.qml.

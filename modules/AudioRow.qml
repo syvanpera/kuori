@@ -74,12 +74,27 @@ PanelRow {
       onPicked: Audio.selectSource(modelData)
     }
 
-    DisplaySlider {
+    Column {
       width: root.bodyWidth
-      value: Audio.gain
-      reading: `${Math.round(Audio.gain * 100)}%`
+      spacing: Theme.micMeterTop
 
-      onMoved: level => Audio.setVolume(Audio.source, level)
+      DisplaySlider {
+        id: gain
+
+        width: root.bodyWidth
+        value: Audio.gain
+        reading: `${Math.round(Audio.gain * 100)}%`
+
+        onMoved: level => Audio.setVolume(Audio.source, level)
+      }
+
+      // as wide as the track above it, the reading's column left empty.
+      LevelMeter {
+        width: root.bodyWidth - gain.labelWidth - Theme.sysSliderGap
+        visible: Theme.micMeter
+        running: Audio.metering
+        level: Audio.inputLevel
+      }
     }
   }
 }

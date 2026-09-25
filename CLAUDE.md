@@ -62,7 +62,7 @@ The shared pieces a new surface should reach for before writing its own: `PillBu
 password field and the line under it, lock, polkit and a locked drive; its sizes are properties with
 polkit's as the defaults), `IconButton` (a glyph on a square), `ListEntry` (a row in a panel list),
 `ToastFrame` (a card on the toast stack), `windows/ModalWindow.qml` (a fullscreen overlay with a
-scrim and a grab), `Rule`, `StatGrid`, `KeyHint`, `Meter` and `Glide` (the design's easing curve).
+scrim and a grab), `Rule`, `StatGrid`, `KeyHint`, `Meter`, `LevelMeter` and `Glide` (the design's easing curve).
 They exist because each was written out by hand two to five times, and the copies had drifted.
 
 `services/Bluez.qml` is named for the daemon, not the radio: `Quickshell.Bluetooth` already exports a
@@ -795,6 +795,12 @@ with wtype — never test by really locking with nobody at the machine to type t
   stream, fixed at 1.00, so the volume keys (`wpctl`, which resolves to the sink) moved nothing the
   panel or the OSD could see. `Audio.device()` trades a stream for the device of the same name. The
   other fix is a distinct `node.name` on the chain's playback side, in their nixos config.
+- **`PwNodePeakMonitor.peak` is already curved.** Quickshell takes the cube root of the sample
+  peak (and divides out the channel volume), so it goes straight onto the mic meter's segments
+  with no dB mapping. A quiet room reads about 0.17 on the webcam mic here, which lights four or
+  five segments: that is the real noise floor, not an offset to subtract. The monitor is a capture
+  stream (`Quickshell Peak Detect` in `pw-cli ls Node`), which is why it is gated on
+  `Audio.detailed` and why `LevelMeter`'s `FrameAnimation` stops with it.
 - **A `Behavior`'s animation never emits `finished()`**. Time the teardown instead. A launcher window
   once stayed mapped forever because it was waiting on that signal.
 - **Qt prunes input delivery by the parent's bounds.** A `HoverHandler` on a body wider than its item

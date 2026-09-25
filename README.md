@@ -549,7 +549,10 @@ display, notifications and battery, and a red dot while a recording is running. 
   kuori starts, the machine wakes or the radio comes on, when every paired device reconnects at once.
   They are transient, so they never reach the history or light the bell. `Theme.btAnnounce` picks
   `"connect"`, `"both"` to hear about disconnects too, or `"off"`.
-- **Audio**: output and input devices, volume, and a switch that is mute read the right way up.
+- **Audio**: output and input devices, volume and microphone gain, and a switch that is mute read the
+  right way up. Under the gain is a live level meter for the microphone. It listens only while the row
+  is open, so pipewire lists kuori as recording from the mic for that long; `Theme.micMeter: false`
+  leaves it out.
 - **Battery**: level, time remaining, health, rate, and power profiles when a daemon offers them.
 - **Drives**: only there while a drive is plugged in, and so is its icon on the strip.
   - **Plugging one in mounts it**, and a toast says where, with **Open** and **Eject**. An

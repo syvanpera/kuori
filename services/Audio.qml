@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
+import qs.theme
 
 // what is playing sound and what is listening, and how loud each of them is.
 //
@@ -36,6 +37,13 @@ Singleton {
   readonly property bool silent: !root.sinkReady || root.muted
   readonly property real volume: root.sinkReady ? root.sink.audio.volume : 0
   readonly property real gain: root.sourceReady ? root.source.audio.volume : 0
+
+  // what the microphone is hearing, 0 to 1. quickshell already takes the cube
+  // root of the sample peak, so speech lands mid-bar without a curve of ours.
+  // measuring opens a capture stream on the source, so it runs only while the
+  // row is open and says nothing otherwise.
+  readonly property bool metering: root.detailed && root.sourceReady && Theme.micMeter
+  readonly property real inputLevel: root.metering ? peaks.peak : 0
 
   // what the collapsed row says on the right.
   readonly property string summary: root.label(root.sink) || "No output"
@@ -113,6 +121,13 @@ Singleton {
     if (name.includes("hdmi") || name.includes("displayport")) return "desktop_windows"
 
     return node?.isSink ? "speaker" : "mic"
+  }
+
+  PwNodePeakMonitor {
+    id: peaks
+
+    node: root.source
+    enabled: root.metering
   }
 
   // the two defaults are always bound: the tab's own strip reads the sink even
