@@ -164,6 +164,7 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 | The lock's prompt is on the monitor **with the keyboard** | The design's secondary scene draws a second screen without saying which is which. The keyboard is where a typed password goes, so that is the screen that asks for it, and it follows focus. |
 | The lock's name and initial come from the passwd entry | The design's "Veera Laine" is mock data. The GECOS field is what `getent` gives, up to its first comma. |
 | A recording lights a red dot on the system strip | The design gives a recording no indicator anywhere. One you cannot see is one you forget you started, and this is a laptop. |
+| Voice typing puts up the **OSD**, in the recording dot's red | Not in the design, which has no microphone display. The user asked for voxtype's recording state inside the shell (2026-09-25) rather than voxtype's own floating card, so it is the volume box with a mic, `Listening` or `Transcribing…`, the running time where the percentage goes and the INPUT row's `LevelMeter` in place of the bar. Red is what the strip already says "recording" in. |
 | Ping measures the path to the **internet**, not to the gateway | A router three metres away answers in single digits whatever the connection is doing. `Network.pingTarget` is the one line to change. |
 | The **primary** calendar of an account is named after the account, not after itself | Google names it after the account's email address, which is not a legend entry. The name the account was given at `auth` — "personal", "work" — is what the design's legend shows. |
 | An all-day event's time column is `—` | The design's 32px column fits `09:30` and nothing has an all-day event in it. "All day" does not fit; a dash in the calendar's colour says "no time" and keeps the titles aligned. All-day events list first. |
@@ -1253,6 +1254,31 @@ needed no keybind changes, and why it also answers a change made from a terminal
   drops in once and the bar and the reading follow while it is up.
 - The design's OSD buttons at the bottom left are a mock affordance, like the launcher's trigger
   button, and are not built.
+
+### Voice typing
+
+The same box shows what [voxtype](https://voxtype.io) is doing. `services/Voxtype.qml` only reads: the
+daemon, its model and its keybinds are the machine's (their nixos config runs it as a user unit, and
+the push-to-talk binds are in their `bindings.lua`), and it types with or without kuori.
+
+- **The state file is watched, and so is its directory.** voxtype writes one word to
+  `$XDG_RUNTIME_DIR/voxtype/state` per transition with `fs::write`, in place, so a `FileView` watch
+  hears every one. But the daemon **deletes the file when it stops** and writes a new one when it
+  starts, and a watch on a deleted file never fires again -- the calendar's rename trap by another
+  road. A `FolderListModel` on the directory reloads the view when the file comes back.
+- **It is a state, not a change**, so `Osd.voice` has no hold: the box is up exactly while voxtype is
+  `recording`, `streaming` or `transcribing`, and it wins over a volume or brightness change made
+  meanwhile. It still stands aside for the system panel, which has the same corner.
+- **The level is `Audio.inputLevel`**, the INPUT row's own peak monitor, run while `Voxtype.listening`
+  as well as while that row is open. voxtype's `voxtype-audio-bridge` sidecar would report what the
+  daemon itself hears, but it is a process per recording for a meter that reads the same device.
+- **`--no-osd` is a marker file** beside the state (`osd_suppressed`), not a state value, because
+  voxtype's status contract is frozen. A second `FolderListModel` is how it is seen.
+- voxtype's own OSD must be off (`[osd] enabled = false`), or it draws too. The nixpkgs package ships
+  no gtk4 frontend and none of its Quickshell tree, so on this machine it only ever failed to start.
+- `kuori ipc call voxtype mock listening | transcribing | idle` draws each state without speaking.
+  Verified 2026-09-25 against the real daemon (`voxtype record start`, then `cancel`, so nothing was
+  typed), and every state by the mock.
 
 `modules/OsdBox.qml` is the box, named that way because `services/Osd.qml` has the plain name and a
 window importing both modules could not say which it meant — the collision `services/Bluez.qml` is

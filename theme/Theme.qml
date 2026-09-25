@@ -1319,6 +1319,12 @@ Singleton {
   // accent: the design says the level is zero and says why in the same glance.
   readonly property color osdFillMuted: root.tint.alpha(0.35)
 
+  // voice typing: not in the design, which has no microphone osd. the glyph is
+  // the recording dot's colour while voxtype listens and the accent while it
+  // transcribes, and the running time moves once a second.
+  readonly property color osdFillListening: root.urgent
+  property int osdVoiceTick: 1000
+
   // how long it stays up after the last change.
   property int osdHold: 1700
 

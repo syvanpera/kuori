@@ -18,7 +18,8 @@ Bluetooth pairing agent, the drive mounter and the lock screen.
   screenshots, recordings and picking a colour off the screen. Resting the pointer on an icon names it.
 - **A launcher** with six categories: everything, applications, clipboard history, wallpapers,
   windows and power, each openable straight from a keybind.
-- **An on-screen display** for the volume and brightness keys, dropping out of the system tab.
+- **An on-screen display** for the volume and brightness keys, and for voice typing with
+  [voxtype](https://voxtype.io), dropping out of the system tab.
 - **Notifications**: kuori *is* the session's notification daemon. Toasts appear top-right, and the
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
@@ -114,6 +115,7 @@ scanning if something looks dead.
 | Locking at all | the PAM services `kuori` and `kuori-fingerprint` (see *Lock screen*) |
 | Locking on lid close and before sleep | `python3` with `jeepney`, as above |
 | Applications keeping the screen awake over D-Bus | `python3` with `jeepney`, as above |
+| The voice typing display | the `voxtype` daemon running, with its own OSD off (`[osd] enabled = false`) |
 | External drives | `udisks2` running (`services.udisks2.enable`), and `python3` with `jeepney`, as above |
 | Opening a drive | a file manager that answers `org.freedesktop.FileManager1` (nautilus, dolphin, nemo, thunar); `xdg-open` otherwise |
 | Fingerprint unlock | `fprintd`, and a finger enrolled with `fprintd-enroll` |
@@ -439,6 +441,15 @@ buttons on a fake go nowhere.
 | `mock yanked` | Raise the toast for a drive pulled out while mounted |
 | `clear` | Take the fakes away |
 
+### `voxtype`
+
+Puts the voice typing display up without a microphone, over whatever the daemon is really doing.
+
+| Call | Does |
+|---|---|
+| `mock listening \| transcribing` | Show the display in that state (listening meters the real microphone) |
+| `mock idle` | Hand the display back to the daemon |
+
 ### `lock`
 
 | Call | Does |
@@ -612,6 +623,16 @@ kuori, but for a different reason: see `backlight` above.)
 
 Toasts move down while it is out, and it stays away entirely while the system panel is open, since the
 panel is showing those same sliders. With several monitors it appears on the focused one only.
+
+**Voice typing** puts the same box up for as long as [voxtype](https://voxtype.io) is at work: a red
+mic, `Listening`, the time since the recording began and the microphone's level while it hears you,
+then an accent mic and `Transcribing…` with the time stopped until the text is typed. It wins over a
+volume or brightness change made meanwhile, and goes away when the daemon is idle again. kuori only
+reads the daemon's state file (`$XDG_RUNTIME_DIR/voxtype/state`), so recording is started and stopped
+however voxtype is set up (its own hotkey, or `voxtype record start` / `stop` from a Hyprland bind),
+and a daemon restarted under it is picked up again. Turn voxtype's own OSD off
+(`[osd] enabled = false` in its `config.toml`), or both will draw. A recording started with
+`voxtype record start --no-osd` is not shown.
 
 ## Notifications
 

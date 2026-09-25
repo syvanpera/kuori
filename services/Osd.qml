@@ -14,7 +14,13 @@ Singleton {
   // "volume", "brightness", or "" for nothing on screen.
   property string kind: ""
 
-  readonly property bool shown: root.kind !== ""
+  // voice typing, which is not a change that comes and goes but a state that
+  // lasts: the box stays up for as long as voxtype is listening or transcribing,
+  // with no hold, and wins over a volume or brightness change made meanwhile. it
+  // stands aside for the system panel like the others, having the same corner.
+  readonly property bool voice: Voxtype.active && Notches.open !== "system"
+
+  readonly property bool shown: root.kind !== "" || root.voice
 
   // the value each service last reported. a service starts with nothing -- no sink
   // yet, no backlight probed yet -- and its first real reading is a change like any

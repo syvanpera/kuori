@@ -25,7 +25,12 @@ Item {
   // is two of them reporting a laptop panel from monitors it does not light.
   property bool here: true
 
-  readonly property bool volume: Osd.kind === "volume"
+  // voice typing first: it lasts, and a volume change made while it is up says
+  // nothing that outweighs "the microphone is on".
+  readonly property bool voice: Osd.voice
+  readonly property bool listening: root.voice && Voxtype.listening
+
+  readonly property bool volume: !root.voice && Osd.kind === "volume"
   readonly property bool muted: root.volume && Audio.muted
 
   readonly property int value: {
@@ -34,8 +39,21 @@ Item {
   }
 
   // the glyph and the bar are the same colour, so a muted sound reads as one
-  // statement rather than a grey icon over a blue bar.
-  readonly property color fill: root.muted ? Theme.osdFillMuted : Theme.osdFill
+  // statement rather than a grey icon over a blue bar. a listening microphone is
+  // the recording dot's red, which is what the strip already says "recording" in.
+  readonly property color fill: {
+    if (root.listening) return Theme.osdFillListening
+    return root.muted ? Theme.osdFillMuted : Theme.osdFill
+  }
+
+  // how long the recording has run, ticking while it does and stopping where it
+  // stopped while it is transcribed. `now` only moves while there is a clock to
+  // show, so an osd for the volume keys wakes nothing.
+  property real now: Date.now()
+
+  readonly property int seconds: Math.max(0, Math.floor(((Voxtype.until || root.now) - Voxtype.since) / 1000))
+  readonly property string elapsed: `${Math.floor(root.seconds / 60)}:${String(root.seconds % 60).padStart(2, "0")}`
+
 
   // 0 away, 1 fully out. the drop-in reads this rather than animating three
   // properties separately and letting them drift apart.
@@ -70,6 +88,15 @@ Item {
     Glide { duration: Theme.osdDuration }
   }
 
+  Timer {
+    interval: Theme.osdVoiceTick
+    repeat: true
+    triggeredOnStart: true
+    running: root.listening && root.visible
+
+    onTriggered: root.now = Date.now()
+  }
+
   Rectangle {
     anchors.fill: parent
 
@@ -90,6 +117,7 @@ Item {
       anchors.verticalCenter: column.verticalCenter
 
       icon: {
+        if (root.voice) return "mic"
         if (!root.volume) return Backlight.levelGlyph(Backlight.level)
 
         // the real level and the mute flag rather than the zeroed reading above:
@@ -116,6 +144,7 @@ Item {
           id: title
 
           text: {
+            if (root.voice) return root.listening ? "Listening" : "Transcribing…"
             if (!root.volume) return "Brightness"
             return root.muted ? "Muted" : "Volume"
           }
@@ -132,7 +161,10 @@ Item {
 
           // a muted sound has no level to report, so it says so rather than
           // printing the nothing it is playing at.
-          text: root.muted ? "—" : `${root.value}%`
+          text: {
+            if (root.voice) return root.elapsed
+            return root.muted ? "—" : `${root.value}%`
+          }
           color: Theme.osdValueText
           font.family: Theme.monoFont
           font.pixelSize: Theme.osdValueSize
@@ -140,6 +172,8 @@ Item {
       }
 
       Meter {
+        visible: !root.voice
+
         width: parent.width
         height: Theme.osdTrack
         radius: Theme.osdTrackRadius
@@ -148,6 +182,19 @@ Item {
         value: root.value / 100
         tint: root.fill
         fillDuration: Theme.osdFillDuration
+      }
+
+      // what the microphone is hearing, the INPUT row's own meter at the track's
+      // height, so the box is the same size whichever it is showing. it goes dark
+      // while transcribing: the microphone has stopped, and says so.
+      LevelMeter {
+        visible: root.voice
+
+        width: parent.width
+        height: Theme.osdTrack
+
+        level: Audio.inputLevel
+        running: root.listening && root.visible
       }
     }
   }

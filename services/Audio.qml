@@ -41,8 +41,9 @@ Singleton {
   // what the microphone is hearing, 0 to 1. quickshell already takes the cube
   // root of the sample peak, so speech lands mid-bar without a curve of ours.
   // measuring opens a capture stream on the source, so it runs only while the
-  // row is open and says nothing otherwise.
-  readonly property bool metering: root.detailed && root.sourceReady && Theme.micMeter
+  // row is open, or while voxtype is listening and the osd shows what it hears,
+  // and says nothing otherwise.
+  readonly property bool metering: (root.detailed || Voxtype.listening) && root.sourceReady && Theme.micMeter
   readonly property real inputLevel: root.metering ? peaks.peak : 0
 
   // what the collapsed row says on the right.
