@@ -3,7 +3,7 @@
 A desktop shell for Hyprland, written in [Quickshell](https://quickshell.org) and QML. *Kuori* is
 Finnish for shell, husk, envelope.
 
-It draws a border around the whole desktop with tabs — "notches" — hanging off the top edge, and
+It draws a border around the whole desktop with tabs ("notches") hanging off the top edge, and
 provides an application launcher, a notification daemon, and an authentication agent.
 
 ## What it does
@@ -27,7 +27,7 @@ provides an application launcher, a notification daemon, and an authentication a
 
 ![The desktop, with the frame and the four notches](docs/desktop.webp)
 
-At rest: the frame around the desktop and the four tabs on the top edge — workspaces on the left, the
+At rest: the frame around the desktop and the four tabs on the top edge: workspaces on the left, the
 clock in the middle, and the switches beside the system tab on the right.
 
 ![Three windows, with the focused one marked along its top edge](docs/focus.webp)
@@ -42,7 +42,7 @@ They get Hyprland's own border instead, from a `floating-border` window rule in 
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
 
-The same three windows with `Theme.focusStyle: "mark"` — a wedge filling the focused window's
+The same three windows with `Theme.focusStyle: "mark"`: a wedge filling the focused window's
 upper-right corner instead. It is the quieter of the two.
 
 ![The launcher, on the applications category](docs/launcher.webp)
@@ -85,9 +85,9 @@ scanning if something looks dead.
 | Every capture's notification | `libnotify` (`notify-send`) |
 | Knowing where captures go | `xdg-user-dirs` |
 | Night light | `hyprsunset` |
-| Calendar events | `python3`, and a Google OAuth client — see *Calendar* |
-| Pairing Bluetooth devices | `python3` with `jeepney` — `python3.withPackages (ps: [ ps.jeepney ])` |
-| Locking at all | the PAM services `kuori` and `kuori-fingerprint` — see *Lock screen* |
+| Calendar events | `python3`, and a Google OAuth client (see *Calendar*) |
+| Pairing Bluetooth devices | `python3` with `jeepney`, i.e. `python3.withPackages (ps: [ ps.jeepney ])` |
+| Locking at all | the PAM services `kuori` and `kuori-fingerprint` (see *Lock screen*) |
 | Locking on lid close and before sleep | `python3` with `jeepney`, as above |
 | Applications keeping the screen awake over D-Bus | `python3` with `jeepney`, as above |
 | Fingerprint unlock | `fprintd`, and a finger enrolled with `fprintd-enroll` |
@@ -104,7 +104,7 @@ nothing:
 
 - **The night light**, without `hyprsunset`: the moon in the toggles tab and the night light switch
   and temperature slider in the display section. kuori asks hyprsunset once a minute and whenever
-  that section opens. When hyprsunset comes back, kuori re-applies whatever was saved — a restarted
+  that section opens. When hyprsunset comes back, kuori re-applies whatever was saved, since a restarted
   hyprsunset starts at identity.
 - **The WALLPAPERS category**, without `awww-daemon`: it is checked each time the launcher opens.
   `launcher wallpapers` opens on ALL instead, and moves to WALLPAPERS if the daemon turns out to be
@@ -121,9 +121,9 @@ rather than broken.
 | Unit | Why |
 |---|---|
 | `awww-daemon` | Displays the wallpaper. Its `ExecStartPost` runs `awww restore`, which is what puts your wallpaper back at login. |
-| `cliphist-text`, `cliphist-image` | Record the clipboard. `cliphist` is a store, not a daemon — without these there is no history at all. The text one skips anything a password manager marked. |
+| `cliphist-text`, `cliphist-image` | Record the clipboard. `cliphist` is a store, not a daemon: without these there is no history at all. The text one skips anything a password manager marked. |
 | `hyprsunset` | Runs with `-i` (identity: present, changing nothing) so the night light has something to talk to. |
-| `xdg-user-dirs-update` | Writes `~/.config/user-dirs.dirs` from `/etc/xdg/user-dirs.defaults`, which is how anything — kuori, grimblast, your file manager — knows where Pictures and Videos are. Oneshot at login. |
+| `xdg-user-dirs-update` | Writes `~/.config/user-dirs.dirs` from `/etc/xdg/user-dirs.defaults`, which is how anything (kuori, grimblast, your file manager) knows where Pictures and Videos are. Oneshot at login. |
 | `kuori-calendar.service`, `.timer` | Runs `scripts/kuori-calendar sync` every 15 minutes, which writes `~/.cache/kuori/calendar.json` from Google. The clock panel reads that file and nothing else; without the timer it shows whatever was last synced, or "Not synced yet". |
 
 ## Installing
@@ -131,7 +131,7 @@ rather than broken.
 ### On NixOS, with the flake
 
 The flake carries everything that only matters to kuori: the shell as a user unit, the lock screen's
-PAM services, its fonts, the calendar timer, and the tools it runs that talk to no daemon — python
+PAM services, its fonts, the calendar timer, and the tools it runs that talk to no daemon: python
 with `jeepney`, `grim`, `slurp`, `grimblast`, `wf-recorder`, `hyprpicker`, `notify-send`, `wl-copy`,
 `brightnessctl` and the webp/tiff/jp2 image plugins. None of those need to be in your
 `systemPackages`.
@@ -156,7 +156,7 @@ programs.kuori.enable = true;
 | Option | Default | Does |
 |---|---|---|
 | `enable` | `false` | installs `kuori` and `kuori-calendar`, and runs the shell as the `kuori` user unit |
-| `configDir` | `null` | `null` runs the copy in the package, from `/etc/kuori`. A path such as `"~/.config/kuori"` runs a checkout instead, which reloads on every save — for working on kuori itself |
+| `configDir` | `null` | `null` runs the copy in the package, from `/etc/kuori`. A path such as `"~/.config/kuori"` runs a checkout instead, which reloads on every save, for working on kuori itself |
 | `calendar.enable` | `false` | the sync service and its 15-minute timer; set up an account first (see *Calendar*) |
 | `lock.enable` | `true` | the `kuori` and `kuori-fingerprint` PAM services |
 | `fonts.enable` | `true` | Material Symbols, Manrope and JetBrainsMono Nerd Font |
@@ -180,10 +180,10 @@ qs -p ~/.config/kuori
 ```
 
 The second line runs it in the foreground, which is the quickest way to find out whether anything from
-*Requirements* is missing — its complaints go to the terminal, and `Ctrl+C` stops it.
+*Requirements* is missing. Its complaints go to the terminal, and `Ctrl+C` stops it.
 
 **`-p` names the config for every command**, and it is not optional. Quickshell's own default
-directory is `~/.config/quickshell`, so a bare `qs` or `qs ipc` talks to whatever lives there — which
+directory is `~/.config/quickshell`, so a bare `qs` or `qs ipc` talks to whatever lives there, which
 is a different shell, or a stale copy of this one. Keeping kuori outside that directory means nothing
 resolves by accident.
 
@@ -231,7 +231,7 @@ On NixOS, use the flake above rather than writing this unit out.
 ## Running it
 
 ```sh
-systemctl --user restart kuori      # restart it — never launch a second copy by hand
+systemctl --user restart kuori      # restart it; never launch a second copy by hand
 journalctl --user -u kuori -f       # follow its output
 qs log -p ~/.config/kuori           # or quickshell's own log
 ```
@@ -242,7 +242,7 @@ own exclusive zone, and a border that reserves twice the space it should.
 ### Watching the log
 
 Everything kuori prints goes to the unit's journal: QML errors, warnings from the services, and what
-its helpers say — the Bluetooth pairing agent's lines are prefixed `bluetooth agent:`.
+its helpers say. The Bluetooth pairing agent's lines are prefixed `bluetooth agent:`.
 
 ```sh
 journalctl --user -u kuori -f               # follow it live
@@ -257,7 +257,7 @@ and nothing on screen to say so. `systemctl --user restart kuori` clears it.
 
 ## Keyboard
 
-Nothing is bound by kuori itself — every entry point is an IPC call, so the binds live in your
+Nothing is bound by kuori itself: every entry point is an IPC call, so the binds live in your
 Hyprland config. These are the ones this machine uses, from `~/.config/hypr/bindings.lua`:
 
 | Keys | Does |
@@ -290,12 +290,12 @@ hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(kuori .. "launcher wallpapers"))
 | `Enter` | Run the selected row |
 | `Escape` | Close |
 
-A power row does not run on `Enter` — it raises a confirmation, and while that card is up it owns the
+A power row does not run on `Enter`. It raises a confirmation, and while that card is up it owns the
 keyboard: the launcher behind it stops answering keys entirely.
 
 | Keys | In the confirmation |
 |---|---|
-| `←` / `→`, `Ctrl+h` / `Ctrl+l` | Pick Cancel or the action — the one the keyboard is on is lit |
+| `←` / `→`, `Ctrl+h` / `Ctrl+l` | Pick Cancel or the action; the one the keyboard is on is lit |
 | `Tab` / `Shift+Tab` | The same, toggling |
 | `Enter` | Answer with whichever is lit. It starts on the action, as the card says |
 | `Escape` | Cancel, leaving the launcher where it was |
@@ -304,7 +304,7 @@ keyboard: the launcher behind it stops answering keys entirely.
 
 | Keys | Does |
 |---|---|
-| `↑` / `↓`, `Ctrl+n` / `Ctrl+p`, `Ctrl+j` / `Ctrl+k` | Move through the panel in reading order — each row's header, and the switches, entries and power profiles of the row that is folded out — wrapping at both ends |
+| `↑` / `↓`, `Ctrl+n` / `Ctrl+p`, `Ctrl+j` / `Ctrl+k` | Move through the panel in reading order (each row's header, and the switches, entries and power profiles of the row that is folded out), wrapping at both ends |
 | `Enter` | What a click would do: fold a row out or away, throw a switch, pick an audio device, join or connect |
 | `Escape` | Close the panel |
 
@@ -315,8 +315,8 @@ are the card's, as described under Bluetooth below.
 
 ## IPC
 
-Every call is `qs ipc -p ~/.config/kuori call <target> <function>` — or `kuori ipc call <target>
-<function>` with the flake — and `… show` lists them. The path has to be spelled exactly as the
+Every call is `qs ipc -p ~/.config/kuori call <target> <function>` (or `kuori ipc call <target>
+<function>` with the flake), and `… show` lists them. The path has to be spelled exactly as the
 running shell was started with it: `-p .` from inside the directory finds no instance.
 
 ### `launcher`
@@ -402,7 +402,7 @@ can be looked at without a device that wants pairing. Open the section first wit
 | `now` | Lock the screen |
 | `preview <scene>` | Show the lock screen **without locking anything**, in one of its states: `rest`, `typing`, `verifying`, `wrong`, `long`, `caps`, `finger`, `fingerfail`, `fingerok`, `secondary`. `close` puts it away, and so does Escape on the bare clock |
 
-Bind `now` to whatever key locks for you — `Super+L` is taken by focus-right here:
+Bind `now` to whatever key locks for you. `Super+L` is taken by focus-right here:
 
 ```lua
 hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("qs ipc -p ~/.config/kuori call lock now"))
@@ -434,7 +434,7 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc -p ~/.config/kuori call
 ```
 
 `brightnessctl`'s own percentages are **not** this scale. Its `-e4` moves 5% along a gamma-4
-perceptual curve, which from 56% steps to 44, 34, 26, 19, 14 — each press a different amount of the
+perceptual curve, which from 56% steps to 44, 34, 26, 19, 14, each press a different amount of the
 range the readings report. A bare `brightnessctl set 5%-` is linear and would agree with these
 readings too; going through kuori also writes sysfs directly instead of starting a process per press,
 and stops at 1% so a key held one press too long cannot leave a dark screen.
@@ -463,7 +463,7 @@ monitor is focused then; plugging one in, or unplugging a different one, leaves 
 to today, but only when you have paged away from it. Clicking the time again closes the panel.
 
 A day with something on carries a dot per calendar, in each calendar's colour, and clicking it lists
-that day's events under the grid — a bar and the time in the calendar's colour, all-day events first
+that day's events under the grid: a bar and the time in the calendar's colour, all-day events first
 with a dash for a time, and `+N more` past four. A legend under the list says which colour is which;
 an account's primary calendar is named after the account. It opens on today. Paging the month drops the pick, and an
 empty day cannot be picked. Under the header, "No events" means exactly that; "Not synced yet" means
@@ -474,23 +474,23 @@ Opening the tab re-reads the file, and if it is older than five minutes starts t
 well, so what you see is at most a few minutes behind Google while you are looking and costs
 nothing while you are not.
 
-**Toggles** (right, just left of the system tab) is three switches and nothing else — a moon for the
+**Toggles** (right, just left of the system tab) is three switches and nothing else: a moon for the
 night light, a cup for the idle inhibitor and a crossed circle for Do Not Disturb. Each is accent
 while on and dim while off, and a click toggles it. The cup is also lit while an application is
-keeping the screen awake over D-Bus — a video playing, say — though its switch is still off, and the
+keeping the screen awake over D-Bus (a video playing, say), though its switch is still off, and the
 Display section's Stay awake row says who ("Held by …"). The tab steps out of the way while the system
 panel is open or the on-screen display is out, both of which grow over it.
 
 **System** (far right) shows the network, Bluetooth, volume, display, notifications and battery, and a red dot while
 a recording is running. It opens a panel of rows, one folded open at a time:
 
-- **Network** — Ethernet first, then Wi-Fi. A connected cable wins: the strip shows a wired glyph,
+- **Network**: Ethernet first, then Wi-Fi. A connected cable wins: the strip shows a wired glyph,
   and the readings (IPv4, traffic, link speed, latency) describe the wire rather than the radio. Each
   Ethernet port has a switch that disconnects it and stays off until switched back on, even across
   re-plugging; the switch is greyed out while no cable is in. The Ethernet section only appears when
   the machine has a wired interface, a USB adapter or dock included. Under it are the Wi-Fi switch and
   the known and available networks. Clicking an open network joins it with **no confirmation**.
-- **Bluetooth** — paired devices first. A device that has stopped advertising will refuse to connect;
+- **Bluetooth**: paired devices first. A device that has stopped advertising will refuse to connect;
   the row says so rather than looking dead. Clicking a device that was never paired pairs it, trusts
   it so it reconnects by itself, then connects. Whatever the device wants on the way opens as a card
   under its row: a yes or no for a mouse or headphones, a code to compare for a phone, a code to type
@@ -498,13 +498,13 @@ a recording is running. It opens a panel of rows, one folded open at a time:
   pairing by itself asks to be allowed. Enter picks the ringed button, Tab or the arrows move the
   ring, Escape cancels. While the panel is not showing Bluetooth, the question appears as a toast;
   clicking it opens the section. kuori is the session's pairing agent, through
-  `scripts/kuori-btagent`, which it runs itself — `bluetoothctl` and `bluetui` register their own
+  `scripts/kuori-btagent`, which it runs itself. `bluetoothctl` and `bluetui` register their own
   while they are open, and take the questions until they close.
-- **Audio** — output and input devices, volume, and a switch that is mute read the right way up.
-- **Battery** — level, time remaining, health, rate, and power profiles when a daemon offers them.
-- **Display** — night light, stay awake, brightness, and a colour temperature slider that appears
+- **Audio**: output and input devices, volume, and a switch that is mute read the right way up.
+- **Battery**: level, time remaining, health, rate, and power profiles when a daemon offers them.
+- **Display**: night light, stay awake, brightness, and a colour temperature slider that appears
   while the night light is on.
-- **Notifications** — the Do Not Disturb switch and the history.
+- **Notifications**: the Do Not Disturb switch and the history.
 
 **Every icon on the system tab is a button.** Clicking one opens the panel with that row already
 folded out, and the icon is accented and underlined for as long as it is the row you are looking at;
@@ -512,7 +512,7 @@ clicking it again closes the panel. A click on the gap between icons opens and c
 without choosing a row.
 
 The bell is the exception in one way: it is accent whenever anything is in the history, whether or not
-its section is open, and its glyph changes with it. Clicking it opens the history — it does not
+its section is open, and its glyph changes with it. Clicking it opens the history. It does not
 silence anything and does not clear anything. Do Not Disturb is the switch on the toggles tab, and
 `CLEAR` in the notifications row is what empties the history.
 
@@ -537,7 +537,7 @@ Muted says `Muted` and `—`, with the bar at nothing in grey rather than accent
 
 **It does not need to be what your keys are bound to.** kuori watches the two values rather than the
 keys: pipewire reports volume, udev reports the backlight. So the display answers a change made by
-`wpctl` from a volume key, by `brightnessctl` in a terminal, or by anything else on the machine — and
+`wpctl` from a volume key, by `brightnessctl` in a terminal, or by anything else on the machine, and
 it would work with no change to your Hyprland config at all. (The brightness keys here do go through
 kuori, but for a different reason: see `backlight` above.)
 
@@ -547,7 +547,7 @@ panel is showing those same sliders. With several monitors it appears on the foc
 ## Notifications
 
 kuori answers `org.freedesktop.Notifications`. **Nothing else on the machine does**, so while kuori
-is down notifications are not merely undrawn — they are dropped.
+is down notifications are not merely undrawn. They are dropped.
 
 - Up to four toasts, newest at the top, each gone after about five seconds.
 - **Clicking a toast dismisses it and drops it from the history**: you read it, so there is nothing
@@ -559,7 +559,7 @@ is down notifications are not merely undrawn — they are dropped.
   is the only place you would find out it arrived.
 - The history keeps the last 50: what expired unread, what arrived under Do Not Disturb, and what
   `DISMISS ALL` swept away. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
-  toast still on screen with it. Anything a sender marked *transient* — volume popups and the like —
+  toast still on screen with it. Anything a sender marked *transient* (volume popups and the like)
   is never kept.
 - The bell on the system tab is accent while there is anything in the history. Clicking it opens the
   history; `CLEAR` inside that section is what empties it.
@@ -590,7 +590,7 @@ Nothing in the shell talks to Google. `scripts/kuori-calendar` does, on the `kuo
 
 **A Google Workspace account** may be barred by its admin from apps that are unverified or still in
 "testing". If the consent page says so, create the OAuth client in a project owned by *that* account
-and mark it **Internal** under *OAuth consent screen* — internal apps need no verification — and use
+and mark it **Internal** under *OAuth consent screen* (internal apps need no verification), and use
 that client for that account. Each account keeps its own client, so mixing is fine.
 
 `journalctl --user -u kuori-calendar` is where a failed sync explains itself. One account failing
@@ -598,7 +598,7 @@ does not stop the others; the file is only left untouched when every account fai
 
 ## Wallpapers
 
-Images live in `~/Pictures/wallpapers` — jpg, png, webp, gif, bmp, tiff and jp2. The launcher's
+Images live in `~/Pictures/wallpapers`: jpg, png, webp, gif, bmp, tiff and jp2. The launcher's
 wallpaper category lists them with thumbnails, marks the one on screen, and offers a random pick that
 never lands on the one already showing. A file dropped into the folder appears without a restart.
 
@@ -608,7 +608,7 @@ remember your wallpaper for it.
 ## Clipboard
 
 Everything copied goes to `cliphist`. The launcher's clipboard category lists it newest first, with
-an icon for the kind of entry — text, a link, an image, or a swatch of the colour when the entry is a
+an icon for the kind of entry: text, a link, an image, or a swatch of the colour when the entry is a
 hex code. Choosing one puts it back on the clipboard, ready to paste; it does not type it for you.
 `Clear clipboard history` at the bottom wipes the store.
 
@@ -621,12 +621,12 @@ Anything a password manager marked with `x-kde-passwordManagerHint` is **never r
 ## Capture
 
 The block at the foot of the system panel: pick **Screenshot**, **Record** or **Color**; for the first
-two pick a target — Region, App or Monitor — and press **Capture!**.
+two pick a target (Region, App or Monitor) and press **Capture!**.
 
 - **Screenshots are saved and copied at once**, so the file is kept *and* ready to paste.
 - The pointer becomes a **crosshair** while you are selecting, for every target.
 - **Region** drags a rectangle. **App** dims the screen and lets you click the window you want, not
-  whichever happens to be focused — only windows actually on screen are offered. **Monitor** does the same for screens — and skips the picker when
+  whichever happens to be focused. Only windows actually on screen are offered. **Monitor** does the same for screens, and skips the picker when
   there is only one, since there is nothing to choose.
 - **Where they go is not kuori's decision**: `XDG_SCREENSHOTS_DIR` then `XDG_PICTURES_DIR` from
   `~/.config/user-dirs.dirs`, which on this machine means `~/Pictures/Screenshots`. Recordings go to
@@ -637,7 +637,7 @@ two pick a target — Region, App or Monitor — and press **Capture!**.
   `Recording…`. Press it again, or `qs ipc … call capture stop`, to finish.
 
 **Color** freezes the screen, magnifies whatever is under the pointer, and copies the colour you click
-in the format you chose — HEX, RGB or HSL. The panel keeps the last one with a swatch, and it lands in
+in the format you chose: HEX, RGB or HSL. The panel keeps the last one with a swatch, and it lands in
 the clipboard history as a colour entry too.
 
 Recording adds one switch, **Record microphone**, off by default. Desktop sound is not offered:
@@ -646,7 +646,7 @@ wf-recorder takes a single audio device and mixing two needs a virtual source no
 Two things worth knowing:
 
 **Encoding is hardware when a VAAPI driver is loadable, software otherwise**, and the notification
-says which you got. The check is whether a driver sits in `/run/opengl-driver/lib/dri` — a driver
+says which you got. The check is whether a driver sits in `/run/opengl-driver/lib/dri`. A driver
 merely installed into `environment.systemPackages` is invisible to libva; it has to be in
 `hardware.graphics.extraPackages`. wf-recorder exits rather than falling back, so the shell only asks
 for hardware when it can see a driver. It looks once at startup, so a driver installed while kuori is
@@ -659,8 +659,8 @@ running is picked up after `systemctl --user restart kuori`.
 The screen **locks** after ten minutes with nobody at the keyboard, when the lid closes (even while
 docked, when closing it does not suspend), before the machine goes to sleep, on `loginctl
 lock-session`, and on `lock now`. Once locked, the screen **goes off** after another minute idle and
-comes back on at the first key or movement. Anything that inhibits idle — the **Stay awake** switch, a
-playing video — holds off both. That includes an application asking over D-Bus, directly or through
+comes back on at the first key or movement. Anything that inhibits idle (the **Stay awake** switch, a
+playing video) holds off both. That includes an application asking over D-Bus, directly or through
 the portal: kuori owns `org.freedesktop.ScreenSaver` through `scripts/kuori-screensaver`, which it
 runs itself, so no idle daemon is needed.
 
@@ -669,9 +669,9 @@ the prompt *and* is typed into it; a click does the same without typing anything
 prompt away again. On a second monitor it is the clock alone, dimmed; the prompt is on the monitor
 the keyboard is on.
 
-**A finger on the sensor unlocks it too**, with no need to open the prompt first — a touch brings the
+**A finger on the sensor unlocks it too**, with no need to open the prompt first. A touch brings the
 prompt up, so a finger it does not know is shown being refused. The line saying so
-only appears once `fprintd` is actually listening — with no finger enrolled it never does, and the
+only appears once `fprintd` is actually listening. With no finger enrolled it never does, and the
 password is the only way in. Enrol one with `fprintd-enroll`.
 
 It needs two PAM services, one for each way in, because a single stack asks them in turn: with the
@@ -694,7 +694,7 @@ opens the lock, and there is deliberately no IPC call that does. If it ever come
 
 ## Configuration
 
-There is no config file: this is a shell you edit. Almost everything lives in `theme/Theme.qml` —
+There is no config file: this is a shell you edit. Almost everything lives in `theme/Theme.qml`:
 every colour, size, duration and font in one place.
 
 | Want to change | Look at |
@@ -713,10 +713,10 @@ every colour, size, duration and font in one place.
 | Whether applications may hold idle off over D-Bus | `Theme.appInhibit` (they are still answered when false) |
 | Whether a feature whose daemon is down hides | `Theme.unavailableFeatures` (`"hide"` or `"show"`) |
 | Whether strip icons name themselves on hover, and how soon | `Theme.stripTips`, `Theme.tipDelay` |
-| Where captures are written | `~/.config/user-dirs.dirs` — not kuori |
+| Where captures are written | `~/.config/user-dirs.dirs`, not kuori |
 
-State that has to survive a restart — the night light and its colour temperature, and whether the
-screen is locked — is written to `~/.local/state/quickshell/by-shell/<id>/`, as `display.json` and
+State that has to survive a restart (the night light and its colour temperature, and whether the
+screen is locked) is written to `~/.local/state/quickshell/by-shell/<id>/`, as `display.json` and
 `lock.json`. Stay awake deliberately does not:
 an idle inhibitor is invisible, and one silently restored after a restart is a flat battery nobody can
 explain.
@@ -726,7 +726,7 @@ explain.
 ```
 shell.qml       the root: one shell per screen, plus the launcher, the polkit
                 dialog, toasts and IPC
-windows/        surfaces — which windows exist and what each is for
+windows/        surfaces: which windows exist and what each is for
 components/     reusable pieces with no domain knowledge
 modules/        the contents of a tab, a panel or a dialog
 services/       singletons: shared state, and everything that talks to the system
