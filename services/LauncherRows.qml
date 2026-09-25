@@ -244,7 +244,11 @@ Singleton {
     // reloaded and lands in the right slice. it takes a desktop entry id and
     // expands the Exec field codes and Terminal=true itself, which is why nothing
     // here has to know that ghostty exists.
-    const id = entry.id.endsWith(".desktop") ? entry.id : `${entry.id}.desktop`
+    //
+    // the suffix goes on unconditionally: quickshell's id is the filename with
+    // it already cut off, and an id can end in ".desktop" by itself --
+    // telegram's is org.telegram.desktop, which uwsm would read as org.telegram.
+    const id = `${entry.id}.desktop`
 
     // execDetached double-forks, so nothing is left parented to quickshell.
     Quickshell.execDetached(["uwsm", "app", "--", id])
