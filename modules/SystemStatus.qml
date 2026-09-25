@@ -3,7 +3,7 @@ import qs.components
 import qs.services
 import qs.theme
 
-// the right tab: network, bluetooth, volume, display, notifications and battery. every one of
+// the right tab: network, bluetooth, volume, drives, display, notifications and battery. every one of
 // them reports something and opens the section of the panel that is about it. the
 // switches live in their own tab beside this one.
 Row {
@@ -81,6 +81,22 @@ Row {
         if (root.showing("audio")) return Theme.accent
         return root.silent ? Theme.textDim : Theme.glyph
       }
+    }
+  }
+
+  // there only while a drive is plugged in, as the design has it. a Row gives an
+  // invisible child no room, so the icons beside it close up when it goes.
+  StripButton {
+    visible: Drives.rows.length > 0
+    active: root.showing("drives")
+    screenName: root.screenName
+    tip: Drives.title
+
+    onClicked: Notches.toggleRow("drives", root.screenName)
+
+    Glyph {
+      icon: "usb"
+      iconColor: root.showing("drives") ? Theme.accent : Theme.glyph
     }
   }
 

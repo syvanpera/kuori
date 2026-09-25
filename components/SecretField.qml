@@ -36,6 +36,16 @@ Rectangle {
   property real busyOpacity: 1
   property int fade: Theme.pkFade
 
+  // the polkit card's sizes. the drives row draws a smaller one, which is the only
+  // reason these are not simply read from the theme.
+  property real fieldHeight: Theme.pkFieldHeight
+  property real fieldRadius: Theme.pkFieldRadius
+  property real paddingH: Theme.pkFieldPaddingH
+  property real iconGap: Theme.pkFieldIconGap
+  property int glyphSize: Theme.pkFieldGlyph
+  property real textSize: Theme.pkFieldSize
+  property int eyeSize: Theme.pkEyeSize
+
   signal accepted()
   signal escaped()
   signal revealToggled()
@@ -58,8 +68,8 @@ Rectangle {
     shaker.restart()
   }
 
-  height: Theme.pkFieldHeight
-  radius: Theme.pkFieldRadius
+  height: root.fieldHeight
+  radius: root.fieldRadius
   color: root.fill
 
   border.width: 1
@@ -85,10 +95,10 @@ Rectangle {
   Glyph {
     id: keyGlyph
 
-    x: Theme.pkFieldPaddingH
+    x: root.paddingH
     anchors.verticalCenter: parent.verticalCenter
 
-    size: Theme.pkFieldGlyph
+    size: root.glyphSize
     icon: "key"
     iconColor: Theme.pkFieldGlyphColor
   }
@@ -97,9 +107,9 @@ Rectangle {
     id: input
 
     anchors.left: keyGlyph.right
-    anchors.leftMargin: Theme.pkFieldIconGap
+    anchors.leftMargin: root.iconGap
     anchors.right: eye.left
-    anchors.rightMargin: Theme.pkFieldIconGap
+    anchors.rightMargin: root.iconGap
     anchors.verticalCenter: parent.verticalCenter
 
     readOnly: root.busy || root.ok || root.locked
@@ -107,7 +117,7 @@ Rectangle {
     color: Theme.tintBright
     opacity: root.busy ? root.busyOpacity : 1
     font.family: Theme.monoFont
-    font.pixelSize: Theme.pkFieldSize
+    font.pixelSize: root.textSize
     font.weight: Font.Medium
     selectByMouse: true
 
@@ -130,10 +140,10 @@ Rectangle {
   Glyph {
     id: eye
 
-    x: root.width - Theme.pkFieldPaddingH - width
+    x: root.width - root.paddingH - width
     anchors.verticalCenter: parent.verticalCenter
 
-    size: Theme.pkEyeSize
+    size: root.eyeSize
     icon: root.revealed ? "visibility_off" : "visibility"
     iconColor: eyeHover.containsMouse ? Theme.pkEyeHover : Theme.pkEye
 

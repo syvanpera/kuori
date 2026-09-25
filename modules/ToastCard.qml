@@ -21,7 +21,7 @@ ToastFrame {
   // to notify-send arrives here as "image://icon/firefox", which Image can load.
   readonly property string image: root.notification?.image ?? ""
 
-  readonly property color accent: Notifications.urgencyColour(root.notification?.urgency ?? -1)
+  readonly property color accent: Notifications.urgencyColour(root.notification?.urgency ?? -1, root.notification?.hints?.["x-kuori-tone"] ?? "")
 
   app: root.notification?.appName ?? ""
 

@@ -10,7 +10,7 @@ Rectangle {
 
   required property var entry
 
-  readonly property color accent: Notifications.urgencyColour(root.entry?.urgency ?? -1)
+  readonly property color accent: Notifications.urgencyColour(root.entry?.urgency ?? -1, root.entry?.tone ?? "")
 
   implicitHeight: body.implicitHeight + Theme.notifEntryPaddingV * 2
 

@@ -18,6 +18,8 @@ provides an application launcher, a notification daemon, and an authentication a
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
 - **A Bluetooth pairing agent**: pairing codes and confirmations appear in the system panel.
+- **External drives**: mounted as they are plugged in, unlocked with a passphrase when encrypted,
+  and ejected from the system panel.
 - **A focus indicator** on the active window, either a corner wedge or a strip along one edge, and
   the same mark in grey on every other window on screen.
 - **A lock screen** that takes a password or a fingerprint. It locks after ten idle minutes, when the lid
@@ -90,6 +92,8 @@ scanning if something looks dead.
 | Locking at all | the PAM services `kuori` and `kuori-fingerprint` (see *Lock screen*) |
 | Locking on lid close and before sleep | `python3` with `jeepney`, as above |
 | Applications keeping the screen awake over D-Bus | `python3` with `jeepney`, as above |
+| External drives | `udisks2` running (`services.udisks2.enable`), and `python3` with `jeepney`, as above |
+| Opening a drive | a file manager that answers `org.freedesktop.FileManager1` (nautilus, dolphin, nemo, thunar); `xdg-open` otherwise |
 | Fingerprint unlock | `fprintd`, and a finger enrolled with `fprintd-enroll` |
 | Focusing a window, colour temperature | `hyprctl` |
 | Icons in the launcher | any installed icon theme (Adwaita, MoreWaita) |
@@ -242,7 +246,8 @@ own exclusive zone, and a border that reserves twice the space it should.
 ### Watching the log
 
 Everything kuori prints goes to the unit's journal: QML errors, warnings from the services, and what
-its helpers say. The Bluetooth pairing agent's lines are prefixed `bluetooth agent:`.
+its helpers say. The Bluetooth pairing agent's lines are prefixed `bluetooth agent:`, the drives
+helper's `drives:`.
 
 ```sh
 journalctl --user -u kuori -f               # follow it live
@@ -396,6 +401,19 @@ section first with `system toggle bluetooth`. Answering one goes nowhere: the re
 | `fail` | Show "Could not pair" on the row |
 | `mock connected \| disconnected` | Raise the toast a device coming or going would, for the first connected device |
 
+### `drives`
+
+Fakes a drive beside whatever is really plugged in, so every card can be looked at without one. The
+buttons on a fake go nowhere.
+
+| Call | Does |
+|---|---|
+| `mock mounted \| busy \| unmounting \| locked \| unlocking \| wrong \| unlocked` | Show a fake drive in that state (`mounted` raises its toast too) |
+| `mock ejected` | Show a fake drive just ejected: safe to remove, then not mounted |
+| `mock flushing` | Show a fake drive's eject writing data out, with its toast |
+| `mock yanked` | Raise the toast for a drive pulled out while mounted |
+| `clear` | Take the fakes away |
+
 ### `lock`
 
 | Call | Does |
@@ -482,8 +500,8 @@ keeping the screen awake over D-Bus (a video playing, say), though its switch is
 Display section's Stay awake row says who ("Held by …"). The tab steps out of the way while the system
 panel is open or the on-screen display is out, both of which grow over it.
 
-**System** (far right) shows the network, Bluetooth, volume, display, notifications and battery, and a red dot while
-a recording is running. It opens a panel of rows, one folded open at a time:
+**System** (far right) shows the network, Bluetooth, volume, drives (only while one is plugged in),
+display, notifications and battery, and a red dot while a recording is running. It opens a panel of rows, one folded open at a time:
 
 - **Network**: Ethernet first, then Wi-Fi. A connected cable wins: the strip shows a wired glyph,
   and the readings (IPv4, traffic, link speed, latency) describe the wire rather than the radio. Each
@@ -508,6 +526,22 @@ a recording is running. It opens a panel of rows, one folded open at a time:
   `"connect"`, `"both"` to hear about disconnects too, or `"off"`.
 - **Audio**: output and input devices, volume, and a switch that is mute read the right way up.
 - **Battery**: level, time remaining, health, rate, and power profiles when a daemon offers them.
+- **Drives**: only there while a drive is plugged in. A drive plugged in is mounted at once, and a
+  toast says where, with **Open** and **Eject**. Each card shows how full the drive is. The folder
+  opens it in your file manager. Eject unmounts it and locks it if it was encrypted, and the card
+  reads "Safe to remove" for a moment, then "Not mounted" (or locked) until the drive is pulled out:
+  **Mount** or Unlock mounts it again. It is not powered off, because a powered-off drive is gone
+  until it is plugged back in; `Theme.drvPowerOff` does that, as the design has it. An eject that is
+  still going after a second is the kernel writing out what was copied: the card reads "Writing data…
+  Don't unplug" and a toast says the same until it is safe. If something still has a file open on
+  the drive, the card names it where it can ("nautilus and cp have files open on …") and offers
+  **Keep mounted** or **Unmount anyway**. An encrypted
+  (LUKS) drive arrives locked, with a passphrase field on its card, and its toast's **Unlock** opens
+  the row. A drive already plugged in when kuori starts is left as it was found: it reads "Not
+  mounted", with a **Mount** button (the folder mounts and opens it in one go). A drive being
+  mounted or unmounted by something else, nautilus or a terminal, shows that too, "Writing data…"
+  included. Pulling a drive out while it is still
+  mounted raises a warning.
 - **Display**: night light, stay awake, brightness, and a colour temperature slider that appears
   while the night light is on.
 - **Notifications**: the Do Not Disturb switch and the history.
@@ -721,6 +755,7 @@ every colour, size, duration and font in one place.
 | Whether a feature whose daemon is down hides | `Theme.unavailableFeatures` (`"hide"` or `"show"`) |
 | Whether strip icons name themselves on hover, and how soon | `Theme.stripTips`, `Theme.tipDelay` |
 | Where captures are written | `~/.config/user-dirs.dirs`, not kuori |
+| Whether a drive is mounted as it is plugged in, whether eject powers it off, and how long "Safe to remove" stays | `Theme.drvAutomount`, `Theme.drvPowerOff`, `Theme.drvSafeLinger`; `Theme.drvFlushNotice` for how long an eject runs before it says it is writing |
 
 State that has to survive a restart (the night light and its colour temperature, and whether the
 screen is locked) is written to `~/.local/state/quickshell/by-shell/<id>/`, as `display.json` and
@@ -738,6 +773,7 @@ components/     reusable pieces with no domain knowledge
 modules/        the contents of a tab, a panel or a dialog
 services/       singletons: shared state, and everything that talks to the system
 theme/Theme.qml every colour, size, duration and font
-scripts/        what runs outside the shell: the calendar fetcher, and the bluetooth
-                pairing agent the shell starts itself
+scripts/        what runs outside the shell: the calendar fetcher, and the d-bus
+                helpers the shell starts itself (the bluetooth pairing agent, sleep
+                and lid, the screensaver name, drives)
 ```

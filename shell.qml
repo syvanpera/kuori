@@ -30,6 +30,10 @@ ShellRoot {
   // scan to startup, where nobody is looking.
   readonly property int applicationCount: DesktopEntries.applications.values.length
 
+  // and once more for the drives: a drive plugged in is mounted by the service, so
+  // it has to be listening from the start and not from the first look at the panel.
+  readonly property int driveCount: Drives.rows.length
+
   // one launcher for the whole session, on whichever monitor has focus, so it
   // hangs off the root instead of off Variants.
   LauncherLoader {}

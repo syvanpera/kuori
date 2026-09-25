@@ -127,6 +127,13 @@ Column {
       onToggled: Notches.foldRow("battery")
     }
 
+    DrivesRow {
+      width: parent.width
+      expanded: Notches.row === "drives"
+
+      onToggled: Notches.foldRow("drives")
+    }
+
     DisplayRow {
       width: parent.width
       expanded: Notches.row === "display"

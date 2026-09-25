@@ -24,7 +24,7 @@ Singleton {
   property var popups: []
 
   // everything that arrived, newest first: { key, app, text, image, icon, urgency,
-  // at }. plain records rather than the live objects, because the design gives the
+  // tone, at }. plain records rather than the live objects, because the design gives the
   // history no buttons -- and an action can only be invoked on a notification that
   // is still alive, which a dismissed one is not.
   property var history: []
@@ -107,7 +107,12 @@ Singleton {
   // colour. the design colours each app differently, which it can do because it
   // knows its four mock apps by name. the toast and the history entry both ask
   // here, so the two can never disagree about what critical looks like.
-  function urgencyColour(urgency: int): color {
+  //
+  // this shell's own notifications can also ask for the design's warning orange,
+  // through an x-kuori-tone hint: a drive pulled out unejected is a warning that
+  // is not critical, and critical would never time out.
+  function urgencyColour(urgency: int, tone: string): color {
+    if (tone === "warning") return Theme.elevated
     if (urgency === NotificationUrgency.Critical) return Theme.urgent
     if (urgency === NotificationUrgency.Low) return Theme.notifDim
 
@@ -202,6 +207,7 @@ Singleton {
           image: notification.image ?? "",
           icon: notification.appIcon ?? "",
           urgency: notification.urgency,
+          tone: notification.hints?.["x-kuori-tone"] ?? "",
           at: at
         }].concat(root.history).slice(0, root.maxHistory)
       }

@@ -725,6 +725,78 @@ Singleton {
   property string btAnnounce: "connect"
   property int btAnnounceSettle: 10000
 
+  // the drives row: a card per drive, a bar for how full it is, and under a
+  // locked one the passphrase field and its two buttons.
+  property int drvListGap: 6
+  property int drvCardRadius: 9
+  property int drvCardPaddingH: 8
+  property int drvCardPaddingV: 7
+  property int drvCardGap: 7
+  property int drvRowGap: 9
+  property int drvIcon: 14
+  property int drvNameSize: 11
+  property real drvSubSize: 9.5
+  property int drvSubLine: 13
+  property int drvTextGap: 3
+  property int drvActionSize: 26
+  property int drvActionRadius: 7
+  property int drvActionIcon: 14
+  property int drvActionGap: 4
+  property int drvBarHeight: 3
+  property int drvBarRadius: 2
+  property int drvButtonPaddingH: 9
+  property int drvButtonPaddingV: 6
+  property int drvButtonRadius: 7
+  property int drvButtonSize: 10
+  property int drvButtonGap: 5
+  property int drvFieldHeight: 32
+  property int drvFieldRadius: 8
+  property int drvFieldPaddingH: 9
+  property int drvFieldIconGap: 8
+  property int drvFieldGlyph: 14
+  property real drvFieldSize: 10.5
+  property int drvEyeSize: 15
+  property int drvNoteLine: 15
+  property real drvSafeOpacity: 0.7
+  property real drvUnlockDisabledOpacity: 0.45
+  property real drvInputBusyOpacity: 0.5
+
+  // how long a drive that is safe to remove stays in the list saying so.
+  property int drvSafeLinger: 2600
+
+  // how long an unmount may take before it counts as writing data out, and the
+  // card and a toast say not to unplug.
+  property int drvFlushNotice: 1000
+
+  // power a drive off once it is ejected, as the design does. off, eject only
+  // unmounts and the drive stays listed to be mounted again: powered off, a usb
+  // drive is gone until it is plugged back in, and a framework expansion card
+  // cannot easily be.
+  property bool drvPowerOff: false
+
+  // mount a drive the moment it is plugged in, as the design does. off, a drive
+  // arrives unmounted and its folder button mounts it.
+  property bool drvAutomount: true
+
+  readonly property color drvCard: root.sheen.alpha(0.05)
+  readonly property color drvName: root.tint
+  readonly property color drvSub: root.tint.alpha(0.4)
+  readonly property color drvLockedIcon: root.tint.alpha(0.6)
+  readonly property color drvBusy: root.sysError
+  readonly property color drvRail: root.sheen.alpha(0.08)
+  readonly property color drvBarSafe: root.tint.alpha(0.2)
+  readonly property color drvOpenFill: root.sheen.alpha(0.06)
+  readonly property color drvOpenHover: root.sheen.alpha(0.13)
+  readonly property color drvOpenGlyph: root.tint.alpha(0.75)
+  readonly property color drvEjectFill: root.accent.alpha(0.16)
+  readonly property color drvEjectHover: root.accent.alpha(0.26)
+  readonly property color drvQuietFill: root.sheen.alpha(0.06)
+  readonly property color drvQuietHover: root.sheen.alpha(0.12)
+  readonly property color drvQuietText: root.tint.alpha(0.7)
+  readonly property color drvForceFill: root.sysError.alpha(0.16)
+  readonly property color drvForceHover: root.sysError.alpha(0.26)
+  readonly property color drvFieldBusyBorder: root.accent.alpha(0.4)
+
   readonly property color btCardText: root.tint.alpha(0.72)
   readonly property color btCode: root.tintBright
   readonly property color btDigitDim: root.tint.alpha(0.3)

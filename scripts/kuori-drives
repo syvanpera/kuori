@@ -1,0 +1,642 @@
+#!/usr/bin/env python3
+"""External drives, through udisks: what is plugged in, and mounting, unlocking and
+ejecting it.
+
+Quickshell has nothing for udisks, and asking udisksctl would mean parsing its
+monitor's prose. This keeps the daemon's objects, tells the shell a drive at a
+time, and makes the calls the panel's buttons ask for. It also posts the drive
+toasts, because they carry buttons: notify-send with an action blocks until it
+is answered, and one process per toast is a process per drive plugged in.
+
+Out, one object per line:
+  {"type": "ready"}
+  {"type": "drives", "list": [{id, name, label, glyph, fs, size, used, mount,
+                               encrypted, locked, crypto, job, since}, ...]}
+  {"type": "mounted",   "id", "name", "glyph", "mount"}   plugged in and mounted
+  {"type": "encrypted", "id", "name", "glyph"}            plugged in, locked
+  {"type": "unlocked",  "id", "name", "glyph", "mount"}
+  {"type": "wrong",     "id", "message"}         the passphrase did not unlock it
+  {"type": "busy",      "id", "holders": [...]}  something has a file open on it
+  {"type": "safe",      "id", "name"}            unmounted, locked, and off if asked
+  {"type": "failed",    "id", "message"}
+  {"type": "yanked",    "id", "name"}            gone while still mounted
+  {"type": "action",    "key", "action"}         a toast's button
+  {"type": "unshown",   "path"}                  no file manager answered
+
+In, one JSON object per line, since a passphrase can hold a space:
+  {"cmd": "mount",   "id"}
+  {"cmd": "unlock",  "id", "passphrase"}
+  {"cmd": "eject",   "id", "force": bool, "power": bool}
+  {"cmd": "refresh"}
+  {"cmd": "automount", "on": bool}
+  {"cmd": "show",    "path"}                     open a folder in the file manager
+  {"cmd": "notify",  "key", "summary", "glyph", "tone", "actions": [[id, label], ...],
+               "replaces": key, "sticky": bool}
+  {"cmd": "withdraw", "key"}
+
+`id` is the drive's object path. Every udisks call is sent without waiting: an
+unmount flushes whatever was written, which can take a minute, and a helper
+blocked on it would hear nothing about the other drives meanwhile.
+
+It lives as long as the shell's pipe does: stdin closing is the shell going away.
+"""
+
+import json
+import os
+import select
+import sys
+from urllib.parse import quote
+
+from jeepney import DBusAddress, HeaderFields, MatchRule, MessageType, new_method_call
+from jeepney.bus_messages import message_bus
+from jeepney.io.blocking import open_dbus_connection
+
+# run from a terminal as well as from the shell, and neither should leave a
+# __pycache__ in the config directory.
+sys.dont_write_bytecode = True
+
+from kuori_bus import Lines, drain, emit, logger  # noqa: E402
+
+UDISKS = "org.freedesktop.UDisks2"
+ROOT = "/org/freedesktop/UDisks2"
+
+BLOCK = f"{UDISKS}.Block"
+FILESYSTEM = f"{UDISKS}.Filesystem"
+ENCRYPTED = f"{UDISKS}.Encrypted"
+DRIVE = f"{UDISKS}.Drive"
+JOB = f"{UDISKS}.Job"
+
+# udisks's jobs, by what they mean for a card. whoever started one -- this shell,
+# nautilus, a terminal, this shell before a restart -- the drive is doing it, and
+# a card that ignored them read mounted or not mounted while an unmount was
+# writing out gigabytes to a slow stick.
+JOBS = {
+    "filesystem-mount": "mounting",
+    "filesystem-unmount": "unmounting",
+    "encrypted-lock": "unmounting",
+    "drive-power-off": "unmounting",
+    "drive-eject": "unmounting",
+    "encrypted-unlock": "unlocking",
+}
+
+BUSY = f"{UDISKS}.Error.DeviceBusy"
+MOUNTED = f"{UDISKS}.Error.AlreadyMounted"
+
+# the file manager's own d-bus name, which nautilus, dolphin, nemo and thunar all
+# answer. xdg-open 1.2 on a desktop it does not recognise runs the default app and,
+# if that exits non-zero for any reason, quietly tries a list of browsers next: a
+# drive's folder once opened as a file:// page in chromium for exactly that.
+FILE_MANAGER = DBusAddress("/org/freedesktop/FileManager1", bus_name="org.freedesktop.FileManager1",
+                           interface="org.freedesktop.FileManager1")
+
+NOTIFICATIONS = DBusAddress("/org/freedesktop/Notifications", bus_name="org.freedesktop.Notifications",
+                            interface="org.freedesktop.Notifications")
+
+# the buses a drive can hang off that make it one you carry about. a removable
+# flag alone is not enough: udisks sets it on an internal card reader, and leaves
+# it off some usb enclosures.
+BUSES = ("usb", "sdio", "ieee1394")
+
+# an sd card's media, as udisks names them. anything in a card slot is a card.
+CARDS = ("flash_sd", "flash_sdhc", "flash_sdxc", "flash_mmc", "flash_cf", "flash_ms", "flash_sm")
+
+# past this a usb device that does not say it is a stick is more likely a disk.
+STICK_MAX = 256 * 1000 ** 3
+
+log = logger("kuori-drives")
+
+
+def unwrap(props):
+    """A property dict, a{sv}, with its variants taken off: jeepney hands each value
+    over as (signature, value)."""
+    return {name: value for name, (_, value) in props.items()}
+
+
+def text(raw):
+    """A byte string udisks hands over with a trailing nul: a mount point."""
+    return bytes(raw).rstrip(b"\0").decode(errors="replace")
+
+
+class Udisks:
+    """The daemon's objects, and the calls in flight."""
+
+    def __init__(self, system, session):
+        self.system = system
+        self.session = session
+        self.objects = {}
+        # serial -> (on_ok, on_error), for both buses. serials are per connection,
+        # so each bus keeps its own table.
+        self.waiting = {system: {}, session: {}}
+        # drives this shell ejected and has not seen leave: a card reader stays on
+        # the bus after its card is unmounted, and must not read as plugged again.
+        self.ejected = set()
+        # block devices already offered a mount, so a property change on one that
+        # was unmounted by hand does not mount it straight back.
+        self.tried = set()
+        # what each drive was last reported as, so one that leaves can be told
+        # apart as yanked or safe.
+        self.last = {}
+        self.said = None
+        # notification id -> the shell's key for it.
+        self.toasts = {}
+        # the shell says whether to, once it has heard this is ready.
+        self.automount = True
+
+    # calls
+
+    def send(self, conn, address, method, signature=None, body=(), ok=None, error=None):
+        msg = new_method_call(address, method, signature, body)
+        serial = next(conn.outgoing_serial)
+        self.waiting[conn][serial] = (ok, error)
+        conn.send(msg, serial=serial)
+
+    def udisks(self, path, interface, method, signature=None, body=(), ok=None, error=None):
+        address = DBusAddress(path, bus_name=UDISKS, interface=interface)
+        self.send(self.system, address, method, signature, body, ok, error)
+
+    def replied(self, conn, msg):
+        serial = msg.header.fields.get(HeaderFields.reply_serial)
+        ok, error = self.waiting[conn].pop(serial, (None, None))
+
+        if msg.header.message_type == MessageType.error:
+            name = msg.header.fields.get(HeaderFields.error_name, "")
+            detail = msg.body[0] if msg.body else name
+            if error:
+                error(name, detail)
+            else:
+                log(f"{name}: {detail}")
+        elif ok:
+            ok(msg.body)
+
+    # what is there
+
+    def props(self, path, interface):
+        return self.objects.get(path, {}).get(interface)
+
+    def eligible(self, drive):
+        props = self.props(drive, DRIVE)
+        if not props:
+            return False
+        return props.get("ConnectionBus") in BUSES or props.get("Removable", False)
+
+    def volumes(self, drive):
+        """The blocks on a drive that hold a filesystem or a LUKS container."""
+        found = []
+        for path, interfaces in self.objects.items():
+            block = interfaces.get(BLOCK)
+            if not block or block.get("Drive") != drive:
+                continue
+            if block.get("HintIgnore") or block.get("HintSystem"):
+                continue
+            if FILESYSTEM in interfaces or ENCRYPTED in interfaces:
+                found.append(path)
+        return found
+
+    def cleartext(self, volume):
+        """The unlocked side of a LUKS volume, or None while it is locked."""
+        encrypted = self.props(volume, ENCRYPTED)
+        if not encrypted:
+            return volume
+        clear = encrypted.get("CleartextDevice", "/")
+        return None if clear == "/" else clear
+
+    def mounts(self, block):
+        fs = self.props(block, FILESYSTEM) if block else None
+        return [text(point) for point in fs.get("MountPoints", [])] if fs else []
+
+    def describe(self, drive):
+        props = self.props(drive, DRIVE)
+        volumes = self.volumes(drive)
+        if not volumes:
+            return None
+
+        # a stick is one partition; a disk with several is shown by its largest,
+        # and ejecting it ejects them all.
+        volume = max(volumes, key=lambda v: self.props(v, BLOCK).get("Size", 0))
+        block = self.props(volume, BLOCK)
+        encrypted = ENCRYPTED in self.objects.get(volume, {})
+        clear = self.cleartext(volume)
+        inner = self.props(clear, BLOCK) if clear else None
+
+        mount = next((point for v in volumes for point in self.mounts(self.cleartext(v))), "")
+        size = (inner or block).get("Size", 0)
+        used = 0
+
+        if mount:
+            try:
+                st = os.statvfs(mount)
+                size = st.f_blocks * st.f_frsize
+                used = (st.f_blocks - st.f_bfree) * st.f_frsize
+            except OSError:
+                pass
+
+        label = (inner or {}).get("IdLabel") or block.get("IdLabel") or ""
+        media = props.get("Media", "") or ""
+        compatible = props.get("MediaCompatibility", []) or []
+        card = media in CARDS or props.get("ConnectionBus") == "sdio" or any(m in CARDS for m in compatible)
+
+        if card:
+            glyph = "sd_card"
+            name = f"SD card · {label}" if label else "SD card"
+        else:
+            thumb = "thumb" in compatible or (props.get("RotationRate", 0) == 0 and props.get("Size", 0) <= STICK_MAX)
+            glyph = "usb" if thumb else "hard_drive"
+            name = " ".join(part for part in (props.get("Vendor", "").strip(), props.get("Model", "").strip()) if part)
+            name = name or label or "Drive"
+
+        # the job in flight on this drive, if any, and when it started.
+        related = set(volumes) | {drive} | {self.cleartext(v) for v in volumes if self.cleartext(v)}
+        job, since = "", 0
+        for interfaces in self.objects.values():
+            running = interfaces.get(JOB)
+            if running and related & set(running.get("Objects", [])) and running.get("Operation") in JOBS:
+                job = JOBS[running["Operation"]]
+                # microseconds of wall clock.
+                since = running.get("StartTime", 0) // 1000
+
+        crypto = ""
+        if encrypted:
+            version = block.get("IdVersion", "")
+            crypto = f"LUKS{version}" if version else "LUKS"
+
+        return {
+            "id": drive,
+            "name": name,
+            "label": label or name,
+            "glyph": glyph,
+            "fs": _fs_name((inner or block).get("IdType", "")) if not (encrypted and not clear) else crypto,
+            "size": size,
+            "used": used,
+            "mount": mount,
+            "encrypted": encrypted,
+            "locked": encrypted and clear is None,
+            "crypto": crypto,
+            "job": job,
+            "since": since,
+        }
+
+    def report(self, force=False):
+        listed = []
+        for path, interfaces in self.objects.items():
+            if DRIVE not in interfaces or path in self.ejected or not self.eligible(path):
+                continue
+            drive = self.describe(path)
+            if drive:
+                listed.append(drive)
+
+        listed.sort(key=lambda d: d["name"].lower())
+        self.last = {d["id"]: d for d in listed}
+
+        line = json.dumps(listed, sort_keys=True)
+        if force or line != self.said:
+            self.said = line
+            emit(type="drives", list=listed)
+
+    # signals
+
+    def added(self, path, interfaces, hotplug):
+        known = self.objects.setdefault(path, {})
+        for interface, props in interfaces.items():
+            known[interface] = unwrap(props)
+
+        if not hotplug:
+            return
+
+        block = self.props(path, BLOCK)
+        if not block or path in self.tried:
+            return
+
+        drive = block.get("Drive", "/")
+        if not self.eligible(drive) or drive in self.ejected:
+            return
+        if block.get("HintIgnore") or block.get("HintSystem") or not block.get("HintAuto", True):
+            return
+
+        interfaces = self.objects[path]
+
+        if ENCRYPTED in interfaces:
+            self.tried.add(path)
+            emit(type="encrypted", id=drive, name=self.name(drive), glyph=self.glyph(drive))
+        elif FILESYSTEM in interfaces and not self.mounts(path) and self.automount:
+            self.tried.add(path)
+            self.mount(path, drive, lambda point: emit(type="mounted", id=drive, name=self.name(drive),
+                                                       glyph=self.glyph(drive), mount=point))
+
+    def removed(self, path, interfaces):
+        was = self.last.get(path) if DRIVE in interfaces else None
+
+        for interface in interfaces:
+            self.objects.get(path, {}).pop(interface, None)
+        if not self.objects.get(path):
+            self.objects.pop(path, None)
+            self.tried.discard(path)
+
+        if DRIVE in interfaces:
+            ejected = path in self.ejected
+            self.ejected.discard(path)
+            # a locked drive pulled out loses nothing, and one this shell ejected
+            # has already been reported safe.
+            if was and was["mount"] and not ejected:
+                emit(type="yanked", id=path, name=was["name"])
+
+    def changed(self, path, interface, values):
+        if path in self.objects and interface in self.objects[path]:
+            self.objects[path][interface].update(unwrap(values))
+
+    # what the shell asks
+
+    def name(self, drive):
+        described = self.describe(drive)
+        return described["name"] if described else "Drive"
+
+    def glyph(self, drive):
+        described = self.describe(drive)
+        return described["glyph"] if described else "usb"
+
+    def mount(self, block, drive, then):
+        def ok(body):
+            then(body[0])
+
+        def error(name, detail):
+            # somebody else's automounter got there first, which is fine.
+            if name == MOUNTED:
+                points = self.mounts(block)
+                then(points[0] if points else "")
+                return
+            emit(type="failed", id=drive, message=detail)
+
+        self.udisks(block, FILESYSTEM, "Mount", "a{sv}", ({},), ok, error)
+
+    def do_mount(self, drive):
+        for volume in self.volumes(drive):
+            clear = self.cleartext(volume)
+            if clear and not self.mounts(clear):
+                self.mount(clear, drive, lambda point: self.report())
+
+    def unlock(self, drive, passphrase):
+        volume = next((v for v in self.volumes(drive) if ENCRYPTED in self.objects[v] and not self.cleartext(v)), None)
+        if not volume:
+            return
+
+        def unlocked(body):
+            clear = body[0]
+            self.tried.add(clear)
+            self.mount(clear, drive, lambda point: emit(type="unlocked", id=drive, name=self.name(drive),
+                                                        glyph=self.glyph(drive), mount=point))
+
+        def refused(name, detail):
+            emit(type="wrong", id=drive, message=detail)
+
+        self.udisks(volume, ENCRYPTED, "Unlock", "sa{sv}", (passphrase, {}), unlocked, refused)
+
+    def eject(self, drive, force, power):
+        """Unmount every filesystem on the drive, lock what was unlocked, and power it
+        off when asked to.
+
+        One step at a time, each sent when the last has answered: a lock sent
+        before its filesystem is unmounted is refused.
+
+        Powering off is not the default. It takes the usb device off the bus until
+        it is plugged in again, and a framework expansion card cannot easily be:
+        ejected that way, a drive stayed gone until a reboot. Unmounted, it has
+        flushed everything and is as safe to pull, and can be mounted again.
+        """
+        steps = []
+        for volume in self.volumes(drive):
+            clear = self.cleartext(volume)
+            if clear and self.mounts(clear):
+                steps.append((clear, FILESYSTEM, "Unmount", "a{sv}", ({"force": ("b", force)},)))
+            if clear and clear != volume:
+                steps.append((volume, ENCRYPTED, "Lock", "a{sv}", ({},)))
+
+        props = self.props(drive, DRIVE) or {}
+        gone = False
+        if power and props.get("CanPowerOff"):
+            steps.append((drive, DRIVE, "PowerOff", "a{sv}", ({},)))
+            gone = True
+        elif power and props.get("Ejectable"):
+            steps.append((drive, DRIVE, "Eject", "a{sv}", ({},)))
+            gone = True
+
+        name = self.name(drive)
+
+        # asked before anything is unmounted, for naming who holds it if it is busy.
+        points = [point for volume in self.volumes(drive) for point in self.mounts(self.cleartext(volume))]
+
+        def run(rest):
+            if not rest:
+                # only a drive this shell switched off is hidden; one merely
+                # unmounted stays listed, to be mounted again.
+                if gone:
+                    self.ejected.add(drive)
+                emit(type="safe", id=drive, name=name)
+                self.report()
+                return
+
+            path, interface, method, signature, body = rest[0]
+
+            def error(err, detail):
+                if err == BUSY:
+                    emit(type="busy", id=drive, holders=self.holders(points))
+                else:
+                    emit(type="failed", id=drive, message=detail)
+                self.report()
+
+            self.udisks(path, interface, method, signature, body, lambda _: run(rest[1:]), error)
+
+        run(steps)
+
+    def notify(self, request):
+        actions = []
+        for action, label in request.get("actions", []):
+            actions += [action, label]
+
+        hints = {"x-kuori-glyph": ("s", request.get("glyph", "usb"))}
+        if request.get("tone"):
+            hints["x-kuori-tone"] = ("s", request["tone"])
+        # the design's "can be safely removed" is quieter than the rest.
+        if request.get("tone") == "dim":
+            hints["urgency"] = ("y", 0)
+
+        key = request.get("key")
+
+        # a toast can take the place of one still up, the way gnome's "writing
+        # data" gives way to "can be safely removed". not through the spec's
+        # replaces_id: quickshell updates the old toast in place, keeping its
+        # expiry -- a sticky one then never goes -- and the history keeps only the
+        # text it first arrived with. so the old one is withdrawn and a new one sent.
+        if request.get("replaces"):
+            self.withdraw(request["replaces"])
+
+        # 0 is the spec's "until it is answered": the writing toast stays up for
+        # as long as the flush takes. transient, because a history entry saying a
+        # drive is being written to is stale the moment it is read.
+        expires = 0 if request.get("sticky") else -1
+        if request.get("sticky"):
+            hints["transient"] = ("b", True)
+
+        def posted(body):
+            self.toasts[body[0]] = key
+
+        self.send(self.session, NOTIFICATIONS, "Notify", "susssasa{sv}i",
+                  ("Drives", 0, "", request.get("summary", ""), "", actions, hints, expires), posted)
+
+    def withdraw(self, key):
+        for nid, k in list(self.toasts.items()):
+            if k == key:
+                self.toasts.pop(nid)
+                self.send(self.session, NOTIFICATIONS, "CloseNotification", "u", (nid,))
+
+    def holders(self, points):
+        """The names of this user's processes with a file, a directory or their
+        working directory under any of these mount points: whoever is keeping a
+        busy drive busy. Other users' processes cannot be read, and are left out
+        rather than guessed at."""
+        def under(target):
+            return any(target == point or target.startswith(point + "/") for point in points)
+
+        names = []
+        for entry in os.listdir("/proc"):
+            if not entry.isdigit() or int(entry) == os.getpid():
+                continue
+            base = f"/proc/{entry}"
+            try:
+                links = [os.readlink(f"{base}/cwd"), os.readlink(f"{base}/root")]
+                links += [os.readlink(f"{base}/fd/{fd}") for fd in os.listdir(f"{base}/fd")]
+            except OSError:
+                continue
+            if any(under(link) for link in links):
+                try:
+                    with open(f"{base}/comm") as comm:
+                        name = comm.read().strip()
+                except OSError:
+                    continue
+                if name and name not in names:
+                    names.append(name)
+        return names
+
+    def show(self, path):
+        def refused(name, detail):
+            log(f"no file manager answered for {path}: {detail}")
+            emit(type="unshown", path=path)
+
+        uri = "file://" + quote(path)
+        self.send(self.session, FILE_MANAGER, "ShowFolders", "ass", ([uri], ""), error=refused)
+
+    def heard(self, line):
+        try:
+            request = json.loads(line)
+        except ValueError:
+            # not the line itself: it may be carrying a passphrase.
+            log("unreadable line from the shell")
+            return
+
+        cmd = request.get("cmd")
+        drive = request.get("id", "")
+
+        if cmd == "refresh":
+            self.report(force=True)
+        elif cmd == "mount":
+            self.do_mount(drive)
+        elif cmd == "unlock":
+            self.unlock(drive, request.get("passphrase", ""))
+        elif cmd == "eject":
+            self.eject(drive, bool(request.get("force")), bool(request.get("power")))
+        elif cmd == "notify":
+            self.notify(request)
+        elif cmd == "withdraw":
+            self.withdraw(request.get("key"))
+        elif cmd == "show":
+            self.show(request.get("path", ""))
+        elif cmd == "automount":
+            self.automount = bool(request.get("on"))
+
+
+def _fs_name(kind):
+    """What the design calls a filesystem: exFAT, FAT32, ext4."""
+    return {"vfat": "FAT32", "exfat": "exFAT", "ntfs": "NTFS", "btrfs": "Btrfs", "xfs": "XFS",
+            "hfsplus": "HFS+", "apfs": "APFS", "f2fs": "F2FS"}.get(kind, kind)
+
+
+def watch(conn, **rule):
+    conn.send_and_get_reply(message_bus.AddMatch(MatchRule(type="signal", **rule)), timeout=5)
+
+
+def main():
+    system = open_dbus_connection(bus="SYSTEM")
+    session = open_dbus_connection(bus="SESSION")
+
+    # the matches go on before the first listing, so nothing that happens between
+    # the two is missed.
+    watch(system, sender=UDISKS, interface="org.freedesktop.DBus.ObjectManager", path=ROOT)
+    watch(system, sender=UDISKS, interface="org.freedesktop.DBus.Properties", path_namespace=ROOT)
+    watch(session, interface="org.freedesktop.Notifications", path="/org/freedesktop/Notifications")
+
+    state = Udisks(system, session)
+
+    def listed(body):
+        for path, interfaces in body[0].items():
+            state.added(path, interfaces, hotplug=False)
+        emit(type="ready")
+        state.report(force=True)
+
+    state.udisks(ROOT, "org.freedesktop.DBus.ObjectManager", "GetManagedObjects", ok=listed)
+
+    shell = Lines()
+
+    while True:
+        readable, _, _ = select.select([system.sock, session.sock, shell.fd], [], [])
+
+        if shell.fd in readable:
+            lines = shell.read()
+            if lines is None:
+                return
+            for line in lines:
+                if line:
+                    state.heard(line)
+
+        if system.sock in readable:
+            touched = False
+
+            for msg in drain(system):
+                kind = msg.header.message_type
+
+                if kind in (MessageType.method_return, MessageType.error):
+                    state.replied(system, msg)
+                elif kind == MessageType.signal:
+                    member = msg.header.fields.get(HeaderFields.member)
+                    path = msg.header.fields.get(HeaderFields.path)
+
+                    if member == "InterfacesAdded":
+                        state.added(msg.body[0], msg.body[1], hotplug=True)
+                    elif member == "InterfacesRemoved":
+                        state.removed(msg.body[0], msg.body[1])
+                    elif member == "PropertiesChanged":
+                        state.changed(path, msg.body[0], msg.body[1])
+                    touched = True
+
+            if touched:
+                state.report()
+
+        if session.sock in readable:
+            for msg in drain(session):
+                kind = msg.header.message_type
+
+                if kind in (MessageType.method_return, MessageType.error):
+                    state.replied(session, msg)
+                elif kind == MessageType.signal:
+                    member = msg.header.fields.get(HeaderFields.member)
+
+                    if member == "ActionInvoked":
+                        nid, action = msg.body
+                        if nid in state.toasts:
+                            emit(type="action", key=state.toasts[nid], action=action)
+                    elif member == "NotificationClosed":
+                        state.toasts.pop(msg.body[0], None)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        pass

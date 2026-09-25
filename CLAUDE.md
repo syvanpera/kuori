@@ -46,19 +46,21 @@ modules/           the contents of a tab or a panel
 services/          singletons: shared state and data (and Helper.qml, the one non-singleton)
 theme/Theme.qml    every colour, size, duration and font in one place
 scripts/           what runs outside the shell: the calendar fetcher, run by its own unit, and
-                   the three d-bus helpers the shell runs as children, sharing kuori_bus.py
+                   the four d-bus helpers the shell runs as children, sharing kuori_bus.py
 ```
 
 `services/Helper.qml` is the one file in `services/` that is not a singleton: a python helper as a
 child process — JSON lines out, words in, respawned after `Theme.helperRespawn` — which the lock, the
-pairing agent and `Display`'s screensaver each own one of. It cannot live in `qs.components`: `Notch` there imports
+pairing agent, `Display`'s screensaver and `Drives` each own one of. The drives helper takes JSON lines
+in as well as out, because a passphrase can hold a space. It cannot live in `qs.components`: `Notch` there imports
 `qs.services`, and services importing the module that imports them is a cycle. It runs the scripts
 with `python3 -B`, and the scripts set `sys.dont_write_bytecode` too, because importing
 `kuori_bus` would otherwise write a `__pycache__` into the config directory.
 
 The shared pieces a new surface should reach for before writing its own: `PillButton` (every button),
 `Field` (a `TextInput` with the accent caret and a placeholder), `SecretField` and `StatusNote` (the
-password field and the line under it, lock and polkit), `ListEntry` (a row in a panel list),
+password field and the line under it, lock, polkit and a locked drive; its sizes are properties with
+polkit's as the defaults), `IconButton` (a glyph on a square), `ListEntry` (a row in a panel list),
 `ToastFrame` (a card on the toast stack), `windows/ModalWindow.qml` (a fullscreen overlay with a
 scrim and a grab), `Rule`, `StatGrid`, `KeyHint`, `Meter` and `Glide` (the design's easing curve).
 They exist because each was written out by hand two to five times, and the copies had drifted.
@@ -130,6 +132,15 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 | A legacy PIN on a keyboard card is shown whole, with no `N of 6 entered` | bluez's `DisplayPinCode` reports no keypresses and its PIN need not be six digits. The design only draws the six-digit passkey, which `DisplayPasskey` does count. |
 | `AuthorizeService` is answered without asking | Not in the design. bluez only asks it for an untrusted device, and every device paired here is trusted as it lands, so a question would be about a device paired elsewhere — allowed if paired, refused otherwise. |
 | A device arriving in CONNECTED does not replay the design's `qs-bt-in` drop | The design marks a freshly connected mock device `fresh`; nothing real carries that, and animating every delegate as the panel opens would be wrong. |
+| A drive already plugged in when the shell starts is **not mounted**, and reads "Not mounted" | The user's call, 2026-09-25: automount is for a drive plugged in while the shell runs. The design only has drives it mounted itself, so it has no word for this state. It gets a **Mount** button where a locked card has Unlock; the folder mounts and opens in one go, once the helper reports where. The folder alone did the mounting at first, which the user rightly found too clever to discover. `Theme.drvAutomount: false` makes every drive arrive this way. |
+| Eject **does not power the drive off** | The user's call, 2026-09-25. The design's eject is "Unmount and power off", and udisks's power-off takes the usb device off the bus until it is plugged in again: their 1TB disk is a Framework expansion card, and ejected that way it was gone until a re-seat or a reboot. Unmounted (and locked) it has flushed everything and is as safe to pull, so the card reads "Safe to remove" for `drvSafeLinger` and then "Not mounted", or locked, and Mount or Unlock mounts it again. The eject button is hidden on an unmounted drive, having nothing left to do. `Theme.drvPowerOff: true` is the design's way. |
+| An eject past `drvFlushNotice` reads "Writing data… Don't unplug", with a toast | The user's ask, 2026-09-25, after nautilus did it. The design has only "Unmounting…". A slow unmount is the kernel writing out dirty pages, and udisks's `Unmount` simply does not answer until it has: nothing needs asking, only saying. There is no progress: how much is left per device is only in debugfs, which is root's. The toast is sticky and transient, and gives way to "can be safely removed" (see the drives section for why not by `replaces_id`). |
+| A busy drive's card names who is holding it | The design says "Close files open on …" and leaves the reader to guess. The helper reads `/proc/<pid>/{cwd,root,fd}` of this user's processes against the drive's mount points, the question nautilus's "volume is busy" dialog answers. Other users' processes cannot be read and are left out; with nobody found the design's sentence stands. |
+| One card per **drive**, showing its largest filesystem | The design's drives each have one. Eject unmounts every filesystem on the drive and powers the whole thing off, which is what a card's eject button can honestly promise. |
+| Sizes are binary GB | The design writes 29.4 GB for a 32 GB stick, which is GiB under the name GB. `DriveEntry.gb` does the same. |
+| A wrong passphrase reads "No key available with this passphrase." | udisks passes on libblockdev's `Operation not permitted` under the device path. The design's sentence is cryptsetup's own for that error, and says what went wrong. Anything else udisks says is shown with its `Error unlocking /dev/…:` prefix cut off. |
+| A drive toast's tint comes from an `x-kuori-tone` hint | The design colours each drive toast: accent, dim for "safe to remove", orange for pulled out. Dim is low urgency. Orange is `Theme.elevated`, asked for by the hint, because critical would never time out and the design's does. The history entry keeps the tone. |
+| An eject that fails for any reason but busy raises a toast | The design only fails with busy, which has its own card. |
 | The bluetooth AVAILABLE list is sorted, paired first | BlueZ hands devices over in the order it learned them, so an unsorted list rearranges itself under the pointer whenever discovery finds something. |
 | A bluetooth device connecting raises a **toast** | Not in the design, which announces nothing. The user asked for it, 2026-09-25: their other desktop does. It follows `Bluez.connected`, so a device mid-pairing is not announced until it lands, and it is quiet for `Theme.btAnnounceSettle` after startup, a wake (`Lock.woke`) and the radio coming on, which each reconnect everything at once. A device clicked in the panel is not announced (`Bluez.asked`), and `asked` clears on *any* change to that device, or a disconnect click would swallow the next real reconnect. Transient, so a mouse waking does not light the bell. `Theme.btAnnounce: "off"` is the old way. |
 | The audio row's ENABLED switch is **mute**, read the right way up | The only thing about sound that can be switched off. The design names the switch and leaves what it does to the reader. |
@@ -351,6 +362,76 @@ follow `linkDevice`; the band and the scan stay the radio's.
 - `qs ipc … call system toggle wifi` opens the panel on the row, so the no-click states can be
   checked without ydotool. The row id is still `wifi`; renaming it would touch `Notches` and every
   strip button for a string nobody sees.
+
+## External drives
+
+udisks2 is running here (system unit), and gvfs's udisks volume monitor is too, but nothing on the
+machine automounts: that was nautilus's job while it ran. `scripts/kuori-drives` (python and jeepney,
+the btagent's shape) keeps udisks's objects from `GetManagedObjects` plus the object manager's
+signals, reports one row per drive, and makes the calls. First seen against the real thing on
+2026-09-25: a LUKS2 USB disk listed as locked, and a wrong passphrase refused by udisks and shown.
+
+- **Every call is sent without waiting.** `send_and_get_reply` drops every message that is not its
+  reply unless a filter wants it, and an unmount flushes what was written, which can take a minute.
+  The helper picks its own serial (`next(conn.outgoing_serial)`), keeps a callback per serial and
+  answers replies from the main loop. Eject is a chain: unmount, lock, power off, each sent when the
+  last answered, because a lock sent before its filesystem is unmounted is refused.
+- **An unlocked volume's filesystem is on another object**, whose `Block.Drive` is `/`. Everything
+  that asks "what is on this drive" goes through `cleartext()`, and automount never sees the
+  cleartext side because `/` is not an eligible drive. `Unlock` returns its path, and the helper
+  mounts it itself.
+- **A card reader stays on the bus after its card is ejected**, so the helper keeps an `ejected` set
+  until the drive object leaves, or the reader would read as a fresh drive plugged in.
+- **Eligible means the bus, not the removable flag**: `ConnectionBus` usb, sdio or ieee1394, or
+  `Removable`. The empty card readers here (`sdb`, `sdc`, 0 B) have no volumes and are left out.
+- **Another automounter getting there first** answers `Error.AlreadyMounted`, which is taken as
+  success. nautilus does this whenever it is running.
+- **A folder is opened through `org.freedesktop.FileManager1.ShowFolders`, not xdg-open.** xdg-utils
+  1.2.1 on a desktop it does not know (Hyprland) runs the default app's `Exec`, and when that exits
+  non-zero for any reason it quietly works down `x-www-browser:firefox:…:chromium`: the user's first
+  Open showed a mounted drive as a `file://` page in chromium, with nothing in the journal, because
+  `execDetached` keeps no output. The same xdg-open in the shell's own environment opened nautilus
+  afterwards, so what failed that once is not known. The d-bus call has no fallback to go wrong and
+  logs a refusal; xdg-open is only used when nothing owns the name.
+- **The helper reports udisks's jobs per drive** (`job`, `since`), and the card shows one whoever
+  started it. A card that only knew its own requests read "mounted", then "not mounted", while an
+  unmount it had lost track of spent 15 minutes writing 9 GB to a 6 MB/s Ventoy stick. It had lost
+  track because the shell was restarted three times mid-test, which forgets every request in flight
+  -- so **do not restart the unit while the user is testing a drive**. udisks meanwhile refused
+  nautilus's remount, and the kernel had the writeback thread and `usb-storage` in D state; `inflight`
+  and the write-sector column of `/sys/block/sdX/stat` are how to tell slow from stuck.
+- **Busy and writing are different.** "Target is busy" is `umount(2)` refusing because a process
+  has something open there: a copy still running, a shell's working directory, a file manager
+  browsing it. Nautilus hits the same wall. Dirty data is not busy: the unmount waits for it and
+  then succeeds, which is what nautilus's "writing data" is saying. The user's first report ("busy
+  in kuori, fine in nautilus") was most likely the copy finishing in between.
+- **A notification's `replaces_id` is not a replacement here.** Quickshell updates the old toast in
+  place: its expiry stays what it was when it arrived, so a sticky one never went, and the history
+  keeps the text it first came with, so "safe to remove" never reached it. Seen with `notify-send -r`.
+  The helper withdraws the old toast (`CloseNotification`) and posts a new one instead.
+- **The toasts are the helper's own `Notify` calls**, on the session bus back to this shell's
+  server, so their buttons arrive as `ActionInvoked` and are relayed as `{"type": "action"}`.
+  notify-send with `--action` blocks until answered, so it would have been a process per toast.
+- **The cards are a Repeater over drive ids, not rows.** `Drives.rows` is rebuilt on every listing,
+  and a delegate per row object is torn down with it, half-typed passphrase and all. An id is the
+  same string every time, so the delegate lives as long as the drive.
+- **The passphrase field is in a Loader**, active only while locked. A hidden field that held focus
+  keeps the keyboard from everything, and a destroyed one gives it to nobody, so the Loader's item
+  calls `Notches.refocus()` on its way out, as the network passphrase does.
+- **A Loader keeps the size of the item it has let go of.** Unloaded, it stayed as tall as the field
+  and its buttons, and a visible Loader still takes its Column's spacing, so an unlocked card had an
+  empty field's worth of space under it. `visible: active` and a height taken from `item`.
+- **The ipc's fakes live in `Drives.mocks`**, not `drives`: the helper's next listing replaces
+  `drives` and took the first version's fakes with it.
+
+Verified by the user on 2026-09-25: a real unlock, an eject (which then powered the drive off,
+hence the change above), and after the change an unmount-only eject and a remount. Not verified by
+doing it: a plain drive, a toast's buttons (a click needs ydotool), a plug while running and a yank.
+
+```
+kuori ipc call drives mock mounted | busy | unmounting | flushing | locked | unlocking | wrong | unlocked | ejected | yanked
+kuori ipc call drives clear
+```
 
 ## Hyprland here is configured in Lua
 
