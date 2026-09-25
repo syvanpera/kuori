@@ -3,34 +3,41 @@
 A desktop shell for Hyprland, written in [Quickshell](https://quickshell.org) and QML. *Kuori* is
 Finnish for shell, husk, envelope.
 
-It draws a border around the whole desktop with tabs ("notches") hanging off the top edge, and
-provides an application launcher, a notification daemon, and an authentication agent.
+It draws a border around the whole desktop with tabs ("notches") hanging off the top edge, and is
+the rest of the session's plumbing too: the launcher, the notification daemon, the polkit agent, the
+Bluetooth pairing agent, the drive mounter and the lock screen.
 
 ## What it does
 
 - **A frame** around the desktop, with the rounded opening your windows live in.
-- **Four notches** on the top edge: workspaces (left), clock and calendar (centre), then the switches
-  and the system tab (right). The calendar shows your Google Calendar events.
+- **Four tabs** on the top edge: workspaces (left), the clock and its calendar (centre), and on the
+  right three switches (night light, stay awake, Do Not Disturb) beside the system tab. The calendar
+  shows your Google Calendar events.
+- **The system tab**: the network, Bluetooth, volume, drives, display, notifications and battery at a
+  glance, each opening its own row of a panel with the controls underneath, and a capture block for
+  screenshots, recordings and picking a colour off the screen. Resting the pointer on an icon names it.
 - **A launcher** with six categories: everything, applications, clipboard history, wallpapers,
   windows and power, each openable straight from a keybind.
 - **An on-screen display** for the volume and brightness keys, dropping out of the system tab.
 - **Notifications**: kuori *is* the session's notification daemon. Toasts appear top-right, and the
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
-- **A Bluetooth pairing agent**: pairing codes and confirmations appear in the system panel.
+- **A Bluetooth pairing agent**: pairing codes and confirmations appear in the system panel, and a
+  device connecting says so in a toast.
 - **External drives**: mounted as they are plugged in, unlocked with a passphrase when encrypted,
-  and ejected from the system panel.
-- **A focus indicator** on the active window, either a corner wedge or a strip along one edge, and
+  and ejected from the system panel, which says when an eject is still writing data out and who is
+  keeping a busy drive busy.
+- **A focus indicator** on the active window, either a strip along one edge or a corner wedge, and
   the same mark in grey on every other window on screen.
 - **A lock screen** that takes a password or a fingerprint. It locks after ten idle minutes, when the lid
   closes and before the machine sleeps, and turns the screen off a minute after locking.
 
 ## Screenshots
 
-![The desktop, with the frame and the four notches](docs/desktop.webp)
+![The desktop, with the frame, the four tabs and three terminals](docs/desktop.webp)
 
-At rest: the frame around the desktop and the four tabs on the top edge: workspaces on the left, the
-clock in the middle, and the switches beside the system tab on the right.
+The desktop: the frame, the four tabs on the top edge, and three terminals. The middle one has focus,
+and kuori marks it with a strip along its top edge; the other two carry the same strip in grey.
 
 ![Three windows, with the focused one marked along its top edge](docs/focus.webp)
 
@@ -44,26 +51,41 @@ They get Hyprland's own border instead, from a `floating-border` window rule in 
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
 
-The same three windows with `Theme.focusStyle: "mark"`: a wedge filling the focused window's
-upper-right corner instead. It is the quieter of the two.
+The same windows with `Theme.focusStyle: "mark"`: a wedge in the focused window's upper-right corner
+instead, and in grey on the others. It is the quieter of the two.
+
+![A tooltip under the night light switch](docs/tooltip.webp)
+
+Resting the pointer on an icon names it. A switch says which way it is set and what a click will do.
 
 ![The launcher, on the applications category](docs/launcher.webp)
 
-The launcher, on applications, with a toast in the corner behind it.
+The launcher, on applications.
 
-![The system panel, with the display row folded out](docs/system-panel.webp)
+![Four rows of the system panel](docs/system-panel.webp)
 
-The system tab open, with the display row folded out and the capture block underneath. One row folds
-out at a time.
+The system panel, one row folded out at a time. From the left: the network, Ethernet first and then
+Wi-Fi with the known and nearby networks; Bluetooth partway through pairing, with the code to compare;
+drives, an unlocked LUKS disk beside a locked one asking for its passphrase; and the display, with
+the night light on and its colour temperature.
 
-![A toast and the on-screen display](docs/notifications.webp)
+![Toasts moved down by the on-screen display](docs/notifications.webp)
 
-The on-screen display dropping out of the system tab on a volume key, with a toast moving down out of
-its way.
+The on-screen display dropping out of the system tab on a volume key, with the toasts moved down out
+of its way. The top one is a drive just mounted, with its **Open** and **Eject** buttons.
 
 ![The clock tab, showing the calendar](docs/calendar.webp)
 
-The clock tab.
+The clock tab: a dot per calendar on each day with something on, the day's events underneath in
+their calendars' colours, and a legend of which colour is which.
+
+![The lock screen with its prompt up](docs/lock.webp)
+
+The lock screen, with the prompt up. A finger on the sensor would do as well as the password.
+
+![The polkit dialog](docs/polkit.webp)
+
+kuori's own polkit dialog, for anything that needs privileges.
 
 ## Requirements
 
@@ -269,14 +291,17 @@ Hyprland config. These are the ones this machine uses, from `~/.config/hypr/bind
 |---|---|
 | `ALT` + `SPACE` | Open the launcher |
 | `ALT` + `SHIFT` + `C` | Open it on the clipboard history |
+| `SUPER` + `ESCAPE` | Open it on suspend / reboot / power off |
+| `ALT` + `SHIFT` + `S` | Open the system panel on audio |
 | `SUPER` + `SHIFT` + `S` | Screenshot a region |
 | Brightness up / down | One step of the backlight, through kuori itself |
 | `SUPER` + `CTRL` + `L` | Lock the screen |
 
-Binding anything else is one more line, and the `-p` goes in every one of them:
+Binding anything else is one more line. With the flake, `kuori ipc call` names the config for you;
+by hand it is `qs ipc -p ~/.config/kuori call`, and the `-p` goes in every one:
 
 ```lua
-local kuori = "qs ipc -p ~/.config/kuori call "
+local kuori = "kuori ipc call "
 
 hl.bind(altMod .. " + SPACE", hl.dsp.exec_cmd(kuori .. "launcher toggle"))
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd(kuori .. "notifications dnd"))
@@ -349,7 +374,7 @@ different one while the launcher is open switches category without closing it.
 
 | Call | Does |
 |---|---|
-| `toggle <row>` | Open the system panel on `wifi` (the network row), `bluetooth`, `audio`, `battery`, `display` or `notifications`; the same row again closes it |
+| `toggle <row>` | Open the system panel on `wifi` (the network row), `bluetooth`, `audio`, `battery`, `drives`, `display` or `notifications`; the same row again closes it |
 
 ### `notifications`
 
@@ -526,22 +551,23 @@ display, notifications and battery, and a red dot while a recording is running. 
   `"connect"`, `"both"` to hear about disconnects too, or `"off"`.
 - **Audio**: output and input devices, volume, and a switch that is mute read the right way up.
 - **Battery**: level, time remaining, health, rate, and power profiles when a daemon offers them.
-- **Drives**: only there while a drive is plugged in. A drive plugged in is mounted at once, and a
-  toast says where, with **Open** and **Eject**. Each card shows how full the drive is. The folder
-  opens it in your file manager. Eject unmounts it and locks it if it was encrypted, and the card
-  reads "Safe to remove" for a moment, then "Not mounted" (or locked) until the drive is pulled out:
-  **Mount** or Unlock mounts it again. It is not powered off, because a powered-off drive is gone
-  until it is plugged back in; `Theme.drvPowerOff` does that, as the design has it. An eject that is
-  still going after a second is the kernel writing out what was copied: the card reads "Writing data…
-  Don't unplug" and a toast says the same until it is safe. If something still has a file open on
-  the drive, the card names it where it can ("nautilus and cp have files open on …") and offers
-  **Keep mounted** or **Unmount anyway**. An encrypted
-  (LUKS) drive arrives locked, with a passphrase field on its card, and its toast's **Unlock** opens
-  the row. A drive already plugged in when kuori starts is left as it was found: it reads "Not
-  mounted", with a **Mount** button (the folder mounts and opens it in one go). A drive being
-  mounted or unmounted by something else, nautilus or a terminal, shows that too, "Writing data…"
-  included. Pulling a drive out while it is still
-  mounted raises a warning.
+- **Drives**: only there while a drive is plugged in, and so is its icon on the strip.
+  - **Plugging one in mounts it**, and a toast says where, with **Open** and **Eject**. An
+    encrypted (LUKS) drive arrives locked instead, with a passphrase field on its card; its toast's
+    **Unlock** opens the row. A drive already plugged in when kuori starts is left as it was found,
+    "Not mounted", with a **Mount** button.
+  - **Each card** shows how full the drive is, and the folder opens it in your file manager
+    (mounting it first if it needs to be).
+  - **Eject** unmounts the drive, and locks it if it was encrypted. The card reads "Safe to remove"
+    for a moment, then "Not mounted" (or locked) until you pull the drive out, and **Mount** or
+    **Unlock** brings it back. It is not powered off, because a powered-off drive is gone until it
+    is plugged in again; `Theme.drvPowerOff` does that, as the design has it.
+  - **An eject still going after a second** is the kernel writing out what you copied: the card
+    reads "Writing data… Don't unplug", and a toast says the same until it is safe.
+  - **If a program still has files open on the drive**, the card names it where it can ("nautilus
+    and cp have files open on …") and offers **Keep mounted** or **Unmount anyway**.
+  - A drive being mounted or unmounted by something else, nautilus or a terminal, shows that too.
+    Pulling a drive out while it is still mounted raises a warning.
 - **Display**: night light, stay awake, brightness, and a colour temperature slider that appears
   while the night light is on.
 - **Notifications**: the Do Not Disturb switch and the history.
