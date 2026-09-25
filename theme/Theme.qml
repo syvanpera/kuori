@@ -1294,7 +1294,7 @@ Singleton {
   // the on-screen display for the volume and brightness keys and for voice
   // typing. the design has two: "drop", the box that falls out of the system tab,
   // and "notch", a tab of its own centred between the clock and the toggles.
-  property string osdStyle: "drop"
+  property string osdStyle: "notch"
 
   // the notch style: one line, the glyph at the strip's own icon size, a bar
   // narrower than the box's, and a reading wide enough for "100%" or "0:00".

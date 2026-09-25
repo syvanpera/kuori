@@ -19,7 +19,8 @@ Bluetooth pairing agent, the drive mounter and the lock screen.
 - **A launcher** with six categories: everything, applications, clipboard history, wallpapers,
   windows and power, each openable straight from a keybind.
 - **An on-screen display** for the volume and brightness keys, and for voice typing with
-  [voxtype](https://voxtype.io), dropping out of the system tab.
+  [voxtype](https://voxtype.io), in a tab of its own on the top edge or dropping out of the system
+  tab.
 - **Notifications**: kuori *is* the session's notification daemon. Toasts appear top-right, and the
   history lives in the system panel.
 - **An authentication agent**: kuori answers polkit, so privileged actions raise its own dialog.
@@ -72,8 +73,8 @@ the night light on and its colour temperature.
 
 ![Toasts moved down by the on-screen display](docs/notifications.webp)
 
-The on-screen display dropping out of the system tab on a volume key, with the toasts moved down out
-of its way. The top one is a drive just mounted, with its **Open** and **Eject** buttons.
+The on-screen display in its `drop` style, falling out of the system tab on a volume key, with the
+toasts moved down out of its way. The top one is a drive just mounted, with its **Open** and **Eject** buttons.
 
 ![The clock tab, showing the calendar](docs/calendar.webp)
 
@@ -611,9 +612,10 @@ folds away.
 
 ### The on-screen display
 
-Press a volume or brightness key and a box drops out of the system tab with the glyph, the name, the
-percentage and a bar. It follows further presses and takes itself away 1.7 seconds after the last one.
-Muted says `Muted` and `—`, with the bar at nothing in grey rather than accent.
+Press a volume or brightness key and a tab slides down from the top edge, centred between the clock
+and the toggles, with the glyph, a bar and the percentage. It follows further presses and takes itself
+away 1.7 seconds after the last one. Muted says `—`, with the glyph and the bar at nothing in grey
+rather than accent.
 
 **It does not need to be what your keys are bound to.** kuori watches the two values rather than the
 keys: pipewire reports volume, udev reports the backlight. So the display answers a change made by
@@ -621,16 +623,15 @@ keys: pipewire reports volume, udev reports the backlight. So the display answer
 it would work with no change to your Hyprland config at all. (The brightness keys here do go through
 kuori, but for a different reason: see `backlight` above.)
 
-Toasts move down while it is out, and it stays away entirely while the system panel is open, since the
-panel is showing those same sliders. With several monitors it appears on the focused one only.
+It stays away entirely while the system panel is open, since the panel is showing those same sliders,
+and steps aside while the calendar is open, which covers the gap it hangs in. With several monitors it
+appears on the focused one only.
 
-**Two styles**, picked by `Theme.osdStyle`. `"drop"` (the default) is the box above. `"notch"` is a
-tab of its own hanging off the top edge, centred between the clock and the toggles: one line with the
-glyph, a bar and the reading (and the title, while voice typing). It leaves the system tab, the
-toggles and the toasts where they are, and steps aside while the calendar is open, which covers the
-gap it hangs in.
+**Two styles**, picked by `Theme.osdStyle`. `"notch"` (the default) is the tab above. `"drop"` is a
+larger box dropping out of the system tab, with the name over the bar (`Volume`, `Muted`,
+`Brightness`); the toggles step aside and the toasts move down while it is out.
 
-**Voice typing** puts the same box up for as long as [voxtype](https://voxtype.io) is at work: a red
+**Voice typing** puts the same display up for as long as [voxtype](https://voxtype.io) is at work: a red
 mic, `Listening`, the time since the recording began and the microphone's level while it hears you,
 then an accent mic and `Transcribing…` with the time stopped until the text is typed. It wins over a
 volume or brightness change made meanwhile, and goes away when the daemon is idle again. kuori only

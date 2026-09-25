@@ -1258,8 +1258,8 @@ needed no keybind changes, and why it also answers a change made from a terminal
 ### The notch style
 
 The design has a second display (2026-09-25), switched in its mock by a Drop/Notch chip; here that
-chip is `Theme.osdStyle`. `modules/OsdNotch.qml` is the design's one-line tab between the clock and
-the toggles, and `OsdBox` is the drop. **Everything either one says is on `Osd`** (glyph, title,
+chip is `Theme.osdStyle`, and "notch" is the default (the user's call). `modules/OsdNotch.qml` is
+the design's one-line tab between the clock and the toggles, and `OsdBox` is the drop. **Everything either one says is on `Osd`** (glyph, title,
 reading, fill, the voice clock) and the lower half is `OsdLevel`, the bar or the meter, so the two
 styles cannot drift into disagreeing about a muted glyph. `Osd.dropped` and `Osd.notched` are
 `shown` split by style, and only `dropped` squares off the system tab, sets the toggles aside, blocks
