@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__qt-docs__qt_documentation_search",
+      "mcp__qt-docs__qt_documentation_read"
+    ]
+  }
+}
