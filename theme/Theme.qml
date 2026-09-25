@@ -1291,8 +1291,21 @@ Singleton {
   readonly property color notifClear: root.tint.alpha(0.45)
   readonly property color notifClearHover: root.tint.alpha(0.85)
 
-  // the on-screen display: the box that drops out of the system tab when the
-  // volume or the brightness keys are pressed.
+  // the on-screen display for the volume and brightness keys and for voice
+  // typing. the design has two: "drop", the box that falls out of the system tab,
+  // and "notch", a tab of its own centred between the clock and the toggles.
+  property string osdStyle: "drop"
+
+  // the notch style: one line, the glyph at the strip's own icon size, a bar
+  // narrower than the box's, and a reading wide enough for "100%" or "0:00".
+  property int osdNotchGap: 10
+  property int osdNotchTrack: 132
+  property int osdNotchValueWidth: 30
+
+  // it slides down from behind the band, its own height, as it fades in.
+  property int osdNotchDuration: 220
+
+  // the box that drops out of the system tab.
   //
   // it is wider than the strip it hangs from, which is what osdWiden says, so its
   // left corners are exposed and take the tab's own radius while its right edge

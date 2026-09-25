@@ -209,6 +209,15 @@ PanelWindow {
     bottomRightRadius: 0
   }
 
+  // and the notch style's, which is a tab's shape and slides with it.
+  NotchShadow {
+    notch: osdNotch
+
+    visible: osdNotch.visible
+    opacity: osdNotch.opacity
+    transform: Translate { y: osdNotch.slide }
+  }
+
   DesktopFrame {
     anchors.fill: parent
   }
@@ -331,6 +340,19 @@ PanelWindow {
     here: root.tabs && root.screenName === Screens.tabsName
     x: root.width - width - Theme.borderWidth
     y: Theme.borderWidth + system.bodyHeight
+  }
+
+  // the other style: a tab of its own, centred in the gap between the clock and
+  // the toggles. it stands aside for the calendar, which opens wide enough to
+  // cover the gap it hangs in, and it touches nothing else -- the system tab keeps
+  // its corner, the toggles stay, and so do the toasts.
+  OsdNotch {
+    id: osdNotch
+
+    here: root.tabs && root.screenName === Screens.tabsName
+      && Notches.openOn(root.screenName) !== "clock"
+    x: Math.round((clock.x + clock.width + toggles.x - width) / 2)
+    y: Theme.borderWidth
   }
 
   // the name of the strip icon under the pointer. after the osd and every tab, so

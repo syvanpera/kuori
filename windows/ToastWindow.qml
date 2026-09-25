@@ -24,7 +24,7 @@ PanelWindow {
   // whether this screen has the tabs, and so whether the osd can drop out of the
   // corner these hang in.
   readonly property bool tabs: Screens.hasTabs(root.screenName)
-  readonly property bool osdHere: Osd.shown && root.tabs && root.screenName === Screens.tabsName
+  readonly property bool osdHere: Osd.dropped && root.tabs && root.screenName === Screens.tabsName
 
   anchors {
     top: true

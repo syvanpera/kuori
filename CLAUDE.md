@@ -99,7 +99,7 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 |---|---|
 | Frame's **outer** corners are square; the **inner** desktop opening is rounded | The design rounds the outer corners, which only makes sense for a screen floating on a web page. On real hardware that would reveal wallpaper in each corner. |
 | A notch is **one box that grows**, not the design's two stacked boxes | Same picture, and it keeps the fillets and the drop shadow following the silhouette for free. |
-| Notch shadows are drawn **before** the frame | The design paints them over the border band (notch z-index 50, band 40). At 5px offset and 14px blur that smears a dark wash along a 5px rail. Drawing first means the band covers the top of the shadow and only the part over the desktop survives. |
+| Notch shadows are drawn **before** the frame | The design paints them over the border band (notch z-index 50, band 40, and 48 for the notch-style OSD). At 5px offset and 14px blur that smears a dark wash along a 5px rail. Drawing first means the band covers the top of the shadow and only the part over the desktop survives. |
 | The design's `box-shadow: 0 0 0 1px <surface>` outline is **not** ported | That is the CSS way to hide the hairline where a fillet meets a body. `Theme.seamBleed` already solves it, and two mechanisms for one seam is one too many. |
 | Battery shows `85%` | The design shows a bare number. |
 | Wifi/bluetooth/volume **dim** when off rather than turning red | The design paints every glyph the same shade; dimming is the smallest deviation that still makes a dead radio legible. |
@@ -1254,6 +1254,34 @@ needed no keybind changes, and why it also answers a change made from a terminal
   drops in once and the bar and the reading follow while it is up.
 - The design's OSD buttons at the bottom left are a mock affordance, like the launcher's trigger
   button, and are not built.
+
+### The notch style
+
+The design has a second display (2026-09-25), switched in its mock by a Drop/Notch chip; here that
+chip is `Theme.osdStyle`. `modules/OsdNotch.qml` is the design's one-line tab between the clock and
+the toggles, and `OsdBox` is the drop. **Everything either one says is on `Osd`** (glyph, title,
+reading, fill, the voice clock) and the lower half is `OsdLevel`, the bar or the meter, so the two
+styles cannot drift into disagreeing about a muted glyph. `Osd.dropped` and `Osd.notched` are
+`shown` split by style, and only `dropped` squares off the system tab, sets the toggles aside, blocks
+the strip tips and moves the toasts: the notch sits in empty band and moves nothing.
+
+- **It is a `Notch` inside a wrapper**, for the tab's fillets and seams. The slide and the fade are the
+  wrapper's: `Notch` animates its own opacity, and a value moving under that `Behavior` every frame
+  would restart it every frame.
+- **Its shadow is drawn before the frame**, like every tab's, though the design gives this one z-index
+  48 over the band's 40 (see the deviations table). The shadow is handed the wrapper's `slide`, so it
+  comes down with it.
+- **It is placed from the clock's and the toggles' own boxes**: halfway between the clock's right edge
+  and the toggles' left, as the design measures it. The toggles are placed from the system *strip*, so
+  the notch does not move when a panel grows.
+- **Hidden while the calendar is open**, as the design has it (`o !== 'clock'`): that panel is wider
+  than the clock and would cover it. The system panel already stops the display in either style.
+- It does not replay its drop-in when the display switches between volume, brightness and voice, where
+  the design re-keys it per kind: the box's reasoning, that something already on screen bouncing reads
+  as something new arriving.
+- Verified 2026-09-25 with `osdStyle: "notch"`: listening, transcribing and brightness through the
+  voxtype mock and one `backlight up`/`down`, and hidden under an open calendar. The drop style was
+  checked again afterwards.
 
 ### Voice typing
 

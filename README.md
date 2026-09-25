@@ -624,6 +624,12 @@ kuori, but for a different reason: see `backlight` above.)
 Toasts move down while it is out, and it stays away entirely while the system panel is open, since the
 panel is showing those same sliders. With several monitors it appears on the focused one only.
 
+**Two styles**, picked by `Theme.osdStyle`. `"drop"` (the default) is the box above. `"notch"` is a
+tab of its own hanging off the top edge, centred between the clock and the toggles: one line with the
+glyph, a bar and the reading (and the title, while voice typing). It leaves the system tab, the
+toggles and the toasts where they are, and steps aside while the calendar is open, which covers the
+gap it hangs in.
+
 **Voice typing** puts the same box up for as long as [voxtype](https://voxtype.io) is at work: a red
 mic, `Listening`, the time since the recording began and the microphone's level while it hears you,
 then an accent mic and `Transcribing…` with the time stopped until the text is typed. It wins over a
