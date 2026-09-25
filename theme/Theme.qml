@@ -718,6 +718,13 @@ Singleton {
   property int btPairSettle: 500
   property int btPairTimeout: 20000
 
+  // a toast when a device connects: "connect", "both" to have one when it goes
+  // too, or "off", which is how it was. not in the design. none at startup, after
+  // a sleep or as the radio comes on, for this long, because every paired device
+  // reconnects then; and none for a device clicked in the panel, which says so.
+  property string btAnnounce: "connect"
+  property int btAnnounceSettle: 10000
+
   readonly property color btCardText: root.tint.alpha(0.72)
   readonly property color btCode: root.tintBright
   readonly property color btDigitDim: root.tint.alpha(0.3)

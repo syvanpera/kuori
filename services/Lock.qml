@@ -84,6 +84,10 @@ Singleton {
   // password, on escape, or for a preview scene that types something.
   signal fill(string text)
 
+  // the machine has just come back from a sleep. bluetooth devices reconnect in a
+  // burst as it does, and that is not news.
+  signal woke()
+
   function lock(reason: string): void {
     if (root.locked) {
       if (reason === "sleep") root.confirm()
@@ -320,6 +324,8 @@ Singleton {
     } else if (event.type === "lock") {
       root.lock(event.reason)
     } else if (event.type === "wake") {
+      root.woke()
+
       // a conversation started as the lid closed is still listening on resume --
       // fprintd suspends and resumes its own verify -- and is left alone. one that
       // lost its reader across the sleep has already ended and been retried, so

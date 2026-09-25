@@ -385,8 +385,8 @@ A real request from polkit raises the same dialog on its own; nothing here is ne
 ### `bluetooth`
 
 Fakes each question the pairing agent can ask, against the first device in AVAILABLE, so the cards
-can be looked at without a device that wants pairing. Open the section first with
-`system toggle bluetooth`. Answering one goes nowhere: the real agent has no question waiting.
+can be looked at without a device that wants pairing, and the toast a connection raises. Open the
+section first with `system toggle bluetooth`. Answering one goes nowhere: the real agent has no question waiting.
 
 | Call | Does |
 |---|---|
@@ -394,6 +394,7 @@ can be looked at without a device that wants pairing. Open the section first wit
 | `typed <n>` | Light the first `n` digits of a `type` card |
 | `cancel` | Show the card being called off from the device's side |
 | `fail` | Show "Could not pair" on the row |
+| `mock connected \| disconnected` | Raise the toast a device coming or going would, for the first connected device |
 
 ### `lock`
 
@@ -500,6 +501,11 @@ a recording is running. It opens a panel of rows, one folded open at a time:
   clicking it opens the section. kuori is the session's pairing agent, through
   `scripts/kuori-btagent`, which it runs itself. `bluetoothctl` and `bluetui` register their own
   while they are open, and take the questions until they close.
+  A device connecting raises a toast with its glyph, name and charge ("Connected — MX Master 3S ·
+  80%"). There is none for a device you just clicked in the panel, and none for ten seconds after
+  kuori starts, the machine wakes or the radio comes on, when every paired device reconnects at once.
+  They are transient, so they never reach the history or light the bell. `Theme.btAnnounce` picks
+  `"connect"`, `"both"` to hear about disconnects too, or `"off"`.
 - **Audio**: output and input devices, volume, and a switch that is mute read the right way up.
 - **Battery**: level, time remaining, health, rate, and power profiles when a daemon offers them.
 - **Display**: night light, stay awake, brightness, and a colour temperature slider that appears
@@ -702,6 +708,7 @@ every colour, size, duration and font in one place.
 | Colours, sizes, animation timing | `theme/Theme.qml` |
 | Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
+| Whether a Bluetooth device connecting raises a toast, and going too | `Theme.btAnnounce` (`"connect"`, `"both"` or `"off"`), `Theme.btAnnounceSettle` |
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |
 | What the latency reading pings | `Network.pingTarget` in `services/Network.qml` |

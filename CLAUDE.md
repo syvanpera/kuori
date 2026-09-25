@@ -131,6 +131,7 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 | `AuthorizeService` is answered without asking | Not in the design. bluez only asks it for an untrusted device, and every device paired here is trusted as it lands, so a question would be about a device paired elsewhere — allowed if paired, refused otherwise. |
 | A device arriving in CONNECTED does not replay the design's `qs-bt-in` drop | The design marks a freshly connected mock device `fresh`; nothing real carries that, and animating every delegate as the panel opens would be wrong. |
 | The bluetooth AVAILABLE list is sorted, paired first | BlueZ hands devices over in the order it learned them, so an unsorted list rearranges itself under the pointer whenever discovery finds something. |
+| A bluetooth device connecting raises a **toast** | Not in the design, which announces nothing. The user asked for it, 2026-09-25: their other desktop does. It follows `Bluez.connected`, so a device mid-pairing is not announced until it lands, and it is quiet for `Theme.btAnnounceSettle` after startup, a wake (`Lock.woke`) and the radio coming on, which each reconnect everything at once. A device clicked in the panel is not announced (`Bluez.asked`), and `asked` clears on *any* change to that device, or a disconnect click would swallow the next real reconnect. Transient, so a mouse waking does not light the bell. `Theme.btAnnounce: "off"` is the old way. |
 | The audio row's ENABLED switch is **mute**, read the right way up | The only thing about sound that can be switched off. The design names the switch and leaves what it does to the reader. |
 | The battery grid shows **Health** and **Rate**, not the design's Limit and Cycles | Nothing under `/sys` on this machine exposes a charge threshold, and upower reports `charge-cycles: N/A`. Health and rate are both real here, and two permanent dashes would be worse than two readings the design did not think of. |
 | The POWER PROFILE section is **hidden** when no daemon answers | Not in the design. Without power-profiles-daemon the buttons cannot do anything, and `PowerProfiles` has no flag saying so, so `hasPerformanceProfile` stands in for one. |
@@ -692,6 +693,13 @@ with wtype — never test by really locking with nobody at the machine to type t
 - **`Image.sourceSize` is in logical pixels.** Qt multiplies it by the screen's scale before decoding:
   measured offscreen at `QT_SCALE_FACTOR=2`, `sourceSize.height: 32` decoded within 1% of a 64-pixel
   decode. Three places here doubled it by hand, which decoded four times the pixels on the laptop.
+- **`image://icon/` hands back a 2x2 pixmap when only `sourceSize.height` is set.** It reads the
+  missing width as zero. Every toast icon and screenshot thumbnail was drawn from four pixels until
+  2026-09-25, and read as a grey smudge, not as a missing icon. Found by logging `implicitWidth`: 2. Set
+  both sides; with both, it fits the picture inside and keeps its shape.
+- **Adwaita's full-colour device icons do not survive qt's svg renderer.** `input-mouse.svg` draws on a
+  black square, the headphones and several others use masks and filters, and the journal's
+  `link #SVGID_1_ is undefined` is the same family. Reach for a material symbol for a device.
 - **`font.pixelSize` is an int and rounds a real half up**: 9.5, 11.5 and 12.5 draw at 10, 12 and 13,
   measured. Theme keeps the design's half-pixel sizes as written, as a record, knowing they round.
 - **A property and a function with the same name in one object** compile, pass qmllint and pass the
@@ -831,6 +839,11 @@ Hard-won details:
   a client can withdraw its own notification, so each popup connects to `closed` and drops itself.
 - **An icon name given to `notify-send` arrives as `image://icon/firefox`** on `image`, ready for
   `Image`. `appIcon` is usually empty.
+- **So does a file path**: `-i /path/shot.png` arrives as `image://icon//path/shot.png`, through the same
+  provider. See the trap about its `sourceSize`.
+- **This shell's own notifications can name a glyph** with `-h string:x-kuori-glyph:<symbol>`, which the
+  toast draws in place of the bell. A vendor hint is allowed by the spec; the bluetooth toasts use it to
+  wear the panel row's glyph, because the adwaita icons bluez names do not draw (below).
 - The design's second line is one sentence and a notification arrives as two fields, so
   `Notifications.textOf()` joins summary and body with an em dash — which is exactly how the mockup
   writes its Thunderbird row.

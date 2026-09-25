@@ -40,7 +40,11 @@ ToastFrame {
       visible: root.image !== ""
       source: root.image
       fillMode: Image.PreserveAspectFit
-      // logical pixels; qt scales for the screen itself.
+      // logical pixels; qt scales for the screen itself. both sides, because the
+      // image://icon provider takes a height alone as a width of nothing and hands
+      // back a 2x2 pixmap -- which every icon and screenshot toast was drawn from.
+      // with both, it fits the picture inside the square and keeps its shape.
+      sourceSize.width: Theme.toastChipSize
       sourceSize.height: Theme.toastChipSize
       asynchronous: true
     },
@@ -48,9 +52,11 @@ ToastFrame {
     Glyph {
       anchors.centerIn: parent
 
-      // the fallback when a client sent no icon at all, which is most of them.
+      // the fallback when a client sent no icon at all, which is most of them. this
+      // shell's own notifications can name a material symbol instead, through a
+      // vendor hint, so a device toast wears the glyph its panel row does.
       visible: root.image === ""
-      icon: "notifications"
+      icon: root.notification?.hints?.["x-kuori-glyph"] ?? "notifications"
       iconColor: root.accent
       size: Theme.toastChipIcon
     }

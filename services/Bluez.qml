@@ -52,6 +52,18 @@ Singleton {
   // the pin card's field, pushed from the card so enter can submit what it holds.
   property string pin: ""
 
+  // the last device a click here connected, disconnected or let in. whoever did
+  // that is looking at the panel and does not need a toast about it.
+  property string asked: ""
+
+  // address -> name, for every device last seen in CONNECTED. what a change in
+  // that list is compared against, and the name a device that has gone is told by.
+  property var announced: ({})
+
+  // true while connections are nobody's news: at startup, after a sleep, and as
+  // the radio comes on, each of which reconnects every paired device at once.
+  property bool settling: true
+
   readonly property var adapter: Bluetooth.defaultAdapter
   readonly property bool enabled: root.adapter?.enabled ?? false
 
@@ -71,6 +83,9 @@ Singleton {
   // still pairing, with none of its profiles up -- and would jump into CONNECTED
   // with its card, mid-question. only a device that is done pairing is connected.
   readonly property var connected: root.devices.filter(d => root.isConnected(d))
+
+  onConnectedChanged: root.announce()
+  onEnabledChanged: if (root.enabled) root.settle()
 
   // everything the adapter knows about that is not currently on: devices paired
   // before, and whatever discovery turns up while the row is open.
@@ -135,6 +150,7 @@ Singleton {
     if (!device || root.request) return
 
     root.failed = ""
+    root.asked = device.address
 
     if (device.connected && device.paired) {
       device.disconnect()
@@ -202,6 +218,7 @@ Singleton {
     // a pairing the other side started is ours to finish too: once it lands it is
     // trusted and connected like one this shell asked for.
     root.pending = request.address
+    root.asked = request.address
     root.fold()
   }
 
@@ -216,6 +233,7 @@ Singleton {
 
     // said no on purpose, so the row goes quiet rather than reporting a failure.
     root.pending = ""
+    root.asked = ""
     root.fold()
   }
 
@@ -224,14 +242,74 @@ Singleton {
     root.pin = ""
   }
 
+  // hold announcements off until the reconnecting is over.
+  function settle(): void {
+    root.settling = true
+    quiet.restart()
+  }
+
   function giveUp(): void {
     if (root.pending === "") return
 
     root.failed = root.pending
     root.failedPairing = !(root.pendingDevice?.paired ?? true)
     root.pending = ""
+    root.asked = ""
     root.fold()
     linger.restart()
+  }
+
+  // compares CONNECTED with what it was last time and says what changed. this
+  // follows `connected` rather than each device's own flag, so a device that
+  // reads connected halfway through pairing is not announced until it arrives.
+  function announce(): void {
+    const now = {}
+    for (const device of root.connected) now[device.address] = device.name
+
+    const changes = []
+    for (const address in now) {
+      if (!(address in root.announced)) changes.push({ address: address, name: now[address], arrived: true })
+    }
+    for (const address in root.announced) {
+      if (!(address in now)) changes.push({ address: address, name: root.announced[address], arrived: false })
+    }
+
+    root.announced = now
+
+    // with the radio off every device leaves at once, which is the switch's doing
+    // and nothing to report.
+    const silent = root.settling || !root.enabled || Theme.btAnnounce === "off"
+
+    for (const change of changes) {
+      // the click's own answer, whichever way it went, and whether or not this
+      // direction is announced: left set, it would swallow the next one.
+      if (change.address === root.asked) {
+        root.asked = ""
+        continue
+      }
+
+      if (silent || (!change.arrived && Theme.btAnnounce !== "both")) continue
+
+      root.tell(change.address, change.name, change.arrived)
+    }
+  }
+
+  // through notify-send, as Capture does: this shell is the notification server,
+  // so the toast arrives the way every other application's does. transient, so a
+  // mouse waking up does not sit in the history and light the bell.
+  function tell(address: string, name: string, arrived: bool): void {
+    const device = root.devices.find(d => d.address === address)
+    const charge = arrived ? root.charge(device) : ""
+
+    // the panel row's own glyph rather than the icon bluez names: adwaita draws
+    // those with masks qt's svg renderer does not do, and a mouse came out on a
+    // black square.
+    const argv = ["notify-send", "-a", "Bluetooth", "-e", "-h", `string:x-kuori-glyph:${root.glyph(device)}`]
+
+    Quickshell.execDetached(argv.concat([
+      arrived ? "Connected" : "Disconnected",
+      charge ? `${name} · ${charge}` : name
+    ]))
   }
 
   // bluez names a device by its object path, which ends in its address.
@@ -389,6 +467,28 @@ Singleton {
     onTriggered: root.giveUp()
   }
 
+  // CONNECTED is still recorded while this runs, so a device that came back during
+  // it is not announced once it ends.
+  Timer {
+    id: quiet
+
+    interval: Theme.btAnnounceSettle
+    running: true
+
+    onTriggered: {
+      root.announce()
+      root.settling = false
+    }
+  }
+
+  Connections {
+    target: Lock
+
+    function onWoke(): void {
+      root.settle()
+    }
+  }
+
   Timer {
     id: linger
 
@@ -412,6 +512,13 @@ Singleton {
     target: "bluetooth"
 
     function mock(kind: string): void {
+      // the toast a device coming or going raises, told about any device at all.
+      if (kind === "connected" || kind === "disconnected") {
+        const known = root.connected[0] ?? root.available[0]
+        if (known) root.tell(known.address, known.name, kind === "connected")
+        return
+      }
+
       const device = root.available[0]
       if (!device) return
 
