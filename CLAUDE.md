@@ -804,6 +804,20 @@ with wtype — never test by really locking with nobody at the machine to type t
   `Audio.detailed` and why `LevelMeter`'s `FrameAnimation` stops with it.
 - **A `Behavior`'s animation never emits `finished()`**. Time the teardown instead. A launcher window
   once stayed mapped forever because it was waiting on that signal.
+- **A `MouseArea`'s `positionChanged` fires when the item moves under a still pointer.** Qt
+  re-delivers hover as the scene changes, and a grid scrolling under the pointer moves the cell's
+  local position, and so does the panel gliding, so "the pointer moved" is only true if its position
+  in the **window** changed. The launcher's hover-selects-once-the-mouse-moves rule read every
+  keyboard step as a mouse move and snapped the selection back to the row under the pointer;
+  `pointerAt` is the window-coordinate check. A panel-coordinate check was tried first and is
+  not enough: the log showed the pointer's y in the panel drifting by fractions of a pixel with the
+  real pointer still, because the panel itself was moving (next item). A pointer warped with
+  `hl.dsp.cursor.move` did not reproduce any of it; only the user's real mouse did.
+- **A `Column`'s `implicitHeight` lags its children by a layout pass.** A child's height changes at
+  once and the column's total on its next polish, so `column.implicitHeight - child.implicitHeight`
+  is wrong for a frame whenever that child resizes. `AppLauncher.fullHeight` was written that way,
+  and every step through the clipboard (whose preview changes height per entry) glided the whole
+  launcher off and back under its `Behavior on y`. Add up the parts that do not change instead.
 - **Qt prunes input delivery by the parent's bounds.** A `HoverHandler` on a body wider than its item
   goes dead exactly over the part that overflows. `Notch` sizes itself to its body for this reason.
 - **`TapHandler` takes an exclusive grab** that cancels a hover an ancestor is holding itself open

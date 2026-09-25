@@ -28,6 +28,12 @@ Rectangle {
   // a choice anyone made.
   property bool mouseArmed: false
 
+  // where the pointer last was, in the window's coordinates. a cell reports a
+  // position change whenever it moves under a still pointer -- the grid
+  // scrolling, the panel gliding -- because its local position moved. only a
+  // change here is the pointer itself moving: the window never does.
+  property point pointerAt: Qt.point(-1, -1)
+
   readonly property var categories: LauncherRows.categories
 
   readonly property var pool: {
@@ -54,20 +60,24 @@ Rectangle {
 
   // the height this panel would have with the grid full, which is what positions
   // it: placing it by the current height would glide the whole panel up and down
-  // every time a query changed the row count. exactly one of the grid and the
-  // empty-state line is ever visible, and the grid tops out at launcherGridMax --
-  // its viewport is defined as that less its own padding -- so the tall state can
-  // be worked out without ever being rendered.
-  readonly property int fullHeight: layout.implicitHeight
-    - (resultsBox.visible ? resultsBox.implicitHeight : 0)
-    - (emptyLabel.visible ? emptyLabel.implicitHeight : 0)
-
-    // the preview is left out on purpose: counted in, switching to the clipboard
-    // would lift the whole panel to make room. left out, the top stays where
-    // it is and the pane extends the panel downwards, which is what the grid
-    // shrinking already does.
-    - (previewBox.visible ? previewBox.implicitHeight : 0)
+  // every time a query changed the row count. the grid tops out at
+  // launcherGridMax -- its viewport is defined as that less its own padding -- so
+  // the tall state can be worked out without ever being rendered.
+  //
+  // it is added up from the parts that never change rather than taken from the
+  // column less the parts that do. the column's implicitHeight is only updated
+  // on its next layout pass, while a part's changes at once, so the difference
+  // was wrong for a frame whenever the preview changed height: the panel glided
+  // off and back on every step through the clipboard.
+  //
+  // the preview is left out on purpose: counted in, switching to the clipboard
+  // would lift the whole panel to make room. left out, the top stays where it
+  // is and the pane extends the panel downwards, which is what the grid
+  // shrinking already does.
+  readonly property int fullHeight: searchBox.implicitHeight + 1
+    + chipBox.implicitHeight
     + Theme.launcherGridMax
+    + 1 + footerBox.implicitHeight
 
   color: Theme.notch
   radius: Theme.notchRadius
@@ -211,6 +221,8 @@ Rectangle {
     width: parent.width
 
     Item {
+      id: searchBox
+
       width: parent.width
       implicitHeight: Math.max(searchIcon.height, input.implicitHeight, escCap.height) + Theme.launcherSearchPadding * 2
 
@@ -336,6 +348,8 @@ Rectangle {
     }
 
     Item {
+      id: chipBox
+
       width: parent.width
       implicitHeight: chips.implicitHeight + Theme.launcherChipRowPadding + Theme.launcherChipRowBottom
 
@@ -439,8 +453,16 @@ Rectangle {
             hoverEnabled: true
 
             // a real pointer movement, which is also what arms hover again after
-            // the keyboard disarmed it.
-            onPositionChanged: {
+            // the keyboard disarmed it. a scroll moving the cell under a still
+            // pointer arrives here too, and is told apart by the window position.
+            onPositionChanged: mouse => {
+              const at = mapToItem(null, mouse.x, mouse.y)
+
+              // within half a pixel: a real pointer sits at fractional coordinates, and
+              // mapping one into a cell and back does not always give the same number.
+              if (Math.abs(at.x - root.pointerAt.x) < 0.5 && Math.abs(at.y - root.pointerAt.y) < 0.5) return
+
+              root.pointerAt = at
               root.mouseArmed = true
               root.selectedIndex = cell.index
             }
@@ -498,6 +520,8 @@ Rectangle {
     }
 
     Item {
+      id: footerBox
+
       width: parent.width
       implicitHeight: hints.implicitHeight + Theme.launcherFooterPaddingV * 2
 
