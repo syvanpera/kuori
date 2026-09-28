@@ -1175,6 +1175,11 @@ Singleton {
   // its overlay to be up and listening for the motion.
   property int capNudge: 400
 
+  // what a screenshot toast's Edit button opens the picture in. "satty" is the only
+  // editor it knows how to drive; "" takes the button off and leaves the toast as
+  // it was.
+  property string capEditor: "satty"
+
   readonly property color capTileOn: root.accent.alpha(0.12)
   readonly property color capTileOff: root.sheen.alpha(0.04)
   readonly property color capChipOff: root.sheen.alpha(0.07)

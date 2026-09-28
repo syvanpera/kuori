@@ -14,6 +14,7 @@
   grimblast,
   wf-recorder,
   hyprpicker,
+  satty,
   libnotify,
   wl-clipboard,
   brightnessctl,
@@ -41,6 +42,7 @@ let
     grimblast
     wf-recorder
     hyprpicker
+    satty
     libnotify
     wl-clipboard
     brightnessctl

@@ -119,6 +119,7 @@ scanning if something looks dead.
 | webp/tiff/jp2 thumbnails | `qt6.qtimageformats` |
 | Clipboard history | `cliphist` and `wl-clipboard` |
 | Screenshots | `grim`, `slurp`, `grimblast` |
+| Editing a screenshot | `satty` |
 | Screen recording | `wf-recorder` |
 | Picking a colour off the screen | `hyprpicker` |
 | Every capture's notification | `libnotify` (`notify-send`) |
@@ -742,7 +743,8 @@ two pick a target (Region, App or Monitor) and press **Capture!**.
   `~/.config/user-dirs.dirs`, which on this machine means `~/Pictures/Screenshots`. Recordings go to
   `XDG_VIDEOS_DIR`. Change the file and everything follows, including other tools.
 - Every capture announces itself with a notification, and a screenshot's notification carries the
-  screenshot as its thumbnail.
+  screenshot as its thumbnail. Its **Edit** button opens the screenshot in satty, which saves over the
+  file and copies to the clipboard; `Theme.capEditor: ""` takes the button away.
 - **A recording shows a red dot** on the system strip until you stop it, and the button reads
   `Recording…`. Press it again, or `qs ipc … call capture stop`, to finish.
 

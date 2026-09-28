@@ -249,6 +249,26 @@ Singleton {
     Quickshell.execDetached(argv.concat([summary, body]))
   }
 
+  // the screenshot's toast, with an Edit button when there is an editor to open.
+  // notify-send with an action waits for the answer and prints the action's name,
+  // which is why this is one detached shell per screenshot rather than a Process:
+  // it lives exactly as long as the toast does, and a toast that times out or is
+  // clicked away ends it with nothing printed.
+  //
+  // satty saves over the screenshot and copies through wl-copy, so what it makes
+  // replaces the file and the clipboard the capture just filled. the path is an
+  // argument, not script (see the sh -c trap in the notes).
+  function notifyShot(file: string): void {
+    if (Theme.capEditor !== "satty") {
+      root.notify("Screenshot saved", root.shorten(file), file)
+      return
+    }
+
+    Quickshell.execDetached(["sh", "-c",
+      `a=$(notify-send -a kuori -i "$1" --action=edit=Edit "$2" "$3") && [ "$a" = edit ] && exec satty --filename "$1" --output-filename "$1" --copy-command wl-copy`,
+      "sh", file, "Screenshot saved", root.shorten(file)])
+  }
+
   function shorten(path: string): string {
     return path.replace(root.home, "~")
   }
@@ -357,7 +377,7 @@ Singleton {
       const file = shot.file.length > 0 ? shot.file : saved.text.trim().split("\n").pop()
 
       root.flash()
-      root.notify("Screenshot saved", root.shorten(file), file)
+      root.notifyShot(file)
     }
   }
 
