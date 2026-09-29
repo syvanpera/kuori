@@ -1264,6 +1264,16 @@ Singleton {
   // a critical notification gets none at all.
   property int toastTimeout: 8000
 
+  // what lights the bell on the system tab. "unseen" is anything that arrived since
+  // the notifications row was last open, so looking puts it out; "history" is
+  // anything kept at all, the design's way, which only CLEAR puts out.
+  property string notifBell: "unseen"
+
+  // how long an entry stays in the history once it has been seen, in ms; 0 keeps
+  // it until cleared. it counts from being seen, not from arriving, so an afternoon
+  // away does not come back to an empty list. critical entries never age out.
+  property int notifHistoryAge: 3600000
+
   readonly property color toastFill: root.notch.alpha(0.94)
   readonly property color toastChipFill: root.sheen.alpha(0.06)
   readonly property color toastTime: root.tint.alpha(0.35)

@@ -606,8 +606,8 @@ folded out, and the icon is accented and underlined for as long as it is the row
 clicking it again closes the panel. A click on the gap between icons opens and closes the panel
 without choosing a row.
 
-The bell is the exception in one way: it is accent whenever anything is in the history, whether or not
-its section is open, and its glyph changes with it. Clicking it opens the history. It does not
+The bell is the exception in one way: it is accent whenever something in the history is new, whether
+or not its section is open, and its glyph changes with it. Opening its section is what makes it old. Clicking it opens the history. It does not
 silence anything and does not clear anything. Do Not Disturb is the switch on the toggles tab, and
 `CLEAR` in the notifications row is what empties the history.
 
@@ -669,11 +669,13 @@ is down notifications are not merely undrawn. They are dropped.
 - **Do Not Disturb silences the toasts only.** A muted notification still lands in the history, which
   is the only place you would find out it arrived.
 - The history keeps the last 50: what expired unread, what arrived under Do Not Disturb, and what
-  `DISMISS ALL` swept away. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
+  `DISMISS ALL` swept away. **An entry you have seen leaves an hour later**, counted from when you
+  opened the history with it in, not from when it arrived; one you have not seen stays until you
+  look. Critical ones stay until cleared. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
   toast still on screen with it. Anything a sender marked *transient* (volume popups and the like)
   is never kept.
-- The bell on the system tab is accent while there is anything in the history. Clicking it opens the
-  history; `CLEAR` inside that section is what empties it.
+- The bell on the system tab is accent while there is anything in the history you have not seen.
+  Clicking it opens the history, which puts it out; `CLEAR` inside that section is what empties it.
 
 ## Calendar
 
@@ -814,6 +816,7 @@ every colour, size, duration and font in one place.
 | Colours, sizes, animation timing | `theme/Theme.qml` |
 | Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
+| What lights the bell, how long a seen notification is kept | `Theme.notifBell` (`"unseen"`, or `"history"` for anything kept), `Theme.notifHistoryAge` (ms, `0` keeps until cleared) |
 | Whether a Bluetooth device connecting raises a toast, and going too | `Theme.btAnnounce` (`"connect"`, `"both"` or `"off"`), `Theme.btAnnounceSettle` |
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
 | Where wallpapers come from | `Wallpapers.directory` in `services/Wallpapers.qml` |

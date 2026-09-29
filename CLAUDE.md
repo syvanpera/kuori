@@ -156,6 +156,7 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 | Night light persists across a restart; stay awake does not | Night light is visible — an orange screen under a switch reading Off would be worse than either state. An idle inhibitor is invisible, and one silently restored after a restart is a flat battery nobody can explain. |
 | A toast's tile shows the sender's **icon**, the history's shows a coloured bell | The design gives each mock app its own glyph, which it can do because it knows its four apps by name. A real notification offers an icon, which the toast is big enough to show; at the history's 14px an application icon is mush, so there the colour carries the urgency and nothing else. |
 | Toasts **stand aside** for the system panel | The design draws the panel over them (z-index 50 against 45) and they share the same corner. Layer-shell has no such ordering — two surfaces on one layer stack by creation order, and the toast surface is always the later one — so it hides while that one panel is open. Nothing is lost by it: that panel is where the history is. |
+| The bell is lit for **unseen** entries, and seen ones leave after an hour | The design lights the bell whenever there is any history. With the bell no longer clearing it, that meant a bell that never went out and a list that only CLEAR emptied — the user's complaint, 2026-09-29. `Theme.notifBell: "history"` and `notifHistoryAge: 0` are the design's way. |
 | Clicking a history entry forgets it | The design hovers an entry like something clickable but gives clicking no meaning. Throwing that one away is the only thing it could sensibly do. |
 | Clicking a toast, or one of its buttons, **forgets it from the history** | The user's call, 2026-09-22: a toast they had clicked was still lighting the bell and sitting in the history. The design's toasts only time out, so it has no rule here. Expiry, `DISMISS ALL`, Do Not Disturb and a client withdrawing its own notification all keep the entry — nothing was read in any of those. |
 | A strip icon whose section is already open **closes the panel** | The design's `notchGo` sets the row unconditionally, so the icon of the open section does nothing. Every other latched thing here — the notch itself, each launcher category bind — answers a second press by closing, and the user asked for the same. |
@@ -245,9 +246,9 @@ throw.
 
 - **The bell in the system tab opens the history; it does not silence anything.** Do-not-disturb is
   the `do_not_disturb_on` switch in the toggles tab, one glyph either way with only its colour moving.
-  The bell is `notifications_active` or `notifications_none`, and it is accent whenever there is a
-  history — open or not, which is the design's own "hot" — while the underline still means only that
-  its section is showing.
+  The bell is `notifications_active` or `notifications_none`, and it is accent while anything in the
+  history has not been seen yet — open or not — while the underline still means only that its
+  section is showing. The design's "hot" is any history at all; see the deviations table.
 - **`Notch.aside`** is how it gets out of the way of the system panel and the OSD, both of which grow
   over the space it occupies. It fades, and **its hit area goes to nothing with it**: a wayland input
   region knows nothing about opacity, so a faded tab left in the region would go on swallowing clicks
@@ -929,9 +930,17 @@ Hard-won details:
   having read them.
 - **Clearing is total.** `clear()` empties the history *and* dismisses whatever is still on screen,
   because a toast and the history entry behind it are one notification — the design's own CLEAR does
-  the same. Nothing tracks "seen" any more: the system tab's bell is accent while there is a history
-  and dim once there is not, so the panel's CLEAR is the only thing that puts it out. The bell itself
-  only opens the section — it stopped clearing when the design gave do-not-disturb its own switch.
+  the same.
+- **"Seen" came back, 2026-09-29.** An entry is stamped `seen` when the notifications row opens or
+  closes with it listed (`Notifications.looking`), or on arrival while the row is out, and the bell
+  follows `unread`. It was here once before as a single `seenAt` and was dropped when the design's
+  bell cleared the history, which made "is the history empty" the whole question. The bell then
+  stopped clearing — do-not-disturb got its own switch — and nothing but CLEAR emptied the list, so
+  the bell never went out. The removed comment had said exactly that would happen.
+- **Seen entries age out** after `Theme.notifHistoryAge` (an hour), swept on `Time`'s minute tick.
+  The clock starts at `seen`, not `at`: counted from arrival, an afternoon away would come back to
+  an empty history. Critical entries stay until cleared, like their toasts. `age()` is per entry,
+  which is why `seen` is a timestamp on each one rather than one `seenAt` for the list.
 - `transient` is the spec asking not to be kept, so those get a toast and no history entry.
 - **Critical urgency never auto-expires**, nor does an `expireTimeout` of 0; anything else takes the
   client's timeout, or the design's 5.2s when it did not ask. Expiry is **one** timer set to whichever

@@ -116,19 +116,33 @@ Row {
   }
 
   // what has arrived, and a way into it. it is the only one of the six that says
-  // something when its row is shut: accent while there is a history behind it, open
-  // or not, which is the design's own "hot".
+  // something when its row is shut: accent while something in the history has not
+  // been looked at yet, open or not. the design's "hot" is any history at all,
+  // which Theme.notifBell: "history" brings back.
   StripButton {
+    id: bell
+
+    readonly property bool hot: Theme.notifBell === "history"
+      ? Notifications.history.length > 0
+      : Notifications.unread > 0
+
     active: root.showing("notifications")
     screenName: root.screenName
-    tip: Notifications.history.length > 0 ? `${Notifications.history.length} notifications` : "No notifications"
+    tip: {
+      const kept = Notifications.history.length
+
+      if (kept === 0) return "No notifications"
+      if (Notifications.unread === 0) return `${kept} notifications`
+
+      return `${Notifications.unread} new · ${kept} notifications`
+    }
 
     onClicked: Notches.toggleRow("notifications", root.screenName)
 
     Glyph {
-      icon: Notifications.history.length > 0 ? "notifications_active" : "notifications_none"
+      icon: bell.hot ? "notifications_active" : "notifications_none"
       iconColor: {
-        if (root.showing("notifications") || Notifications.history.length > 0) return Theme.accent
+        if (root.showing("notifications") || bell.hot) return Theme.accent
         return Theme.glyph
       }
     }

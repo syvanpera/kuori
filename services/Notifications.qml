@@ -24,12 +24,55 @@ Singleton {
   property var popups: []
 
   // everything that arrived, newest first: { key, app, text, image, icon, urgency,
-  // tone, at }. plain records rather than the live objects, because the design gives the
+  // tone, at, seen }. plain records rather than the live objects, because the design gives the
   // history no buttons -- and an action can only be invoked on a notification that
-  // is still alive, which a dismissed one is not.
+  // is still alive, which a dismissed one is not. seen is when the entry was first
+  // on screen in the panel, 0 until then.
   property var history: []
 
   readonly property int maxHistory: 50
+
+  // what the bell answers to. the bell stopped clearing the history when do not
+  // disturb got its own switch, so an empty history could no longer be what puts it
+  // out: nothing but CLEAR ever emptied it.
+  readonly property int unread: root.history.filter(entry => entry.seen === 0).length
+
+  // the notifications row is out, on whichever screen. one panel for the shell.
+  readonly property bool looking: Notches.open === "system" && Notches.row === "notifications"
+
+  // stamped on the way in and on the way out, so what arrived while the row was
+  // open counts as seen too.
+  onLookingChanged: root.markSeen()
+
+  function markSeen(): void {
+    if (root.unread === 0) return
+
+    const now = Date.now()
+
+    root.history = root.history.map(entry => entry.seen ? entry : Object.assign({}, entry, { seen: now }))
+  }
+
+  // seen entries leave Theme.notifHistoryAge after they were seen. critical ones stay until
+  // somebody clears them, the way their toasts do.
+  function age(now: double): void {
+    if (Theme.notifHistoryAge <= 0) return
+
+    const kept = root.history.filter(entry =>
+      entry.seen === 0 || entry.urgency === NotificationUrgency.Critical
+        || now - entry.seen < Theme.notifHistoryAge)
+
+    if (kept.length !== root.history.length) root.history = kept
+  }
+
+  // the clock's minute tick, not a Timer: a long QML Timer keeps the animation
+  // driver running for as long as it is pending.
+  Connections {
+    target: Time
+
+    function onDateChanged(): void {
+      root.age(Date.now())
+    }
+  }
 
   // the design's three states for the panel row, in its own words.
   readonly property string summary: {
@@ -208,7 +251,8 @@ Singleton {
           icon: notification.appIcon ?? "",
           urgency: notification.urgency,
           tone: notification.hints?.["x-kuori-tone"] ?? "",
-          at: at
+          at: at,
+          seen: root.looking ? at : 0
         }].concat(root.history).slice(0, root.maxHistory)
       }
 
