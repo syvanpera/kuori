@@ -65,9 +65,11 @@ Column {
     root.cursor = list[(at + delta + list.length) % list.length]
   }
 
-  // return: whatever a click on the cursor would do.
+  // return: whatever a click on the cursor would do. the cursor can be left in a
+  // row the pointer has since folded shut, where it is out of sight and must not
+  // be pressed -- it can be the switch that turns the radio off.
   function press(): void {
-    root.cursor?.press()
+    if (root.cursor && root.targets().includes(root.cursor)) root.cursor.press()
   }
 
   onCursorChanged: {
