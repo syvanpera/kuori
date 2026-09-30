@@ -414,6 +414,9 @@ different one while the launcher is open switches category without closing it.
 
 `Print` is the obvious bind for `region`.
 
+One capture at a time: a call made while another is still selecting, saving or picking is ignored.
+While a recording runs, any of them stops it.
+
 ### `polkit`
 
 Walks the authentication dialog through each state it can be in, against a mock request, so it can be

@@ -23,6 +23,9 @@ Singleton {
 
   readonly property var formats: ["hex", "rgb", "hsl"]
 
+  // the overlay is up, waiting for a click.
+  readonly property bool running: hyprpicker.running
+
   // the picked colour written the way the panel is showing it, which is also what
   // reaches the clipboard.
   readonly property string pickedText: root.formatted(root.picked, root.format)

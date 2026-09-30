@@ -1121,7 +1121,13 @@ Things learned the hard way here:
   shell's own notification server — the server has no API for emitting one.
 - **Its exit codes carry meaning**: 0 saved, **1 cancelled** (slurp closed without a selection, which
   is the ordinary way out and says nothing), 2 the lock — a second capture while one is still
-  selecting.
+  selecting. From inside kuori that lock never fires: a second request never reaches a second
+  grimblast, because `shot` ignores a new command while it runs.
+- **One capture at a time, refused rather than queued.** `Capture.busy` is derived from the
+  processes (settle, both slurps, `shot`, `recordArea`, hyprpicker), so no exit path can strand it.
+  Before it (outside review, 2026-09-30), the region key pressed during an app selection started a
+  second slurp whose `grabRegion` wrote `shot.file` over the running grimblast: the region shot was
+  never taken and the notification named a file that did not exist.
 - **The panel has to close first**, and not only because it would be in the picture: slurp cannot have
   the pointer while the notch is holding a focus grab. `Theme.capSettle` is that wait.
 

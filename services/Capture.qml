@@ -30,6 +30,13 @@ Singleton {
 
   readonly property bool recording: recorder.running
 
+  // a capture is somewhere between the press and the file: settling, selecting,
+  // saving or picking. worked out from the processes rather than set and cleared,
+  // so no exit path can leave it stuck. a second request meanwhile is refused:
+  // they share one Process, which ignores a new command while it runs, and the
+  // second would overwrite the first one's file name on its way to being dropped.
+  readonly property bool busy: settle.running || shotArea.running || shot.running || recordArea.running || ColourPicker.running
+
   // the button says "Captured!" for a moment after a shot, which is the only
   // feedback a screenshot gives from inside the panel.
   property bool flashing: false
@@ -79,6 +86,11 @@ Singleton {
       return
     }
 
+    if (root.busy) {
+      console.info("capture: already capturing, request ignored")
+      return
+    }
+
     // the panel is in the picture otherwise, and neither slurp nor hyprpicker can
     // have the pointer while the notch is holding a focus grab.
     Notches.close()
@@ -88,8 +100,13 @@ Singleton {
   // what a keybind does: say what you want, then do it, rather than inheriting
   // whatever the panel was last left showing.
   function shortcut(mode: string, target: string): void {
-    root.mode = mode
-    root.target = target
+    // a press that only stops a recording, or is refused, leaves the panel showing
+    // what it was.
+    if (!root.recording && !root.busy) {
+      root.mode = mode
+      root.target = target
+    }
+
     root.fire()
   }
 
