@@ -39,10 +39,12 @@ Singleton {
   // all-day first, then by start. built once per load so a cell costs a lookup.
   property var byDay: ({})
 
-  // the panel raises this while it is open. the file is re-read the moment
-  // somebody is looking, the fetcher is run if what it holds is stale, and
-  // neither happens while nobody is.
-  property bool watching: false
+  // true while the calendar is open. the file is re-read the moment somebody is
+  // looking, the fetcher is run if what it holds is stale, and neither happens
+  // while nobody is. derived here from the one open tab rather than pushed by the
+  // panel: there is a panel per monitor, and each pushing its own open state into
+  // this one flag let a closed one overwrite the open one.
+  readonly property bool watching: Notches.open === "clock"
 
   onWatchingChanged: {
     if (!root.watching) return

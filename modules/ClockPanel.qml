@@ -95,13 +95,6 @@ Column {
     return root.monthOffset === 0 && day === root.now.getDate()
   }
 
-  // the fetcher runs when the tab opens on a stale file, and never while shut.
-  Binding {
-    target: Calendar
-    property: "watching"
-    value: root.enabled
-  }
-
   Text {
     width: root.contentWidth
 

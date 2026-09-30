@@ -1566,8 +1566,11 @@ Google Calendar, through the API, synced to a file. The decisions and why:
 - **Opening the tab pokes the unit** when the file is older than `Theme.calSyncStale`, through
   `systemctl --user start kuori-calendar.service`, which on a oneshot **waits for the run**, so the
   `onExited` reload reads what it just wrote. Before the unit exists that is exit 5 and a warning
-  in the log, nothing more. The panel pushes `Calendar.watching` with a `Binding`, the
-  `Network.detailed` shape.
+  in the log, nothing more. `Calendar.watching` is derived in the service from `Notches.open`, not
+  pushed by the panel with a `Binding` the way `Network.detailed` is: there is a clock panel per
+  monitor, each pushed its own open state into the one flag, and a closed one could overwrite the
+  open one (outside review, 2026-09-30). The network rows get away with it because every copy
+  pushes the same global `Notches.row`.
 - **A failed load clears the data.** Without it a deleted file left the previous read flagged as
   ready and the panel said "No events" about days it no longer knew anything about.
 - **All-day dates must not go through `new Date("2026-09-23")`**: that is utc midnight, which
