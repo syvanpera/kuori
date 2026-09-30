@@ -25,9 +25,17 @@ Scope {
   signal exited(int code)
 
   // a word for the helper. dropped while it is down: whatever it would have
-  // answered is asked again when it says it is ready.
-  function tell(line: string): void {
-    if (proc.running) proc.write(`${line}\n`)
+  // answered is asked again when it says it is ready. says whether it went, so a
+  // caller that shows a request as under way can wait until one really is.
+  function tell(line: string): bool {
+    if (!proc.running) {
+      // not the line itself: a drive's is its passphrase.
+      console.warn(`${root.name}: not running, a request was dropped`)
+      return false
+    }
+
+    proc.write(`${line}\n`)
+    return true
   }
 
   Process {

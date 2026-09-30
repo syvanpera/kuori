@@ -75,8 +75,8 @@ Singleton {
   // the strip's tip: the one drive by name, or how many.
   readonly property string title: root.rows.length === 1 ? root.rows[0].name : `${root.rows.length} drives`
 
-  function tell(request: var): void {
-    helper.tell(JSON.stringify(request))
+  function tell(request: var): bool {
+    return helper.tell(JSON.stringify(request))
   }
 
   function patch(id: string, change: var): void {
@@ -99,8 +99,7 @@ Singleton {
     if (!drive) return
 
     if (drive.mount === "") {
-      root.opening = id
-      root.mount(id)
+      if (root.mount(id)) root.opening = id
       return
     }
 
@@ -112,20 +111,26 @@ Singleton {
 
   // not in the design, whose drives are all mounted by it: an unmounted one gets a
   // Mount button, as a locked one gets Unlock.
-  function mount(id: string): void {
+  //
+  // each action shows itself under way only once the helper has the request. a
+  // click in the seconds it takes to respawn would otherwise leave the card
+  // spinning over a request nobody received, and nothing would ever clear it.
+  function mount(id: string): bool {
     const drive = root.row(id)
-    if (!drive || drive.st !== "unmounted") return
+    if (!drive || drive.st !== "unmounted") return false
+    if (!root.tell({ cmd: "mount", id: id })) return false
 
     root.patch(id, { st: "mounting" })
-    root.tell({ cmd: "mount", id: id })
+    return true
   }
 
   function eject(id: string, force: bool): void {
     const drive = root.row(id)
     if (!drive || ["mounting", "unmounting", "unlocking", "safe"].includes(drive.st)) return
 
+    if (!root.tell({ cmd: "eject", id: id, force: force, power: Theme.drvPowerOff })) return
+
     root.patch(id, { st: "unmounting", since: Date.now(), flushing: false, holders: [] })
-    root.tell({ cmd: "eject", id: id, force: force, power: Theme.drvPowerOff })
   }
 
   // typing again takes the last refusal away, as the design's field does.
@@ -142,8 +147,9 @@ Singleton {
     const drive = root.row(id)
     if (!drive || drive.st !== "locked" || passphrase === "") return
 
+    if (!root.tell({ cmd: "unlock", id: id, passphrase: passphrase })) return
+
     root.patch(id, { st: "unlocking", err: "" })
-    root.tell({ cmd: "unlock", id: id, passphrase: passphrase })
   }
 
   // udisks passes on libblockdev's words for a wrong passphrase, which are
