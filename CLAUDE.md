@@ -658,8 +658,10 @@ a keystroke this shell has no business synthesising.
 Two things that bit while building it:
 
 - **Recency has to survive the ranking.** `AppSearch` sorts by name when there is no query, which
-  turns a history into nonsense, so a row may carry an `order` and `byName` prefers it. Rows without
-  one still sort by name, and the two never mix because the clipboard is out of ALL.
+  turns a history into nonsense, so a row may carry an `order` and `byName` prefers it — but only
+  when **every** row being sorted has one. ALL does mix them: windows and power rows carry an order
+  and applications do not, and comparing some pairs by number and the rest by name is a cycle
+  (outside review, 2026-09-30). So a single category keeps its order and ALL sorts by name.
 - **A QML singleton is not built until something reads it**, and `DesktopEntries` is one of them: its
   scan does not start until the first read, which used to be the first launcher open of the session.
   The rows arrived with empty tiles and filled in when the scan landed. `shell.qml` now reads

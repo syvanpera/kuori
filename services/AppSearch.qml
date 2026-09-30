@@ -30,10 +30,16 @@ Singleton {
   function rank(entries: var, query: string): var {
     const needle = query.trim().toLowerCase()
 
+    // a source order only means something among rows that all have one: ALL mixes
+    // windows and power rows, each numbered from zero, with applications that have
+    // none, and comparing some pairs by number and the rest by name goes round in
+    // a circle -- which a sort answers with whatever order it likes.
+    const ordered = entries.every(entry => entry.order !== undefined)
+
     // no query at all. this is the first thing the launcher shows, so it has to be
     // cheap and it has to be stable.
     if (needle.length === 0) {
-      return entries.slice().sort((a, b) => root.byName(a, b))
+      return entries.slice().sort((a, b) => root.byName(a, b, ordered))
     }
 
     const hits = []
@@ -46,7 +52,7 @@ Singleton {
 
     // score, then name. without the second key two apps that score the same could
     // swap places between keystrokes for no visible reason.
-    hits.sort((a, b) => b.score - a.score || root.byName(a.entry, b.entry))
+    hits.sort((a, b) => b.score - a.score || root.byName(a.entry, b.entry, ordered))
 
     // the model gets the entries themselves: scored wrappers would be new objects
     // every keystroke and ScriptModel could not match them up.
@@ -130,12 +136,12 @@ Singleton {
   // lives in a list of things -- "Random wallpaper" among the wallpapers -- stays
   // at the bottom instead of landing wherever its name falls. it is a tiebreak
   // only: a query that scores it higher still brings it up.
-  function byName(a: var, b: var): int {
+  function byName(a: var, b: var, ordered: bool): int {
     if (!!a.last !== !!b.last) return a.last ? 1 : -1
 
     // a source that has an order of its own says so, and it wins over the name.
     // a clipboard history sorted alphabetically is not a history.
-    if (a.order !== undefined && b.order !== undefined) return a.order - b.order
+    if (ordered) return a.order - b.order
 
     return (a.name ?? "").localeCompare(b.name ?? "")
   }
