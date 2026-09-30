@@ -77,16 +77,35 @@ ToastFrame {
     height: actions.implicitHeight + Theme.toastActionsTop
     visible: (root.notification?.actions?.length ?? 0) > 0
 
-    Row {
+    // a Flow, not a Row: a client may send as many actions as it likes, and a row
+    // of them only grows leftwards, over the icon and then off the card, where the
+    // surface cuts it. these wrap instead. the flow is as wide as the buttons in
+    // one line, up to the card, so a line that fits sits on the right as before --
+    // a right-to-left flow would do that too, and put the first action last.
+    Flow {
       id: actions
+
+      // bumped per button made, so the sum below is taken again once each exists.
+      property int built: 0
+
+      readonly property real natural: {
+        let width = Math.max(0, repeater.count - 1) * actions.spacing
+        for (let i = 0; i < actions.built && i < repeater.count; i++) width += repeater.itemAt(i)?.implicitWidth ?? 0
+        return width
+      }
 
       anchors.right: parent.right
       anchors.bottom: parent.bottom
+      width: Math.min(parent.width, actions.natural)
 
       spacing: Theme.toastActionsGap
 
       Repeater {
+        id: repeater
+
         model: root.notification?.actions ?? []
+
+        onItemAdded: actions.built += 1
 
         PillButton {
           id: button
@@ -97,6 +116,8 @@ ToastFrame {
           // the design accents the first action and leaves the rest quiet: the
           // one a notification lists first is the one it wants you to take.
           readonly property bool primary: button.index === 0
+
+          width: Math.min(button.implicitWidth, actions.width)
 
           label: button.modelData.text
           fill: button.primary ? Theme.toastPrimaryFill : Theme.toastActionFill

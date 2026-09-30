@@ -53,6 +53,11 @@ Rectangle {
 
     anchors.centerIn: parent
 
+    // a button held narrower than its label, as a toast action can be, cuts the
+    // label short rather than spilling out of its own pill.
+    width: Math.min(caption.implicitWidth, root.width - root.paddingH * 2)
+    elide: Text.ElideRight
+
     text: root.label
     color: root.textColor
     font.family: Theme.uiFont
