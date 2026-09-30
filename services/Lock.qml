@@ -89,6 +89,21 @@ Singleton {
   signal woke()
 
   function lock(reason: string): void {
+    // a lock asked for during the unlock fade -- the lid shut just after the
+    // password -- keeps the lock rather than letting the fade finish under it and
+    // waking to an open desktop.
+    if (root.locked && root.leaving) {
+      leave.stop()
+      fingerUnlock.stop()
+      root.reset()
+
+      // unlock() has just killed the finger conversation, and fprintd may still
+      // hold the reader for it. the retry's delay is what gives it back.
+      fingerRetry.restart()
+
+      console.info(`lock: kept (${reason})`)
+    }
+
     if (root.locked) {
       if (reason === "sleep") root.confirm()
       return
@@ -103,7 +118,14 @@ Singleton {
       return
     }
 
-    // a preview in the way of the real thing gives way to it.
+    // a preview in the way of the real thing gives way to it, and so does anything
+    // it had in flight: a password still being checked, or an unlock waiting on its
+    // fade, would otherwise land on the lock that replaced it. the finger is left
+    // to listen(), which knows how to replace a live one.
+    leave.stop()
+    fingerUnlock.stop()
+    password.abort()
+    root.secret = null
     root.previewing = false
     root.reset()
 
@@ -275,6 +297,7 @@ Singleton {
     password.abort()
     finger.abort()
     fingerRetry.stop()
+    fingerUnlock.stop()
   }
 
   function missed(): void {
@@ -343,6 +366,10 @@ Singleton {
     interval: Theme.lockExit + 30
 
     onTriggered: {
+      // reset() clears leaving, so a fade from a session that has since been
+      // replaced finds nothing to finish.
+      if (!root.leaving) return
+
       const wasLocked = root.locked
 
       root.locked = false
@@ -502,7 +529,8 @@ Singleton {
 
     interval: Theme.lockFingerOk
 
-    onTriggered: root.unlock()
+    // the same test for a finger: reset() clears fingerOk.
+    onTriggered: if (root.fingerOk && root.shown) root.unlock()
   }
 
   Timer {

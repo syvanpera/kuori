@@ -714,6 +714,13 @@ hyprland draws nothing else and hands the surfaces the keyboard: it is a lock, n
   So the state is in `lock.json` with the boot id, read with **`blockLoading`** in the singleton's
   `onCompleted` — before anything has bound `locked` to a false value it would act on. The same covers
   a hot reload, which rebuilds singletons too.
+- **An unlock finishes later than it is decided**, by `leave` (the fade) and `fingerUnlock` (the
+  "recognised" beat), and a lock can arrive in between: a preview replaced by the real thing, or the
+  lid shut straight after the password. Found by an outside review, 2026-09-30: the old timer fired
+  into the new lock and released it, and a sleep confirmed during the fade resumed unlocked. Both
+  callbacks now check a flag `reset()` clears (`leaving`, `fingerOk`), so one from a replaced session
+  does nothing; `lock()` stops them and aborts a password still being checked; and a lock during the
+  fade keeps the lock instead of returning early because `locked` is still true.
 - **There is no IPC unlock and `Unlock` from logind is ignored.** Either would let any process of this
   user open the lock, which is the one thing a lock is for.
 - **Sleep holds a delay inhibitor** (`scripts/kuori-lockd`, the btagent's shape: python3 and jeepney,
