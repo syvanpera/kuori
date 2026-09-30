@@ -58,9 +58,15 @@ Column {
 
   // the field is for a network we have no way into yet: a saved one is joined by
   // the click itself, and a refusal replaces the field until it has been read.
+  // a Loader keeps the size of the last item it held after that item is gone, so
+  // both of these take their height from the item, as the drive card's does.
   Loader {
+    id: passphrase
+
     width: root.width
     active: root.stranger && root.picked && !root.active && Network.error === ""
+    visible: passphrase.active
+    height: passphrase.item ? passphrase.item.implicitHeight : 0
 
     sourceComponent: Component {
       PassphraseField {}
@@ -68,8 +74,12 @@ Column {
   }
 
   Loader {
+    id: refusal
+
     width: root.width
     active: root.picked && Network.error !== ""
+    visible: refusal.active
+    height: refusal.item ? refusal.item.implicitHeight : 0
 
     sourceComponent: Component {
       Item {
