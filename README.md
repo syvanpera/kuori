@@ -555,7 +555,7 @@ Display section's Stay awake row says who ("Held by …"). The tab steps out of 
 panel is open or the on-screen display is out, both of which grow over it.
 
 **System** (far right) shows the network, Bluetooth, volume, drives (only while one is plugged in),
-display, notifications and battery, and a red dot while a recording is running. It opens a panel of rows, one folded open at a time:
+display, notifications and battery, and a red dot while a recording is running. It opens a panel of rows, one folded open at a time. A list longer than six entries (`Theme.sysListRows`) scrolls, with the next entry peeking in by half, and follows the arrow keys:
 
 - **Network**: Ethernet first, then Wi-Fi. A connected cable wins: the strip shows a wired glyph,
   and the readings (IPv4, traffic, link speed, latency) describe the wire rather than the radio. Each

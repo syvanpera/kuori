@@ -41,13 +41,43 @@ Column {
     visible: lead.children.length > 0
   }
 
-  Column {
-    width: root.width
-    spacing: Theme.sysNetSpacing
+  // a Flickable round a Column rather than a ListView: the panel's keyboard walks
+  // children in order, and a ListView builds only the entries on show, in whatever
+  // order it built them. the lists are tens of entries, which a Column can afford.
+  Flickable {
+    id: scroller
 
-    Repeater {
-      model: root.model
-      delegate: root.delegate
+    // down to the half of the entry after the last one on show, or the whole list.
+    readonly property real cap: {
+      const shown = Array.from(list.children).filter(child => child.visible && child.height > 0)
+      const rows = Theme.sysListRows
+      if (rows <= 0 || shown.length <= rows) return list.implicitHeight
+
+      const peek = shown[rows]
+      return peek.y + peek.height / 2
+    }
+
+    width: root.width
+    height: Math.min(list.implicitHeight, scroller.cap)
+    contentWidth: scroller.width
+    contentHeight: list.implicitHeight
+
+    clip: true
+    boundsBehavior: Flickable.StopAtBounds
+
+    // a list that fits is not a scroller, and leaves the wheel to what is under it.
+    interactive: scroller.contentHeight > scroller.height
+
+    Column {
+      id: list
+
+      width: scroller.width
+      spacing: Theme.sysNetSpacing
+
+      Repeater {
+        model: root.model
+        delegate: root.delegate
+      }
     }
   }
 }

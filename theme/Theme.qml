@@ -591,6 +591,12 @@ Singleton {
   property int sysNetTextSpacing: 3
   property int sysNetSpacing: 2
 
+  // how many entries a list in the system panel shows before it scrolls, with the
+  // next one peeking in by half to say there is more. not in the design, whose
+  // lists are as long as their mock data: a real one of access points or bluetooth
+  // devices ran the panel off the bottom of the laptop screen. 0 never scrolls.
+  property int sysListRows: 6
+
   // how often the network row pings and re-reads its counters while it is open.
   property int sysNetPoll: 10000
 

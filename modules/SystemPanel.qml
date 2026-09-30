@@ -72,12 +72,27 @@ Column {
     if (root.cursor && root.targets().includes(root.cursor)) root.cursor.press()
   }
 
+  // scrolls every list the item is inside until it is on show. a Flickable is
+  // known by what it has, since qml types cannot be tested for from javascript.
+  function reveal(item: Item): void {
+    for (let view = item.parent; view; view = view.parent) {
+      if (view.contentY === undefined || !view.contentItem) continue
+
+      const top = item.mapToItem(view.contentItem, 0, 0).y
+      if (top < view.contentY) view.contentY = top
+      else if (top + item.height > view.contentY + view.height) view.contentY = top + item.height - view.height
+    }
+  }
+
   onCursorChanged: {
     if (root.lit) root.lit.keyed = false
 
     root.lit = root.cursor
 
-    if (root.cursor) root.cursor.keyed = true
+    if (root.cursor) {
+      root.cursor.keyed = true
+      root.reveal(root.cursor)
+    }
   }
 
   width: Theme.sysPanelWidth
