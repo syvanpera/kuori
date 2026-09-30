@@ -996,7 +996,7 @@ That is not decoration: `AuthFlow` is `isCreatable: false` and its `request`/`sh
 **private slots**, so a mock cannot be a real one. `services/Polkit.qml` owns both the mock and
 (eventually) the agent, and the dialog cannot tell them apart.
 
-Two things worth knowing about the shape:
+Three things worth knowing about the shape:
 
 - **"Verifying" is not a flag.** A real flow signals work in flight by `isResponseRequired` going
   false while `isCompleted` is still false. The mock does the same rather than inventing a busy
@@ -1004,6 +1004,10 @@ Two things worth knowing about the shape:
 - **`responseVisible` is not the eye toggle.** It is pam saying whether to echo at all — a username
   prompt does, a password does not. The eye is the user overriding that for their own eyes, so the
   field echoes when *either* is true.
+- **A new request can land on the old card.** The window outlives a close by `pkFade` to play its
+  exit, and a request arriving in that time is handed the same dialog. So the dialog clears the
+  field and the eye on every `flow` change rather than trusting a fresh window to do it (outside
+  review, 2026-09-30: a cancelled half-password carried into the next request).
 
 Every state is reachable without touching anyone's password:
 

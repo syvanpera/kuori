@@ -38,6 +38,14 @@ Rectangle {
   border.width: 1
   border.color: Theme.pkOutline
 
+  // a request that arrives while the last one is fading out is handed this same
+  // card, so what was typed for that one, and the eye, would carry over. a new
+  // flow is a new question and starts empty.
+  onFlowChanged: {
+    field.setText("")
+    root.revealed = false
+  }
+
   function send(): void {
     if (root.busy || root.ok) return
     root.submitted(field.text)
