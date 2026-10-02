@@ -33,8 +33,11 @@ Singleton {
     // a source order only means something among rows that all have one: ALL mixes
     // windows and power rows, each numbered from zero, with applications that have
     // none, and comparing some pairs by number and the rest by name goes round in
-    // a circle -- which a sort answers with whatever order it likes.
-    const ordered = entries.every(entry => entry.order !== undefined)
+    // a circle -- which a sort answers with whatever order it likes. a row that
+    // sorts last is settled before any order is read, so it does not count: the
+    // clipboard's "Clear clipboard history" has none, and counting it sorted the
+    // whole history by name.
+    const ordered = entries.every(entry => entry.last || entry.order !== undefined)
 
     // no query at all. this is the first thing the launcher shows, so it has to be
     // cheap and it has to be stable.
