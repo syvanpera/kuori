@@ -1051,6 +1051,11 @@ Singleton {
   property int lockFingerRetry: 1000
   property int lockCapsDelay: 80
 
+  // the goodix reader can come back from a sleep still timing out, and a
+  // conversation it fails that way never said a word. after a wake, this many of
+  // those are retried before it is taken for a reader with nothing enrolled.
+  property int lockFingerWakeTries: 3
+
   readonly property color lockWash: root.shade
   readonly property real lockWashAlpha: 0.38
   readonly property color lockFieldFill: root.surface.alpha(0.6)

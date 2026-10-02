@@ -61,6 +61,10 @@ Singleton {
   property int fingerMisses: 0
   property bool fingerOk: false
 
+  // silent failures still worth retrying, because a wake came after them: a
+  // reader fresh from a sleep times out before it can say it is listening.
+  property int fingerWakeTries: 0
+
   // preview only: draw every screen as a secondary one, and caps lock as on
   // whatever the keyboard says.
   property bool previewSecondary: false
@@ -98,8 +102,9 @@ Singleton {
       root.reset()
 
       // unlock() has just killed the finger conversation, and fprintd may still
-      // hold the reader for it. the retry's delay is what gives it back.
-      fingerRetry.restart()
+      // hold the reader for it. the retry's delay is what gives it back. not on
+      // the way into a sleep, which the wake will start one after (see below).
+      if (reason !== "sleep") fingerRetry.restart()
 
       console.info(`lock: kept (${reason})`)
     }
@@ -136,7 +141,13 @@ Singleton {
     root.locked = true
     root.save()
     helper.tell("hint on")
-    root.listen()
+
+    // a lock for a sleep does not ask for a finger until the wake. fprintd is
+    // started on demand, and started inside the sleep window it cannot take the
+    // delay it needs to put the reader away: the reader went down half set up,
+    // came back timing out, and fprintd took that for corrupt storage and tried
+    // to wipe the enrolled prints (2026-10-02; the wipe timed out too).
+    if (reason !== "sleep") root.listen()
 
     console.info(`lock: locked (${reason})`)
   }
@@ -156,6 +167,7 @@ Singleton {
     root.fingerReady = false
     root.fingerMissed = false
     root.fingerOk = false
+    root.fingerWakeTries = 0
     root.previewSecondary = false
     root.previewCaps = false
     root.fill("")
@@ -349,11 +361,16 @@ Singleton {
     } else if (event.type === "wake") {
       root.woke()
 
-      // a conversation started as the lid closed is still listening on resume --
+      // a conversation listening before the sleep is still listening on resume --
       // fprintd suspends and resumes its own verify -- and is left alone. one that
       // lost its reader across the sleep has already ended and been retried, so
-      // only a lock with no conversation at all needs one started.
+      // only a lock with no conversation at all needs one started: which is every
+      // lock taken for the sleep itself.
+      //
+      // the reader can still be timing out for a few seconds, and fail whatever
+      // is asking without a word, so that is retried for a while too.
       root.blanked = false
+      root.fingerWakeTries = Theme.lockFingerWakeTries
       if (root.shown && !root.leaving && !finger.active) root.listen()
     }
   }
@@ -488,6 +505,9 @@ Singleton {
     // a miss is "Failed to match fingerprint" as an error, followed at once by
     // the next "place your finger"; "Verification timed out" is info.
     onPamMessage: {
+      // a reader that speaks has survived the wake.
+      root.fingerWakeTries = 0
+
       if (finger.messageIsError) root.missed()
       else root.fingerReady = true
     }
@@ -507,9 +527,17 @@ Singleton {
 
       // a reader that was listening and gave up -- three misses, or thirty
       // seconds of nothing -- is asked again. one that never started listening
-      // has nothing enrolled, or no reader, and is left alone until next time.
-      if (root.fingerReady && root.shown && !root.leaving) fingerRetry.restart()
-      else root.fingerReady = false
+      // has nothing enrolled, or no reader, and is left alone until next time,
+      // unless it has just woken up and may only be slow.
+      if (!root.shown || root.leaving) {
+        root.fingerReady = false
+      } else if (root.fingerReady) {
+        fingerRetry.restart()
+      } else if (root.fingerWakeTries > 0) {
+        root.fingerWakeTries -= 1
+        console.info(`lock: finger silent after a wake, retrying (${root.fingerWakeTries} left)`)
+        fingerRetry.restart()
+      }
     }
 
     onError: root.fingerReady = false

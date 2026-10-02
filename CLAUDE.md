@@ -709,6 +709,15 @@ hyprland draws nothing else and hands the surfaces the keyboard: it is a lock, n
   `Device reported an error during verify: transfer timed out` two seconds after resume, then a
   usb reset — and that is what the retry on a conversation that had spoken already covers:
   verified 2026-09-25, finger accepted on the retry four seconds after the lid opened.
+- **A lock for a sleep asks for no finger until the wake.** fprintd is D-Bus activated and exits
+  when idle, so a lid shut on an unlocked desktop started it 700ms before suspend. Started that late
+  it cannot take its own sleep delay (`Failed to install a sleep delay inhibitor:
+  OperationInProgress`), the Goodix reader was suspended half set up, and on resume fprintd read
+  its timeouts as `Template storage appears to have been corrupted!` and tried to **wipe the
+  enrolled prints**. The wipe timed out too, so nothing was lost (2026-10-02). The conversation
+  then failed without ever having spoken, and so was never retried: the password was the only way
+  in. Now the wake starts the conversation, and `Theme.lockFingerWakeTries` silent failures after
+  a wake are retried before it counts as nothing enrolled. 0 is the old way.
 - **It refuses to lock without `/etc/pam.d/kuori`.** Built before the rebuild that made the service,
   the idle timer would have locked a machine nothing could unlock. It checks at every lock, not once.
 - **A restart must not unlock.** hyprland keeps the session locked when the client dies and, with
