@@ -102,9 +102,9 @@ Singleton {
       root.reset()
 
       // unlock() has just killed the finger conversation, and fprintd may still
-      // hold the reader for it. the retry's delay is what gives it back. not on
-      // the way into a sleep, which the wake will start one after (see below).
-      if (reason !== "sleep") fingerRetry.restart()
+      // hold the reader for it. the retry's delay is what gives it back. not
+      // under a shut lid or into a sleep (see waitsForLid).
+      if (!root.waitsForLid(reason)) fingerRetry.restart()
 
       console.info(`lock: kept (${reason})`)
     }
@@ -142,14 +142,21 @@ Singleton {
     root.save()
     helper.tell("hint on")
 
-    // a lock for a sleep does not ask for a finger until the wake. fprintd is
-    // started on demand, and started inside the sleep window it cannot take the
-    // delay it needs to put the reader away: the reader went down half set up,
-    // came back timing out, and fprintd took that for corrupt storage and tried
-    // to wipe the enrolled prints (2026-10-02; the wipe timed out too).
-    if (reason !== "sleep") root.listen()
+    if (!root.waitsForLid(reason)) root.listen()
 
     console.info(`lock: locked (${reason})`)
+  }
+
+  // a lock for the lid or a sleep asks for no finger until the lid opens or the
+  // machine wakes. fprintd is started on demand, and started inside the sleep
+  // window it cannot take the delay it needs to put the reader away: the reader
+  // went down half set up, came back timing out, and fprintd took that for
+  // corrupt storage and tried to wipe the enrolled prints (2026-10-02; the wipe
+  // timed out too). the lid is the same window, and a suspend can follow it by
+  // up to logind's thirty-second holdoff after a resume. the reader is under the
+  // lid anyway, so nothing is lost by waiting.
+  function waitsForLid(reason: string): bool {
+    return reason === "sleep" || reason === "lid"
   }
 
   // the lock is on every screen. a sleep held for it can go.
@@ -365,12 +372,17 @@ Singleton {
       // fprintd suspends and resumes its own verify -- and is left alone. one that
       // lost its reader across the sleep has already ended and been retried, so
       // only a lock with no conversation at all needs one started: which is every
-      // lock taken for the sleep itself.
+      // lock taken for the lid or the sleep itself.
       //
       // the reader can still be timing out for a few seconds, and fail whatever
       // is asking without a word, so that is retried for a while too.
       root.blanked = false
       root.fingerWakeTries = Theme.lockFingerWakeTries
+      if (root.shown && !root.leaving && !finger.active) root.listen()
+    } else if (event.type === "open") {
+      // a lid lock with no sleep after it, docked or inside the holdoff, has no
+      // wake to start the finger. a lid opening on the way out of a sleep arrives
+      // beside the wake, and whichever is first starts it.
       if (root.shown && !root.leaving && !finger.active) root.listen()
     }
   }

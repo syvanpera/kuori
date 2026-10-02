@@ -17,6 +17,7 @@ Out, one object per line:
   {"type": "ready"}
   {"type": "lock", "reason": "lid" | "sleep" | "session"}
   {"type": "wake"}
+  {"type": "open"}      the lid has opened; the fingerprint reader is reachable again
 
 In, one word per line:
   locked        the lock is on screen; a pending sleep may go ahead
@@ -173,8 +174,11 @@ def main():
                     lid = changed.get("LidClosed")
                     # a lid closed while docked does not suspend, and should still
                     # lock: the laptop's own screen is no longer being watched.
-                    if interface == f"{LOGIN1}.Manager" and lid is not None and lid[1]:
-                        emit(type="lock", reason="lid")
+                    if interface == f"{LOGIN1}.Manager" and lid is not None:
+                        if lid[1]:
+                            emit(type="lock", reason="lid")
+                        else:
+                            emit(type="open")
                 elif member == "Lock":
                     emit(type="lock", reason="session")
 
