@@ -290,6 +290,8 @@ unnamed request means: main, or focused in `"all"`), so the switch lives in one 
   (the user's call, the same day), so its `here` asks only for `tabsName`, which is a screen with
   tabs by definition. The notch style is a tab of its own and needs nothing else. The drop style has
   no strip to hang from, so `OsdBox.bare` hangs it off the border with fillets of its own.
+  Hiding reflows every window and hyprland says nothing about it, so `FocusedWindow` refreshes the
+  toplevels on `tabsHiddenChanged`, or the focus indicator stays on the old rect.
 
 Every screen gets a whole `DesktopShell` — frame, four reservations, all four tabs — from the
 `Variants` in `shell.qml`, and that part worked the first time three monitors were plugged in

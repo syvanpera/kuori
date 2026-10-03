@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
+import qs.services
 import qs.theme
 
 // where the focused window is, for whatever wants to mark it. a singleton because
@@ -104,6 +105,18 @@ Singleton {
     function onRawEvent(event: HyprlandEvent): void {
       if (!root.geometryEvents.includes(event.name)) return
 
+      debounce.restart()
+      settle.restart()
+    }
+  }
+
+  // the tabs hiding or coming back changes the top reservation, and every window
+  // under it reflows -- silently, for the reason the startup pass above exists.
+  // this shell knows when it moves its own edge, so it says so.
+  Connections {
+    target: Screens
+
+    function onTabsHiddenChanged(): void {
       debounce.restart()
       settle.restart()
     }
