@@ -26,11 +26,13 @@ Item {
   }
 
   // and a fullscreen window is alone on its monitor, so there is nothing to tell
-  // apart and nothing to mark. a floating one is left to hyprland's border unless
-  // the theme says otherwise, because nothing reports it being dragged.
+  // apart and nothing to mark. a maximized one is marked unless the theme says
+  // otherwise, and a floating one is left to hyprland's border unless the theme
+  // says otherwise, because nothing reports it being dragged.
   readonly property bool eligible: FocusedWindow.monitor === root.monitor
     && root.onShownWorkspace
     && !FocusedWindow.fullscreen
+    && (Theme.focusMarkMaximized || !FocusedWindow.maximized)
     && (Theme.focusMarkFloating || !FocusedWindow.floating)
     && FocusedWindow.geometry.width > 0
 

@@ -49,7 +49,9 @@ bottom. Every other window on screen carries the same mark in Hyprland's inactiv
 `Theme.focusMarkUnfocused: false` leaves only the focused one marked. Floating windows carry no kuori
 mark: Hyprland reports nothing while a window is dragged, so a mark could not follow one being moved.
 They get Hyprland's own border instead, from a `floating-border` window rule in the Hyprland config;
-`Theme.focusMarkFloating: true` marks them like any other window.
+`Theme.focusMarkFloating: true` marks them like any other window. A fullscreen window is never marked,
+since it is alone on the screen. A maximized one is; `Theme.focusMarkMaximized: false` leaves it
+unmarked like a fullscreen one.
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
 
@@ -313,7 +315,7 @@ Hyprland config. These are the ones this machine uses, from `~/.config/hypr/bind
 | `SUPER` + `SHIFT` + `S` | Screenshot a region |
 | Brightness up / down | One step of the backlight, through kuori itself |
 | `SUPER` + `CTRL` + `L` | Lock the screen |
-| `SUPER` + `B` | Hide the tabs along the top edge, or bring them back |
+| `SUPER` + `F` | Maximize the window. The tabs hide while a maximized window is showing (below) |
 
 Binding anything else is one more line. With the flake, `kuori ipc call` names the config for you;
 by hand it is `qs ipc -p ~/.config/kuori call`, and the `-p` goes in every one:
@@ -391,7 +393,13 @@ different one while the launcher is open switches category without closing it.
 
 Hidden, only the border is left and windows get the band the tabs hung in. The on-screen display
 still appears, in the same place, over whatever window is under it. A call that opens a panel
-(`calendar toggle`, `system toggle <row>`) brings the tabs back. A restart brings them back as well.
+(`calendar toggle`, `system toggle <row>`) brings the tabs back for as long as that panel is open,
+and they hide again when it closes. A restart brings them back too.
+
+`hide` and `reveal` are for following a state rather than a key. This machine's Hyprland config
+hides the tabs while the workspace on their monitor has a maximized window, from a Lua function on
+Hyprland's window and workspace events in `bindings.lua`. It calls only on a change, since every call
+starts a process.
 
 ### `calendar`
 
@@ -829,7 +837,7 @@ every colour, size, duration and font in one place.
 | Want to change | Look at |
 |---|---|
 | Colours, sizes, animation timing | `theme/Theme.qml` |
-| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones |
+| Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones; `Theme.focusMarkMaximized` for maximized ones |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
 | What lights the bell, how long a seen notification is kept | `Theme.notifBell` (`"unseen"`, or `"history"` for anything kept), `Theme.notifHistoryAge` (ms, `0` keeps until cleared) |
 | Whether a Bluetooth device connecting raises a toast, and going too | `Theme.btAnnounce` (`"connect"`, `"both"` or `"off"`), `Theme.btAnnounceSettle` |

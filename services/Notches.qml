@@ -30,6 +30,12 @@ Singleton {
   // after the tab is open.
   property string row: ""
 
+  // whether the tabs are only out for the panel that brought them back. hidden
+  // tabs come back with a panel a key asks for, and go again when it closes:
+  // whatever hid them -- a key, or a script following a maximized window -- still
+  // means it, and has no way to know the panel was ever opened.
+  property bool peeking: false
+
   // the strip button whose name is showing under it, and the screen it is on, so
   // only that screen's frame draws it. one for the whole shell, because there is
   // one pointer. tipGone is when the last one went, for Theme.tipWarm.
@@ -42,8 +48,15 @@ Singleton {
   // after which escape stops reaching anything.
   signal refocus()
 
-  // a row cannot be out while the panel it is in is away.
-  onOpenChanged: if (root.open !== "system") root.row = ""
+  onOpenChanged: {
+    // a row cannot be out while the panel it is in is away.
+    if (root.open !== "system") root.row = ""
+
+    if (root.open === "" && root.peeking) {
+      root.peeking = false
+      Screens.tabsHidden = true
+    }
+  }
 
   // what is open on this screen: the tab's id, or "" when nothing is, or when what
   // is open is on another screen.
@@ -61,6 +74,8 @@ Singleton {
   // gone -- its grab would hold the keyboard over nothing -- and neither can a
   // tip under an icon that is no longer there.
   function hideTabs(hidden: bool): void {
+    root.peeking = false
+
     if (hidden) {
       root.close()
       root.tip = null
@@ -71,10 +86,14 @@ Singleton {
 
   // the screen is set before the tab, so the frame that is about to open never
   // sees the new tab while the old screen is still named. a key asking for a
-  // panel while the tabs are hidden brings them back with it: the alternative is
-  // a bind that silently does nothing.
+  // panel while the tabs are hidden brings them back with it (see peeking): the
+  // alternative is a bind that silently does nothing.
   function show(id: string, screen: string): void {
-    Screens.tabsHidden = false
+    if (Screens.tabsHidden) {
+      root.peeking = true
+      Screens.tabsHidden = false
+    }
+
     root.screen = root.resolve(screen)
     root.open = id
   }

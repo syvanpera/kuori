@@ -52,9 +52,13 @@ Singleton {
     return Qt.rect(ipc.at[0], ipc.at[1], ipc.size[0], ipc.size[1])
   }
 
-  // a fullscreen window is the only thing on its monitor, so there is nothing to
-  // disambiguate and nothing to mark.
-  readonly property bool fullscreen: (root.toplevel?.lastIpcObject?.fullscreen ?? 0) !== 0
+  // hyprland's fullscreen mode is two flags: 1 maximized, 2 fullscreen. a
+  // fullscreen window is the only thing on its monitor, so there is nothing to
+  // disambiguate and nothing to mark; a maximized one is marked or not by
+  // Theme.focusMarkMaximized.
+  readonly property int fullscreenMode: root.toplevel?.lastIpcObject?.fullscreen ?? 0
+  readonly property bool fullscreen: (root.fullscreenMode & 2) !== 0
+  readonly property bool maximized: (root.fullscreenMode & 1) !== 0
 
   readonly property bool floating: root.toplevel?.lastIpcObject?.floating ?? false
 

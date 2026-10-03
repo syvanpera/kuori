@@ -64,6 +64,12 @@ Singleton {
   // which windows.lua turns on for them alone.
   property bool focusMarkFloating: false
 
+  // whether a maximized window is marked. it covers the rest of its workspace, so
+  // there is nothing to tell it apart from, and it went unmarked like a fullscreen
+  // one until the user asked for the mark back (2026-10-03). false is that old way.
+  // a fullscreen window is never marked either way.
+  property bool focusMarkMaximized: true
+
   // how solid that grey is, on the same terms as focusOpacity: alpha in the fill,
   // because UnfocusedIndicators drives each mark's opacity to fade it in. 0.67 is
   // hyprland's own aa.
