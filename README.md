@@ -316,6 +316,7 @@ Hyprland config. These are the ones this machine uses, from `~/.config/hypr/bind
 | Brightness up / down | One step of the backlight, through kuori itself |
 | `SUPER` + `CTRL` + `L` | Lock the screen |
 | `SUPER` + `F` | Maximize the window. The tabs hide while a maximized window is showing (below) |
+| `SUPER` + `B` | Hide the tabs along the top edge, or bring them back |
 
 Binding anything else is one more line. With the flake, `kuori ipc call` names the config for you;
 by hand it is `qs ipc -p ~/.config/kuori call`, and the `-p` goes in every one:
