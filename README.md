@@ -313,6 +313,7 @@ Hyprland config. These are the ones this machine uses, from `~/.config/hypr/bind
 | `SUPER` + `SHIFT` + `S` | Screenshot a region |
 | Brightness up / down | One step of the backlight, through kuori itself |
 | `SUPER` + `CTRL` + `L` | Lock the screen |
+| `SUPER` + `B` | Hide the tabs along the top edge, or bring them back |
 
 Binding anything else is one more line. With the flake, `kuori ipc call` names the config for you;
 by hand it is `qs ipc -p ~/.config/kuori call`, and the `-p` goes in every one:
@@ -380,6 +381,17 @@ running shell was started with it: `-p .` from inside the directory finds no ins
 
 The category calls **toggle**: pressing the same one twice opens and closes, while pressing a
 different one while the launcher is open switches category without closing it.
+
+### `notches`
+
+| Call | Does |
+|---|---|
+| `toggle` | Hide every tab on every screen, or bring them back |
+| `hide` / `reveal` | Hide them / bring them back |
+
+Hidden, only the border is left and windows get the band the tabs hung in. The on-screen display
+hangs off the system tab, so it goes with them. A call that opens a panel (`calendar toggle`,
+`system toggle <row>`) brings the tabs back. A restart brings them back as well.
 
 ### `calendar`
 

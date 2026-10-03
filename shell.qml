@@ -174,6 +174,25 @@ ShellRoot {
     }
   }
 
+  // every tab on every screen, put away for a desktop with nothing hanging off its
+  // top edge, and the band they hang in given back to windows. not `show`, which
+  // `qs ipc show` would answer instead.
+  IpcHandler {
+    target: "notches"
+
+    function toggle(): void {
+      Notches.hideTabs(!Screens.tabsHidden)
+    }
+
+    function hide(): void {
+      Notches.hideTabs(true)
+    }
+
+    function reveal(): void {
+      Notches.hideTabs(false)
+    }
+  }
+
   // the system tab onto one of its rows, exactly as that row's icon on the strip
   // would -- which is otherwise a click, and a click is ydotool and a password.
   IpcHandler {

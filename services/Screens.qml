@@ -43,9 +43,15 @@ Singleton {
   // the tabs on it, or with tabs everywhere, the one being worked on.
   readonly property string tabsName: Theme.tabScreens === "all" ? (root.focused?.name ?? "") : root.mainName
 
+  // every tab put away, on every screen, from a keybind. it is thrown through
+  // Notches.hideTabs(), which also shuts whatever panel was out, and it is not
+  // kept across a restart: a shell that came back with no tabs and no way to
+  // tell why would look broken.
+  property bool tabsHidden: false
+
   // whether a screen carries the tabs. every question about it comes here, so
-  // Theme.tabScreens means the same thing everywhere.
+  // Theme.tabScreens and the hide key mean the same thing everywhere.
   function hasTabs(name: string): bool {
-    return Theme.tabScreens === "all" || name === root.mainName
+    return !root.tabsHidden && (Theme.tabScreens === "all" || name === root.mainName)
   }
 }

@@ -57,9 +57,24 @@ Singleton {
     return screen !== "" ? screen : Screens.tabsName
   }
 
+  // put every tab away, or bring them back. a panel cannot stay out with its tab
+  // gone -- its grab would hold the keyboard over nothing -- and neither can a
+  // tip under an icon that is no longer there.
+  function hideTabs(hidden: bool): void {
+    if (hidden) {
+      root.close()
+      root.tip = null
+    }
+
+    Screens.tabsHidden = hidden
+  }
+
   // the screen is set before the tab, so the frame that is about to open never
-  // sees the new tab while the old screen is still named.
+  // sees the new tab while the old screen is still named. a key asking for a
+  // panel while the tabs are hidden brings them back with it: the alternative is
+  // a bind that silently does nothing.
   function show(id: string, screen: string): void {
+    Screens.tabsHidden = false
     root.screen = root.resolve(screen)
     root.open = id
   }

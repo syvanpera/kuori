@@ -281,6 +281,13 @@ unnamed request means: main, or focused in `"all"`), so the switch lives in one 
   tab. The osd follows the system tab it hangs from.
 - The launcher and the toasts still follow focus, and on a screen without tabs they subtract the band
   they no longer need to clear. A toast only makes room for the osd on the screen the osd is on.
+- **`Screens.tabsHidden` takes the tabs off every screen at once** (`notches toggle`, the user's
+  ask, 2026-10-03, bound to `SUPER` + `B`). Not in the design. It is one more term in `hasTabs`, so
+  everything above follows it for free, the reservation included. It is thrown through
+  `Notches.hideTabs`, which shuts an open panel first, since its grab would otherwise hold the keyboard
+  over nothing. `Notches.show` clears it: a panel key that did nothing while hidden would read as
+  broken. It is not persisted, so a restart (or a hot reload) brings the tabs back. The osd hangs
+  off the system tab and goes with it.
 
 Every screen gets a whole `DesktopShell` — frame, four reservations, all four tabs — from the
 `Variants` in `shell.qml`, and that part worked the first time three monitors were plugged in
