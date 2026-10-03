@@ -21,10 +21,10 @@ PanelWindow {
   // re-entered its own binding every time a toast appeared.
   property string screenName: ""
 
-  // whether this screen has the tabs, and so whether the osd can drop out of the
-  // corner these hang in.
+  // whether this screen has the tabs showing, and whether the osd drops out of the
+  // corner these hang in: it does on the tabs' screen, showing or hidden.
   readonly property bool tabs: Screens.hasTabs(root.screenName)
-  readonly property bool osdHere: Osd.dropped && root.tabs && root.screenName === Screens.tabsName
+  readonly property bool osdHere: Osd.dropped && root.screenName === Screens.tabsName
 
   anchors {
     top: true

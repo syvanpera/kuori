@@ -390,8 +390,8 @@ different one while the launcher is open switches category without closing it.
 | `hide` / `reveal` | Hide them / bring them back |
 
 Hidden, only the border is left and windows get the band the tabs hung in. The on-screen display
-hangs off the system tab, so it goes with them. A call that opens a panel (`calendar toggle`,
-`system toggle <row>`) brings the tabs back. A restart brings them back as well.
+still appears, in the same place, over whatever window is under it. A call that opens a panel
+(`calendar toggle`, `system toggle <row>`) brings the tabs back. A restart brings them back as well.
 
 ### `calendar`
 

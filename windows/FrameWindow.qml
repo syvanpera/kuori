@@ -200,10 +200,10 @@ PanelWindow {
   NotchShadow {
     notch: osd
 
-    visible: root.tabs && osd.visible
+    visible: osd.visible
     opacity: osd.opacity
 
-    topLeftRadius: Theme.notchRadius
+    topLeftRadius: osd.bare ? 0 : Theme.notchRadius
     topRightRadius: 0
     bottomLeftRadius: Theme.notchRadius
     bottomRightRadius: 0
@@ -336,10 +336,13 @@ PanelWindow {
 
     stripWidth: system.width
     // where the system tab it hangs from is: the main screen, or with tabs on
-    // every screen, the focused one.
-    here: root.tabs && root.screenName === Screens.tabsName
+    // every screen, the focused one. that is a screen with tabs by definition,
+    // so it is not asked whether they are showing: with them hidden the box
+    // still answers a key, hanging off the border where the strip would be.
+    here: root.screenName === Screens.tabsName
+    bare: !root.tabs
     x: root.width - width - Theme.borderWidth
-    y: Theme.borderWidth + system.bodyHeight
+    y: Theme.borderWidth + (osd.bare ? 0 : system.bodyHeight)
   }
 
   // the other style: a tab of its own, centred in the gap between the clock and
@@ -349,7 +352,7 @@ PanelWindow {
   OsdNotch {
     id: osdNotch
 
-    here: root.tabs && root.screenName === Screens.tabsName
+    here: root.screenName === Screens.tabsName
       && Notches.openOn(root.screenName) !== "clock"
     x: Math.round((clock.x + clock.width + toggles.x - width) / 2)
     y: Theme.borderWidth

@@ -286,8 +286,10 @@ unnamed request means: main, or focused in `"all"`), so the switch lives in one 
   everything above follows it for free, the reservation included. It is thrown through
   `Notches.hideTabs`, which shuts an open panel first, since its grab would otherwise hold the keyboard
   over nothing. `Notches.show` clears it: a panel key that did nothing while hidden would read as
-  broken. It is not persisted, so a restart (or a hot reload) brings the tabs back. The osd hangs
-  off the system tab and goes with it.
+  broken. It is not persisted, so a restart (or a hot reload) brings the tabs back. The osd stays
+  (the user's call, the same day), so its `here` asks only for `tabsName`, which is a screen with
+  tabs by definition. The notch style is a tab of its own and needs nothing else. The drop style has
+  no strip to hang from, so `OsdBox.bare` hangs it off the border with fillets of its own.
 
 Every screen gets a whole `DesktopShell` — frame, four reservations, all four tabs — from the
 `Variants` in `shell.qml`, and that part worked the first time three monitors were plugged in

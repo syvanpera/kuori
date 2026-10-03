@@ -27,6 +27,11 @@ Item {
   // is two of them reporting a laptop panel from monitors it does not light.
   property bool here: true
 
+  // with the tabs hidden there is no strip to hang from, so the box hangs straight
+  // off the top border instead, and moulds itself onto the band and the side
+  // border the way a tab does, with fillets of its own.
+  property bool bare: false
+
   // 0 away, 1 fully out. the drop-in reads this rather than animating three
   // properties separately and letting them drift apart.
   property real reveal: Osd.dropped && root.here ? 1 : 0
@@ -64,8 +69,24 @@ Item {
     anchors.fill: parent
 
     color: Theme.notch
-    topLeftRadius: Theme.notchRadius
+    topLeftRadius: root.bare ? 0 : Theme.notchRadius
     bottomLeftRadius: Theme.notchRadius
+  }
+
+  // where a bare box meets the top band on its left.
+  InvertedCorner {
+    visible: root.bare
+    corner: "bottomLeft"
+    x: -Theme.notchRadius
+    y: -Theme.seamBleed
+  }
+
+  // and where the side border resumes underneath it.
+  InvertedCorner {
+    visible: root.bare
+    corner: "bottomLeft"
+    x: root.width - Theme.notchRadius
+    y: root.height - Theme.seamBleed
   }
 
   Row {
