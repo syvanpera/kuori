@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Qt.labs.folderlistmodel
 import qs.services
+import qs.theme
 
 // the wallpaper library, and which of it is on screen.
 //
@@ -33,6 +34,18 @@ Singleton {
   // told by `awww query` exiting 0, which it does not without the daemon. the
   // query runs whenever the launcher opens, which is the only thing that asks.
   property bool available: false
+
+  // what awww last said each output is showing, name -> image path ("" for a
+  // colour). what lets a monitor plugged in later be told apart from the ones
+  // that were already here.
+  property var outputs: ({})
+
+  // the outputs there were before a monitor arrived, while the new one is being
+  // brought in line with them, or null. kept from the first change of a burst, so
+  // a dock bringing two monitors up a beat apart still counts both as new.
+  property var before: null
+  property int tries: 0
+  readonly property int followTries: 10
 
   // what qt can draw, not what awww can read. awww takes a wider set, but a
   // wallpaper qt cannot decode would be a row with an empty tile, which is worse
@@ -77,6 +90,40 @@ Singleton {
     if (words.length === 0) return base
 
     return words.replace(/\b\w/g, first => first.toUpperCase())
+  }
+
+  // awww restores its own cache per output name, so a monitor plugged in comes up
+  // showing whatever it showed the last time it was here, not what the others show
+  // now: a wallpaper set while it was away was only ever sent to the outputs that
+  // existed. so a new output is given the picture the old ones have.
+  function follow(): void {
+    const pending = root.before
+
+    if (pending === null) return
+
+    const names = Array.from(Quickshell.screens).map(screen => screen.name)
+
+    // awww makes its surface for a new output a moment after the compositor
+    // announces it, and an output it does not know yet cannot be told anything.
+    if (names.some(name => !(name in root.outputs)) && root.tries < root.followTries) {
+      root.tries++
+      settle.restart()
+      return
+    }
+
+    root.before = null
+
+    const reference = pending.map(name => root.outputs[name]).find(path => path)
+
+    if (!reference) return
+
+    const stale = Object.keys(root.outputs)
+      .filter(name => !pending.includes(name) && root.outputs[name] !== reference)
+
+    if (stale.length === 0) return
+
+    extend.command = ["awww", "img", "-o", stale.join(","), reference].concat(root.transition)
+    extend.running = true
   }
 
   function rebuild(): void {
@@ -129,8 +176,23 @@ Singleton {
 
       onStreamFinished: {
         const match = /currently displaying: image: (.*)$/m.exec(reply.text)
+        const outputs = {}
 
         root.current = match ? match[1].trim() : ""
+
+        // ": eDP-1: 1440x960, scale: 2, currently displaying: image: <path>"
+        for (const line of reply.text.split("\n")) {
+          const output = /([^\s:]+): \d+x\d+.*currently displaying: (.*)$/.exec(line)
+
+          if (!output) continue
+
+          const shown = output[2].trim()
+
+          outputs[output[1]] = shown.startsWith("image: ") ? shown.slice(7) : ""
+        }
+
+        root.outputs = outputs
+        root.follow()
       }
     }
   }
@@ -141,6 +203,34 @@ Singleton {
     // read it back rather than assume the write landed: awww is the truth, and it
     // refuses a path it cannot decode without this shell hearing about it.
     onExited: query.running = true
+  }
+
+  Process {
+    id: extend
+
+    onExited: query.running = true
+  }
+
+  Timer {
+    id: settle
+
+    interval: 300
+    onTriggered: query.running = true
+  }
+
+  Connections {
+    target: Quickshell
+
+    function onScreensChanged(): void {
+      if (!Theme.wallpaperFollow || !root.available) return
+
+      if (root.before === null) {
+        root.before = Object.keys(root.outputs)
+        root.tries = 0
+      }
+
+      settle.restart()
+    }
   }
 
   // the launcher is the only thing that shows this, so the cheapest moment to

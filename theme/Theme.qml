@@ -997,6 +997,11 @@ Singleton {
   function shows(available: bool): bool {
     return available || root.unavailableFeatures === "show"
   }
+
+  // whether a monitor plugged in is given the wallpaper the others are showing.
+  // awww restores each output from its own cache, so without this a monitor comes
+  // back with whatever it showed when it was last unplugged.
+  property bool wallpaperFollow: true
   property int lockBlank: 60
 
   // the design's column starts 208px down a 900px screen. a fraction rather than

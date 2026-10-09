@@ -565,6 +565,13 @@ what it is showing, and tells it to show something else.
   through `QT_PLUGIN_PATH`, which already contains `/run/current-system/sw/lib/qt-6/plugins`, so
   installing the package was the whole change. It is version-coupled: a Qt plugin built against a
   different Qt refuses to load, silently.
+- **A monitor plugged in comes up black, or on a stale picture.** awww restores per output only at
+  `awww restore`, which its unit runs at login, so an output that arrives later gets its own cache
+  or a colour, and `awww img` without `-o` only ever reached the outputs that existed then. Seen
+  2026-10-09 with both LGs at `color: 000000`. `Wallpapers.follow()` notes the outputs from before
+  the first `screensChanged` of a burst, re-queries until awww lists every screen (it makes its
+  surface a beat after the compositor announces one), and sends the old outputs' picture to the
+  new ones with `-o`. `Theme.wallpaperFollow`.
 - Thumbnails are decoded at the tile's size (`sourceSize.height`), not the file's. Only the height is
   set, so a panorama stays a panorama and still covers the square after `PreserveAspectCrop`. There
   is **no thumbnail cache** — six files do not need one. A library of hundreds would.

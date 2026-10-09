@@ -742,6 +742,10 @@ never lands on the one already showing. A file dropped into the folder appears w
 `awww` keeps its own cache of the last image, and its unit restores it at login, so kuori does not
 remember your wallpaper for it.
 
+A monitor plugged in while kuori runs is given the wallpaper the other screens are showing. awww
+on its own brings it back with whatever it showed the last time it was connected, or black.
+`Theme.wallpaperFollow: false` leaves it to awww.
+
 ## Clipboard
 
 Everything copied goes to `cliphist`. The launcher's clipboard category lists it newest first, with
