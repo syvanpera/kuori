@@ -12,7 +12,14 @@ Column {
   // driven by the tab, which is the thing that knows about the pointer.
   property bool peeking: false
 
+  // as wide as the date whether or not it is showing. a positioner skips a child of
+  // zero height, so a column left to measure itself was only as wide as the time
+  // until the date peeked, and the tab grew sideways as well as down.
+  width: Math.max(time.implicitWidth, date.implicitWidth)
+
   Text {
+    id: time
+
     anchors.horizontalCenter: parent.horizontalCenter
 
     text: Qt.formatDateTime(Time.date, "hh:mm")
@@ -33,6 +40,8 @@ Column {
   }
 
   Text {
+    id: date
+
     anchors.horizontalCenter: parent.horizontalCenter
 
     // clipped to nothing rather than hidden, so the strip's height follows it out
