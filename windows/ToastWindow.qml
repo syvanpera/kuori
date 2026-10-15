@@ -159,7 +159,7 @@ PanelWindow {
         anchors.fill: parent
         hoverEnabled: true
 
-        onClicked: Notifications.dismissAll()
+        onClicked: Notifications.sweepAll()
       }
     }
   }

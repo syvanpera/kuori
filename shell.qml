@@ -234,7 +234,7 @@ ShellRoot {
     }
 
     function dismiss(): void {
-      Notifications.dismissAll()
+      Notifications.sweepAll()
     }
   }
 }

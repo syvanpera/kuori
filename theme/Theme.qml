@@ -1296,6 +1296,11 @@ Singleton {
   // away does not come back to an empty list. critical entries never age out.
   property int notifHistoryAge: 3600000
 
+  // what DISMISS ALL does to the history entries behind the toasts it sweeps.
+  // "seen" marks them seen, so the bell goes out and they age out like anything
+  // looked at in the panel; "unseen" leaves them waiting, the old way.
+  property string notifSweep: "seen"
+
   readonly property color toastFill: root.notch.alpha(0.94)
   readonly property color toastChipFill: root.sheen.alpha(0.06)
   readonly property color toastTime: root.tint.alpha(0.35)

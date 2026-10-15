@@ -111,7 +111,8 @@ Singleton {
   // a click on a toast, or on one of its buttons. that is the notification being
   // read, so it leaves the history too: a history is for what you missed, and the
   // bell staying lit for something you just answered was the user's complaint.
-  // expiry and dismiss-all go the other way -- nothing was read -- and keep it.
+  // expiry and dismiss-all go the other way -- nothing was read -- and keep it,
+  // though dismiss-all marks it seen (sweepAll).
   function dismiss(key: int): void {
     const popup = root.popups.find(p => p.key === key)
 
@@ -122,6 +123,23 @@ Singleton {
     // untracking is what tells the client we are done with it; the object is gone
     // immediately afterwards, so nothing may touch it after this line.
     if (popup) popup.notification.dismiss()
+  }
+
+  // the DISMISS ALL button and its ipc call: somebody looked at the stack and waved
+  // it away. that is not reading each one, so the entries stay in the history, but
+  // they have been seen -- the bell staying lit for cards just swept off the screen
+  // was the user's complaint. a monitor unplugged, do not disturb and CLEAR all
+  // sweep through dismissAll() without anyone having looked.
+  function sweepAll(): void {
+    if (Theme.notifSweep === "seen") {
+      const now = Date.now()
+      const swept = root.popups.map(p => p.key)
+
+      root.history = root.history.map(entry =>
+        entry.seen || !swept.includes(entry.key) ? entry : Object.assign({}, entry, { seen: now }))
+    }
+
+    root.dismissAll()
   }
 
   function dismissAll(): void {

@@ -420,7 +420,7 @@ starts a process.
 |---|---|
 | `dnd` | Toggle Do Not Disturb |
 | `clear` | Throw away the history |
-| `dismiss` | Dismiss every toast currently on screen |
+| `dismiss` | Dismiss every toast currently on screen, as `DISMISS ALL` does |
 
 ### `capture`
 
@@ -693,7 +693,8 @@ is down notifications are not merely undrawn. They are dropped.
 - **Do Not Disturb silences the toasts only.** A muted notification still lands in the history, which
   is the only place you would find out it arrived.
 - The history keeps the last 50: what expired unread, what arrived under Do Not Disturb, and what
-  `DISMISS ALL` swept away. **An entry you have seen leaves an hour later**, counted from when you
+  `DISMISS ALL` swept away. `DISMISS ALL` counts as having seen what it swept, so the bell goes out
+  for those (`Theme.notifSweep: "unseen"` leaves them lit). **An entry you have seen leaves an hour later**, counted from when you
   opened the history with it in, not from when it arrived; one you have not seen stays until you
   look. Critical ones stay until cleared. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
   toast still on screen with it. Anything a sender marked *transient* (volume popups and the like)
