@@ -1301,6 +1301,10 @@ Singleton {
   // looked at in the panel; "unseen" leaves them waiting, the old way.
   property string notifSweep: "seen"
 
+  // no toast for a notification from the focused window's application; it still
+  // lands in the history, unseen. false toasts everything, the design's way.
+  property bool notifQuietFocused: true
+
   readonly property color toastFill: root.notch.alpha(0.94)
   readonly property color toastChipFill: root.sheen.alpha(0.06)
   readonly property color toastTime: root.tint.alpha(0.35)

@@ -189,6 +189,32 @@ Singleton {
     return [notification.summary, notification.body].filter(part => part && part.length > 0).join(" — ")
   }
 
+  // whether the sender is the window in front of you, in which case the toast is
+  // only telling you what you are looking at. a browser decides this per tab and
+  // many sites never ask, and nothing on the bus says which tab sent it, so this
+  // quiets the whole application: a message from a background tab goes to the
+  // history unseen, and the bell is what says it came. critical still shows.
+  //
+  // a client names itself twice, appName and the desktop-entry hint, and neither
+  // has to match the window's class; zen calls its window zen-beta. so each side
+  // brings every name it has, the desktop entry's included, and any overlap counts.
+  function fromFocused(notification: var): bool {
+    if (!Theme.notifQuietFocused) return false
+    if (notification.urgency === NotificationUrgency.Critical) return false
+
+    const ipc = FocusedWindow.toplevel?.lastIpcObject
+    if (!ipc?.class) return false
+
+    const entry = DesktopEntries.heuristicLookup(ipc.class)
+    const window = [ipc.class, ipc.initialClass, entry?.id, entry?.name]
+    const sender = [notification.appName, notification.desktopEntry]
+
+    const names = list => list.filter(name => name && name.length > 0).map(name => name.toLowerCase())
+    const theirs = names(window)
+
+    return names(sender).some(name => theirs.includes(name))
+  }
+
   // one timer for every toast on screen, set to whichever expires first, rather
   // than a Timer per card: a QML Timer runs on qt's animation driver and keeps the
   // shell ticking at frame rate while it is pending, so the fewer the better.
@@ -274,7 +300,7 @@ Singleton {
         }].concat(root.history).slice(0, root.maxHistory)
       }
 
-      if (root.dnd) {
+      if (root.dnd || root.fromFocused(notification)) {
         notification.tracked = false
         return
       }

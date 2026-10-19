@@ -690,6 +690,11 @@ is down notifications are not merely undrawn. They are dropped.
   accented because it is the one the sender listed first.
 - **Critical notifications do not time out.** They stay until dismissed.
 - Toasts stand aside while the system panel is open, since they share that corner.
+- **No toast from the window you are in front of.** A notification from the focused window's
+  application goes straight to the history, unseen, so the bell still lights for it. That is the whole
+  application: with a browser focused, a message from a tab in the background is quieted too, since
+  nothing says which tab sent it. Critical ones still toast. `Theme.notifQuietFocused: false` toasts
+  everything.
 - **Do Not Disturb silences the toasts only.** A muted notification still lands in the history, which
   is the only place you would find out it arrived.
 - The history keeps the last 50: what expired unread, what arrived under Do Not Disturb, and what
@@ -845,6 +850,7 @@ every colour, size, duration and font in one place.
 | Colours, sizes, animation timing | `theme/Theme.qml` |
 | Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones; `Theme.focusMarkMaximized` for maximized ones |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
+| Whether the focused application's notifications toast | `Theme.notifQuietFocused` |
 | What lights the bell, how long a seen notification is kept | `Theme.notifBell` (`"unseen"`, or `"history"` for anything kept), `Theme.notifHistoryAge` (ms, `0` keeps until cleared) |
 | Whether a Bluetooth device connecting raises a toast, and going too | `Theme.btAnnounce` (`"connect"`, `"both"` or `"off"`), `Theme.btAnnounceSettle` |
 | Colour temperature range | `Theme.dispTempMin` / `dispTempMax` / `dispTempDefault` |
