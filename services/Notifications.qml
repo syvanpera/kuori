@@ -258,6 +258,12 @@ Singleton {
   // a client names itself twice, appName and the desktop-entry hint, and neither
   // has to match the window's class; zen calls its window zen-beta. so each side
   // brings every name it has, the desktop entry's included, and any overlap counts.
+  //
+  // a window's names count by their first word too, because the sender may not use
+  // any of them whole: zen sends "Zen" with a desktop-entry of "zen", and no entry
+  // by that name exists, while its window and entry are zen-beta, its icon
+  // zen-browser and its name "Zen Browser (Beta)". a release channel is the usual
+  // reason, firefox-esr and google-chrome-beta alike.
   function fromFocused(notification: var): bool {
     if (!Theme.notifQuietFocused) return false
     if (notification.urgency === NotificationUrgency.Critical) return false
@@ -270,7 +276,9 @@ Singleton {
     const sender = [notification.appName, notification.desktopEntry]
 
     const names = list => list.filter(name => name && name.length > 0).map(name => name.toLowerCase())
-    const theirs = names(window)
+    // no flatMap: qt's javascript does not have it, and the throw took every toast
+    // with it while a window was focused.
+    const theirs = names(window).concat(names(window).map(name => name.split(/[^a-z0-9]+/)[0]))
 
     return names(sender).some(name => theirs.includes(name))
   }
