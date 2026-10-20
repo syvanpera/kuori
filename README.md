@@ -701,9 +701,13 @@ is down notifications are not merely undrawn. They are dropped.
   `DISMISS ALL` swept away. `DISMISS ALL` counts as having seen what it swept, so the bell goes out
   for those (`Theme.notifSweep: "unseen"` leaves them lit). **An entry you have seen leaves an hour later**, counted from when you
   opened the history with it in, not from when it arrived; one you have not seen stays until you
-  look. Critical ones stay until cleared. Clicking an entry forgets it; `CLEAR` empties the lot, and takes any
+  look. Critical ones stay until cleared. The cross on a group forgets everything in it; `CLEAR` empties the lot, and takes any
   toast still on screen with it. Anything a sender marked *transient* (volume popups and the like)
   is never kept.
+- **The history is grouped by application.** A group shows its newest message, a count and `+N more`;
+  clicking its header folds the rest open, each with its own age, and a group stays open until you
+  fold it again or clear the history. The group's bell is the colour of its most urgent message.
+  `Theme.notifGroup: "none"` lists every notification on its own.
 - The bell on the system tab is accent while there is anything in the history you have not seen.
   Clicking it opens the history, which puts it out; `CLEAR` inside that section is what empties it.
 

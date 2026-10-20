@@ -92,6 +92,65 @@ Singleton {
     root.history = root.history.filter(entry => entry.key !== key)
   }
 
+  // the history as the panel draws it, one group per sender, newest group first:
+  // { id, app, items }, items newest first. Theme.notifGroup "none" gives every
+  // entry a group of its own, which draws as the old flat list.
+  readonly property var groups: {
+    const byId = {}
+    const out = []
+
+    for (const entry of root.history) {
+      const id = Theme.notifGroup === "app" ? `app:${entry.app}` : `key:${entry.key}`
+
+      if (!byId[id]) {
+        byId[id] = { id: id, app: entry.app, items: [] }
+        out.push(byId[id])
+      }
+
+      byId[id].items.push(entry)
+    }
+
+    return out
+  }
+
+  // which groups are folded open, by id. kept here rather than in the panel, so a
+  // group stays open across the panel closing, the way the design keeps it.
+  property var expanded: ({})
+
+  function toggleGroup(id: string): void {
+    const next = Object.assign({}, root.expanded)
+
+    next[id] = !next[id]
+    root.expanded = next
+  }
+
+  // the cross on a group: everything that sender said, thrown away at once.
+  function forgetGroup(id: string): void {
+    const group = root.groups.find(g => g.id === id)
+    if (!group) return
+
+    const keys = group.items.map(entry => entry.key)
+    const next = Object.assign({}, root.expanded)
+
+    delete next[id]
+    root.expanded = next
+    root.history = root.history.filter(entry => !keys.includes(entry.key))
+  }
+
+  // a group wears the colour of its most urgent entry, not its newest: a critical
+  // one folded under a chatty sender's later message would otherwise lose its red.
+  function groupColour(items: var): color {
+    const rank = entry => entry.urgency === NotificationUrgency.Critical ? 3
+      : entry.tone === "warning" ? 2
+      : entry.urgency === NotificationUrgency.Low ? 0 : 1
+
+    let loudest = items[0]
+
+    for (const entry of items) if (rank(entry) > rank(loudest)) loudest = entry
+
+    return root.urgencyColour(loudest?.urgency ?? -1, loudest?.tone ?? "")
+  }
+
   function toggleDnd(): void {
     root.dnd = !root.dnd
 
@@ -105,6 +164,7 @@ Singleton {
   // gone would be answering only half the request.
   function clear(): void {
     root.history = []
+    root.expanded = {}
     root.dismissAll()
   }
 

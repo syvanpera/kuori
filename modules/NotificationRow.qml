@@ -86,17 +86,17 @@ PanelRow {
     height: Math.min(contentHeight, Theme.notifListMax)
 
     visible: Notifications.history.length > 0
-    model: Notifications.history
+    model: Notifications.groups
     spacing: Theme.notifEntryGap
 
     clip: true
     boundsBehavior: Flickable.StopAtBounds
 
-    delegate: NotificationEntry {
+    delegate: NotificationGroup {
       required property var modelData
 
       width: ListView.view.width
-      entry: modelData
+      group: modelData
     }
   }
 }

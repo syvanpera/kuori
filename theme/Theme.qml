@@ -1316,21 +1316,48 @@ Singleton {
   readonly property color toastPrimaryHover: root.accent.alpha(0.26)
   readonly property color toastDismissText: root.tint.alpha(0.55)
 
-  // and the history, inside the system panel
-  property int notifListMax: 186
+  // and the history, inside the system panel. "app" folds it into one group per
+  // sender, newest message showing and the rest behind a chevron, the design's way;
+  // "none" is one group per notification, the flat list it was before.
+  property string notifGroup: "app"
+
+  property int notifListMax: 236
   property int notifEntryGap: 2
   property int notifEntryPaddingH: 8
   property int notifEntryPaddingV: 7
   property int notifEntryRadius: 9
   property int notifEntryGlyph: 14
-  property int notifEntryTextGap: 4
   property int notifAppSize: 11
   property real notifTimeSize: 9.5
   property real notifBodySize: 10.5
   readonly property int notifBodyLine: 14
   property int notifEmptySize: 11
 
-  readonly property color notifEntryHover: root.sheen.alpha(0.12)
+  // a group: the header line is 12 high with its glyph a pixel low, the messages
+  // under it start at the name's left edge
+  property int notifHeadHeight: 12
+  property int notifHeadGlyphDrop: 1
+  property int notifHeadGap: 6
+  property int notifRowsTop: 4
+  property int notifRowsBottom: 8
+  property int notifRowGap: 6
+  property int notifRowTimeGap: 8
+  property int notifCountSize: 9
+  property int notifCountPaddingH: 5
+  property int notifCountPaddingV: 2
+  property int notifChevronSize: 14
+  property int notifCloseSize: 13
+  property real notifMoreSize: 9.5
+  property real notifMoreSpacing: 0.38
+
+  readonly property color notifGroupOpen: root.sheen.alpha(0.05)
+  readonly property color notifCountFill: root.sheen.alpha(0.08)
+  readonly property color notifCountText: root.tint.alpha(0.6)
+  readonly property color notifChevron: root.tint.alpha(0.4)
+  readonly property color notifClose: root.tint.alpha(0.35)
+  readonly property color notifCloseHover: root.tint.alpha(0.85)
+  readonly property color notifMore: root.tint.alpha(0.4)
+  readonly property color notifRowTime: root.tint.alpha(0.3)
   readonly property color notifBody: root.tint.alpha(0.6)
   readonly property color notifEmpty: root.tint.alpha(0.4)
   readonly property color notifDim: root.tint.alpha(0.45)
