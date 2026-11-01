@@ -1,4 +1,9 @@
-# kuori
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark.svg">
+    <img alt="kuori" src="docs/logo-light.svg" width="320">
+  </picture>
+</h1>
 
 A desktop shell for Hyprland, written in [Quickshell](https://quickshell.org) and QML. *Kuori* is
 Finnish for shell, husk, envelope.
