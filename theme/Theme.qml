@@ -172,6 +172,12 @@ Singleton {
   // how wide that rim is beside and below the console.
   property int consoleRim: root.borderWidth
 
+  // whether a click anywhere outside the notch puts the console away. the click is
+  // spent on that and reaches nothing under it, the way a click outside a panel
+  // only closes the panel. the tabs still take theirs. false leaves the console
+  // down until its key.
+  property bool consoleClickAway: true
+
   // the notch goes back up with the console, so it has to move the way hyprland
   // moves the window: specialWorkspaceOut in qconsole.lua, speed 2 (in tenths of a
   // second) on easeInOutCubic, whose points looknfeel.lua defines. kept in step by

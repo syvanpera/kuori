@@ -67,7 +67,10 @@ into it, and the notch goes back up with it on the way out, so `Theme.consoleRet
 windows carry no mark: the notch already says where they are. A tab sitting across the top of the
 notch, the clock usually, melts into it, since only its shadow on the console said it was a tab
 (until its panel opens), and a click on it does not open the calendar across the console; the
-calendar keybind still does. The toggles tab, which would sit half on the notch's shoulder, steps
+calendar keybind still does. A click anywhere outside the notch puts the console away, and
+closes a panel open over it; the click goes no further, the way a click outside a panel only closes
+the panel. The tabs still take theirs. `Theme.consoleClickAway: false` leaves it down until its
+key. The toggles tab, which would sit half on the notch's shoulder, steps
 aside while the console is down.
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
@@ -870,7 +873,7 @@ every colour, size, duration and font in one place.
 |---|---|
 | Colours, sizes, animation timing | `theme/Theme.qml` |
 | Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones; `Theme.focusMarkMaximized` for maximized ones |
-| The drop-down console's notch | `Theme.consoleWorkspace` (`""` for none), `Theme.consoleRim`, `Theme.consoleRetract` and `consoleRetractCurve` |
+| The drop-down console's notch | `Theme.consoleWorkspace` (`""` for none), `Theme.consoleClickAway`, `Theme.consoleRim`, `Theme.consoleRetract` and `consoleRetractCurve` |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
 | Whether the focused application's notifications toast | `Theme.notifQuietFocused` |
 | What lights the bell, how long a seen notification is kept | `Theme.notifBell` (`"unseen"`, or `"history"` for anything kept), `Theme.notifHistoryAge` (ms, `0` keeps until cleared) |

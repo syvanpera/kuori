@@ -128,6 +128,11 @@ Item {
   // round it.
   readonly property real outerRadius: Theme.windowRadius + root.rim
 
+  // the box the notch and the console fill, top edge to rim, for the frame to keep
+  // out of the click-away region: a click on the console is the console's, and one
+  // on the notch round it is too near to read as a click elsewhere.
+  readonly property alias area: area
+
   anchors.fill: parent
 
   opacity: root.lit ? 1 : 0
@@ -141,6 +146,14 @@ Item {
   // point lit already holds the value that started it.
   Behavior on opacity {
     NumberAnimation { duration: root.lit ? Theme.notchFadeDuration : Theme.consoleRetract }
+  }
+
+  Item {
+    id: area
+
+    x: root.outerLeft
+    width: root.outerRight - root.outerLeft
+    height: root.outerBottom
   }
 
   Shape {

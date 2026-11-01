@@ -65,6 +65,15 @@ Singleton {
     return out
   }
 
+  // put a special workspace away. toggle is the only verb hyprland has for it, so
+  // this only toggles one that is known to be showing, or a second call would
+  // bring it straight back.
+  function hide(monitorName: string, name: string): void {
+    if (name === "" || root.on(monitorName) !== name) return
+
+    Hyprland.dispatch(`hl.dsp.workspace.toggle_special("${name.replace(/^special:/, "")}")`)
+  }
+
   Component.onCompleted: Hyprland.refreshMonitors()
 
   Connections {

@@ -55,6 +55,19 @@ PanelWindow {
     Region { item: root.tabs ? clock.hitArea : null }
     Region { item: root.tabs ? system.hitArea : null }
     Region { item: root.tabs ? toggles.hitArea : null }
+
+    // and while the console is down, everything but the notch round it, so a
+    // click anywhere else can put it away. the tabs are already in above, and
+    // the subtraction only reaches this region, so the ones on the notch still
+    // take their clicks.
+    Region {
+      item: clickAway.enabled ? clickAway : null
+
+      Region {
+        item: clickAway.enabled ? consoleNotch.area : null
+        intersection: Intersection.Subtract
+      }
+    }
   }
 
   WlrLayershell.layer: WlrLayer.Top
@@ -240,6 +253,28 @@ PanelWindow {
     id: consoleNotch
 
     monitor: root.monitor
+  }
+
+  // a press anywhere outside the notch puts the console away (Theme.consoleClickAway).
+  // the input region above is what limits it to outside; this only has to fill the
+  // screen. before the tabs, which are over it and take their own presses. on the
+  // press, not the click, so the console is already going as the button comes up.
+  MouseArea {
+    id: clickAway
+
+    anchors.fill: parent
+
+    enabled: Theme.consoleClickAway && consoleNotch.lit
+    acceptedButtons: Qt.AllButtons
+
+    // a panel open over the console is dismissed too. its focus grab would
+    // otherwise see nothing to do: this press lands on the frame, which is inside
+    // the grab, not elsewhere.
+    onPressed: {
+      if (Notches.openOn(root.screenName) !== "") Notches.close()
+
+      SpecialWorkspaces.hide(root.monitor?.name ?? "", Theme.consoleWorkspace)
+    }
   }
 
   // between the frame and the notches, so a window sitting against the top edge

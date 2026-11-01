@@ -300,6 +300,17 @@ windows underneath were drawn across the console. `modules/ConsoleNotch.qml` mak
   not opening on a **click** while the console is down (`Notch.clickable`), so the calendar cannot
   open across it by accident. Only the click: a keybind or ipc is deliberate, and an already open
   calendar can still be clicked shut, the strip's toggle being how it closes.
+- **A click outside puts it away** (`Theme.consoleClickAway`, the user's ask, 2026-11-01). Hyprland's
+  lua has no pointer button event at all (its event names are `window.*`, `workspace.*`,
+  `monitor.*`, `layer.*`, `config.*`), and closing on `window.active` in their `qconsole.lua`
+  would miss a click on bare desktop or the frame, which move no focus. So the frame's input
+  region grows to the whole screen **minus the notch** while it is down (a nested `Region` with
+  a `Subtract` child, which only subtracts from its parent, so the tabs on the notch keep their
+  clicks), and a press there toggles the special workspace. The press is spent on it, like the
+  launcher's scrim, and it also closes an open panel: that press lands on the frame, inside the
+  panel's focus grab, so the grab would not have read it as a click elsewhere. Toggle is
+  hyprland's only verb for a special workspace, so `SpecialWorkspaces.hide()` only sends it for
+  one known to be showing.
 - **A flush side** (two windows, which `qconsole.lua` gives the full width) is square against the
   side border with a fillet underneath, the way a flush tab is.
 - Verified 2026-11-01 on eDP-1 alone: one window and two (a second from ghostty's own
