@@ -36,6 +36,11 @@ Item {
   // what the tab becomes while open. a tab without one never opens.
   property Component panel: null
 
+  // whether a click on the strip opens the panel. false leaves a keybind or ipc
+  // able to open it, and a panel already open able to be clicked shut, since the
+  // strip's toggle is also how it closes -- see the MouseArea below.
+  property bool clickable: true
+
   // how much of something else is hanging below this tab -- the osd, under the
   // system tab. the tab does not draw it, but it is part of the same silhouette:
   // the corner between them squares off and the fillet where the tab meets the side
@@ -212,7 +217,7 @@ Item {
     anchors.top: body.top
     height: root.stripHeight
 
-    enabled: root.trigger === "click" && root.panel !== null
+    enabled: root.trigger === "click" && root.panel !== null && (root.clickable || root.open)
     visible: enabled
 
     onClicked: Notches.toggle(root.notchId, root.screenName)

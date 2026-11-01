@@ -31,6 +31,9 @@ Bluetooth pairing agent, the drive mounter and the lock screen.
   keeping a busy drive busy.
 - **A focus indicator** on the active window, either a strip along one edge or a corner wedge, and
   the same mark in grey on every other window on screen.
+- **A notch for a drop-down console**: while the special workspace named by
+  `Theme.consoleWorkspace` is showing, the frame grows down around its windows like a tab, so a
+  quake-style terminal hangs off the top edge instead of floating under it with wallpaper above.
 - **A lock screen** that takes a password or a fingerprint. It locks after ten idle minutes, when the lid
   closes and before the machine sleeps, and turns the screen off a minute after locking.
 
@@ -51,7 +54,21 @@ mark: Hyprland reports nothing while a window is dragged, so a mark could not fo
 They get Hyprland's own border instead, from a `floating-border` window rule in the Hyprland config;
 `Theme.focusMarkFloating: true` marks them like any other window. A fullscreen window is never marked,
 since it is alone on the screen. A maximized one is; `Theme.focusMarkMaximized: false` leaves it
-unmarked like a fullscreen one.
+unmarked like a fullscreen one. While a special workspace is showing, the windows of the workspace
+underneath go unmarked, since their marks would land across it.
+
+The drop-down console is the one special workspace kuori frames rather than marks.
+`Theme.consoleWorkspace` names it (`"special:qconsole"`, which is the Hyprland config's own; set
+it to whatever yours drops down, or `""` to turn this off). While it is showing, the frame grows a
+notch around its windows: surface from the top band down to the console, a `Theme.consoleRim`
+rim beside and below it, and the tabs' fillets where it meets the band. The console slides down
+into it, and the notch goes back up with it on the way out, so `Theme.consoleRetract` and
+`consoleRetractCurve` have to match the Hyprland config's `specialWorkspaceOut` animation. Its
+windows carry no mark: the notch already says where they are. A tab sitting across the top of the
+notch, the clock usually, melts into it, since only its shadow on the console said it was a tab
+(until its panel opens), and a click on it does not open the calendar across the console; the
+calendar keybind still does. The toggles tab, which would sit half on the notch's shoulder, steps
+aside while the console is down.
 
 ![The same three windows, with the focused one marked by a corner wedge](docs/focus-mark.webp)
 
@@ -853,6 +870,7 @@ every colour, size, duration and font in one place.
 |---|---|
 | Colours, sizes, animation timing | `theme/Theme.qml` |
 | Focus indicator style | `Theme.focusStyle` (`"mark"` or `"strip"`), `Theme.focusStripEdge`; `Theme.focusMarkUnfocused`, `focusUnfocusedBase` and `focusUnfocusedOpacity` for the other windows; `Theme.focusMarkFloating` for floating ones; `Theme.focusMarkMaximized` for maximized ones |
+| The drop-down console's notch | `Theme.consoleWorkspace` (`""` for none), `Theme.consoleRim`, `Theme.consoleRetract` and `consoleRetractCurve` |
 | How long a toast lasts, how many stack | `Theme.toastTimeout`, `Theme.toastMax` |
 | Whether the focused application's notifications toast | `Theme.notifQuietFocused` |
 | What lights the bell, how long a seen notification is kept | `Theme.notifBell` (`"unseen"`, or `"history"` for anything kept), `Theme.notifHistoryAge` (ms, `0` keeps until cleared) |

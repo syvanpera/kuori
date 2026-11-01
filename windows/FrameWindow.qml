@@ -183,7 +183,19 @@ PanelWindow {
   // before the frame on purpose: the band is drawn over the top of these, so a
   // notch casts onto the desktop below it without smearing the rail it hangs off.
   NotchShadow { notch: workspaces; visible: root.tabs }
-  NotchShadow { notch: clock; visible: root.tabs }
+  // the clock melts into the console notch when that grows round it, and a shadow
+  // would outline it on the console's top rows. a shut clock only: an open
+  // calendar hangs over the console, and is a panel again.
+  NotchShadow {
+    notch: clock
+
+    visible: root.tabs && opacity > 0
+    opacity: consoleNotch.covers(clock) && !clock.open ? 0 : 1
+
+    Behavior on opacity {
+      NumberAnimation { duration: Theme.notchFadeDuration }
+    }
+  }
   NotchShadow { notch: system; visible: root.tabs }
 
   NotchShadow {
@@ -220,6 +232,14 @@ PanelWindow {
 
   DesktopFrame {
     anchors.fill: parent
+  }
+
+  // part of the frame while the console is down, so after it and under the tabs,
+  // which sit on it the way they sit on the band.
+  ConsoleNotch {
+    id: consoleNotch
+
+    monitor: root.monitor
   }
 
   // between the frame and the notches, so a window sitting against the top edge
@@ -263,6 +283,9 @@ PanelWindow {
     screenName: root.screenName
     trigger: "click"
 
+    // not over the console: the calendar would open across it.
+    clickable: !consoleNotch.lit
+
     panel: Component {
       ClockPanel {}
     }
@@ -293,8 +316,9 @@ PanelWindow {
 
     // both of the things that would grow over it -- and on a screen without tabs,
     // always. aside rather than visible, because the tab's own visibility follows
-    // its fade.
-    aside: !root.tabs || Notches.openOn(root.screenName) === "system" || osd.visible
+    // its fade. and while the console is down: it sits half on the notch's
+    // shoulder, neither part of it nor clear of it.
+    aside: !root.tabs || Notches.openOn(root.screenName) === "system" || osd.visible || consoleNotch.lit
 
     Toggles {
       screenName: root.screenName

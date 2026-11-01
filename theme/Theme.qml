@@ -161,6 +161,24 @@ Singleton {
   // property int focusStripEndRadius: root.windowRadius
   property int focusStripEndRadius: 8
 
+  // the special workspace hyprland drops down as a quake console (qconsole.lua).
+  // while it is showing, the frame grows a notch around its windows: surface from
+  // the top band down to the console, and a rim down each side and along the
+  // bottom, so the console hangs off the top edge like a tab instead of floating
+  // under it with wallpaper above. its windows carry no focus mark. "" is the old
+  // way: no notch, and the console marked like any other window.
+  property string consoleWorkspace: "special:qconsole"
+
+  // how wide that rim is beside and below the console.
+  property int consoleRim: root.borderWidth
+
+  // the notch goes back up with the console, so it has to move the way hyprland
+  // moves the window: specialWorkspaceOut in qconsole.lua, speed 2 (in tenths of a
+  // second) on easeInOutCubic, whose points looknfeel.lua defines. kept in step by
+  // hand, like windowRadius.
+  property int consoleRetract: 200
+  readonly property var consoleRetractCurve: [0.65, 0.05, 0.36, 1, 1, 1]
+
   property int systemSpacing: 9
   property int batterySpacing: 5
 

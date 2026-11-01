@@ -32,25 +32,30 @@ Item {
       readonly property var ipc: marker.modelData.lastIpcObject ?? {}
 
       // a special workspace is open over a normal one and is never its monitor's
-      // activeWorkspace, so it is let through when it is the one focus is on --
-      // the only way to know it is showing without asking for the monitors too.
-      // the windows of the workspace underneath stay marked: hyprland dims them
-      // but they are still there.
+      // activeWorkspace, so which one is showing comes from SpecialWorkspaces.
+      // while one is, the windows of the workspace underneath go unmarked: these
+      // marks are drawn above every window, so theirs landed across whatever the
+      // special workspace put over them, and hyprland has dimmed them out of the
+      // picture anyway.
       readonly property bool onShownWorkspace: {
         const ws = marker.modelData.workspace
         if (!ws) return false
 
-        if (ws.id < 0) return ws === (FocusedWindow.toplevel?.workspace ?? null)
+        const special = SpecialWorkspaces.on(root.monitor?.name ?? "")
 
-        return ws === root.monitor?.activeWorkspace
+        if (ws.id < 0) return ws.name === special
+
+        return special === "" && ws === root.monitor?.activeWorkspace
       }
 
       // a fullscreen window covers the rest of its workspace, so there is nothing
       // on it left to mark; a hidden one is a group member behind its tab; a
-      // floating one is hyprland's to border, as in FocusIndicator.
+      // floating one is hyprland's to border, as in FocusIndicator; the console
+      // has its notch.
       readonly property bool lit: marker.modelData !== FocusedWindow.toplevel
         && marker.modelData.monitor === root.monitor
         && marker.onShownWorkspace
+        && !SpecialWorkspaces.framed(marker.modelData)
         && !(marker.modelData.workspace?.hasFullscreen ?? false)
         && !(marker.ipc.hidden ?? false)
         && (Theme.focusMarkFloating || !(marker.ipc.floating ?? false))

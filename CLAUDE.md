@@ -123,7 +123,8 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 | A wallpaper row is named from its filename, prettified | `0-winding-road.webp` becomes "Winding Road" — the leading number is somebody's sort key, not part of the name. The design's rows carry hand-written names it does not say where to get. |
 | The wallpaper on screen says `· current` | Not in the design, which has no state for it. Six pictures with no mark is six pictures you cannot tell apart from the one you are looking at. |
 | `Random wallpaper` sorts after the pictures | The design lists it last. An alphabetical sort would drop it wherever "random" falls, so a row may set `last: true`, which `AppSearch.byName` uses as a tiebreak only — a query that scores it higher still lifts it. |
-| Focus mark / focus strip | Not in the design at all — the user's own feature. `Theme.focusStyle` picks `"mark"` (corner wedge) or `"strip"` (a bar on the window's edge, `Theme.focusStripEdge` top or bottom). Unfocused windows on screen carry the same shape in hyprland's own `inactive_border` grey (`Theme.focusMarkUnfocused`), one `WindowMarker` per window in `UnfocusedIndicators` — the focused one keeps its single moving indicator and its one-frame blank, which a per-window delegate has no need for. A special workspace is only known to be showing when focus is on it; asking would mean refreshing the monitors too. **Floating windows are not marked** (`Theme.focusMarkFloating: false`) and get hyprland's own 2px border from a `floating-border` rule in their `windows.lua`: hyprland emits no event while a window is dragged or resized — nothing on socket2, nothing in the lua event list — so a mark stayed where the window had been until something unrelated fired. Hiding the mark only *during* a drag was considered and dropped: a `non_consuming` bind can catch `SUPER` + mouse drags, but a client-side titlebar drag goes through no bind at all. **A maximized window is marked** (`Theme.focusMarkMaximized`, 2026-10-03), though hyprland reports it with the same `fullscreen` field as a fullscreen one: that field is two flags, 1 maximized and 2 fullscreen, and the mark used to drop for any non-zero value. Unfocused windows on a workspace with a maximized window stay unmarked either way, `hasFullscreen` being true for both: they are behind it. |
+| Focus mark / focus strip | Not in the design at all — the user's own feature. `Theme.focusStyle` picks `"mark"` (corner wedge) or `"strip"` (a bar on the window's edge, `Theme.focusStripEdge` top or bottom). Unfocused windows on screen carry the same shape in hyprland's own `inactive_border` grey (`Theme.focusMarkUnfocused`), one `WindowMarker` per window in `UnfocusedIndicators` — the focused one keeps its single moving indicator and its one-frame blank, which a per-window delegate has no need for. Which special workspace a monitor is showing is `SpecialWorkspaces.on()`, and while one is, the windows underneath go unmarked (2026-11-01): the marks are on a layer above every window, so theirs were drawn across the special workspace's windows. **Floating windows are not marked** (`Theme.focusMarkFloating: false`) and get hyprland's own 2px border from a `floating-border` rule in their `windows.lua`: hyprland emits no event while a window is dragged or resized — nothing on socket2, nothing in the lua event list — so a mark stayed where the window had been until something unrelated fired. Hiding the mark only *during* a drag was considered and dropped: a `non_consuming` bind can catch `SUPER` + mouse drags, but a client-side titlebar drag goes through no bind at all. **A maximized window is marked** (`Theme.focusMarkMaximized`, 2026-10-03), though hyprland reports it with the same `fullscreen` field as a fullscreen one: that field is two flags, 1 maximized and 2 fullscreen, and the mark used to drop for any non-zero value. Unfocused windows on a workspace with a maximized window stay unmarked either way, `hasFullscreen` being true for both: they are behind it. |
+| The drop-down console is framed by a **notch** | Not in the design at all, the user's ask (2026-11-01) for the quake console in their `qconsole.lua`. See *The console notch*. `Theme.consoleWorkspace: ""` is the old way. |
 | The focus strip's outer corners are rounded by their own `Theme.focusStripEndRadius` | Not by half the thickness: the horns make the outer edge four times taller than the bar, so a radius scaled to the bar is round in the arithmetic and square to the eye. It followed `windowRadius` until the user tuned it, and the horns still do — they have to ride hyprland's own curve. |
 | A second click on the clock's time closes the panel | In the design the strip collapses to zero height when open, so its own toggle is unclickable. |
 | The calendar's date line is clickable **only** when paged off the current month | On the current month it is already saying something true and has nothing to undo. |
@@ -263,6 +264,48 @@ throw.
   when that tab grows a panel — which it does leftwards, over this.
 - The recording dot stays at the end of the system tab (the user's call): it is a report like the rest
   of that tab, even though it is the one thing there that opens nothing.
+
+## The console notch
+
+The user's Hyprland config drops a ghostty down as the special workspace `special:qconsole`
+(`qconsole.lua` in their hypr directory), flush with the top reservation and with no gap above it.
+Before this the reservation's 25px of tab band showed dimmed wallpaper between the frame and the
+console, the console's strip sat in that band half under the clock tab, and the grey marks of the
+windows underneath were drawn across the console. `modules/ConsoleNotch.qml` makes it a notch.
+
+- **It is drawn above the console, so it goes round it.** The frame is on the top layer, over every
+  window. The notch is one path, the outer silhouette minus **one hole per window** under the
+  odd-even rule. A single hole for the windows' union left a wedge of desktop between two windows'
+  rounded corners where they meet, since each is rounded by hyprland on its own. The holes are inset
+  by `seamBleed`, which also keeps neighbours from touching: two overlapping holes fill back in.
+- **The way in is not synchronised; the way out is.** `specialWorkspaceIn` is `easeOutQuint`,
+  hundreds of pixels in its first frame, so a notch one frame behind the window would be visibly
+  wrong, and nothing reports the slide. The notch fades in at full size and the window slides into
+  it from under the band. `specialWorkspaceOut` is `easeInOutCubic`, which starts slowly, so on
+  close the notch rises a screen height on the same curve and duration (`consoleRetract`,
+  `consoleRetractCurve`, kept in step with their config by hand) and fades with it. Hyprland
+  fades the console as it slides it out: a notch that only rose was a bare rim over the desktop for
+  a frame or two. Holding it in place instead, the first version, left an empty outline for 100ms.
+- **`activespecialv2` beats the snapshot.** `SpecialWorkspaces` reads `specialWorkspace.name`
+  from the monitors snapshot at startup (quickshell's `HyprlandMonitor` has no property for it),
+  then takes the event straight, because a `refreshMonitors()` round-trip would start the retract
+  late. A `moveworkspacev2` forgets what was heard and refreshes, since it says nothing about
+  the monitor the workspace left. Hyprland fires `activewindowv2` **before** `activespecialv2`.
+- **The tabs over it.** The clock is the same colour as the notch and sits across its top, so the
+  only thing still drawing it as a tab was its **shadow, falling through the hole** onto the
+  console's top rows (the frame's band covers a shadow, a hole does not). `ConsoleNotch.covers()`
+  says when a tab is wholly over the notch, and the frame fades that tab's shadow out unless its
+  panel is open. The toggles tab sat half on the notch's right shoulder, so it steps aside
+  (`aside`) while the console is down: the user's ask, 2026-11-01, the same day. So is the clock
+  not opening on a **click** while the console is down (`Notch.clickable`), so the calendar cannot
+  open across it by accident. Only the click: a keybind or ipc is deliberate, and an already open
+  calendar can still be clicked shut, the strip's toggle being how it closes.
+- **A flush side** (two windows, which `qconsole.lua` gives the full width) is square against the
+  side border with a fillet underneath, the way a flush tab is.
+- Verified 2026-11-01 on eDP-1 alone: one window and two (a second from ghostty's own
+  `ctrl+shift+n`, typed with wtype; launching another `--class` instance is absorbed by the running
+  one), and a burst of `grim -t ppm` frames through a close. Not tried on a second monitor or with the
+  tabs hidden, where the reservation is 5 and the band above the console is nothing.
 
 ## More than one monitor
 
@@ -814,6 +857,8 @@ with wtype — never test by really locking with nobody at the machine to type t
   with nothing in the log.
 - **A mirroring `Scale` needs both origins set**, even when only one axis is used. With `origin.x`
   left at its default the shape renders as *nothing at all*, identity scale or not.
+- **`console` is not a usable property name.** `root.console: …` in a `Binding` fails to
+  compile with "Illegal property name", the JS global getting in the way. The probe catches it.
 - **`bottom` is a FINAL anchor line on `Item`** — you cannot name a property that. Same for `top`,
   `left`, `right`, `baseline`. Use `atBottom` or similar.
 - **A `Process` that is still running ignores a new `command`.** Setting it and then `running = true`
