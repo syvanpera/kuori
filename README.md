@@ -15,9 +15,11 @@ Bluetooth pairing agent, the drive mounter and the lock screen.
 ## What it does
 
 - **A frame** around the desktop, with the rounded opening your windows live in.
-- **Four tabs** on the top edge: workspaces (left), the clock and its calendar (centre), and on the
-  right three switches (night light, stay awake, Do Not Disturb) beside the system tab. The calendar
-  shows your Google Calendar events.
+- **Tabs** on the top edge: workspaces (left), the clock and its calendar (centre), and on the
+  right the tray, three switches (night light, stay awake, Do Not Disturb) and the system tab. The
+  calendar shows your Google Calendar events.
+- **A system tray**: kuori is the session's StatusNotifierWatcher, so the icons applications put in
+  a tray (Steam, say) appear in a tab of their own, with their menus opening out of it.
 - **The system tab**: the network, Bluetooth, volume, drives, display, notifications and battery at a
   glance, each opening its own row of a panel with the controls underneath, and a capture block for
   screenshots, recordings and picking a colour off the screen. Resting the pointer on an icon names it.
@@ -433,6 +435,12 @@ starts a process.
 |---|---|
 | `toggle` | Open or close the clock tab's calendar |
 
+### `tray`
+
+| Call | Does |
+|---|---|
+| `menu <n>` | Open the menu of the `n`th tray icon, counting from 1; the same again closes it |
+
 ### `system`
 
 | Call | Does |
@@ -593,6 +601,18 @@ Opening the tab re-reads the file, and if it is older than five minutes starts t
 well, so what you see is at most a few minutes behind Google while you are looking and costs
 nothing while you are not.
 
+**Tray** (right, left of the toggles) holds the icons applications put in a system tray, and is
+only there while one has. kuori registers `org.kde.StatusNotifierWatcher` itself, so applications
+using StatusNotifierItem or AppIndicator find it with nothing else running. Steam, started before
+kuori was, registered the moment kuori came up. A left click is the
+application's own action (Steam opens its window), a middle click its secondary one, and the wheel is
+passed on to it. A right click opens the application's menu out of the tab, drawn like the other
+panels: the arrow keys move through it, Return picks, a submenu replaces the list with a row at the
+top to go back (or Left), and a click on the icon again, anywhere outside, or Escape closes it. The
+toggles step aside while it is open. An icon whose application says it has nothing to report
+(passive) is hidden; `Theme.trayPassive` shows those too, and `Theme.tray: false` turns the tab off
+and leaves the watcher's name for another bar to take.
+
 **Toggles** (right, just left of the system tab) is three switches and nothing else: a moon for the
 night light, a cup for the idle inhibitor and a crossed circle for Do Not Disturb. Each is accent
 while on and dim while off, and a click toggles it. The cup is also lit while an application is
@@ -662,7 +682,7 @@ silence anything and does not clear anything. Do Not Disturb is the switch on th
 
 The red recording dot reports only; it is the one thing on the tab that opens nothing.
 
-**Resting the pointer on an icon names it**, on both the system and the toggles tab, after a little
+**Resting the pointer on an icon names it**, on the system, toggles and tray tabs, after a little
 over half a second. Sliding along to the next icon names that one at once. A switch says which way it
 is set and what a click will do ("Night light off — click to turn on"), and the words change under
 the pointer when you click. The network icon names the access point you are on, or says "Ethernet" and the
@@ -676,7 +696,7 @@ folds away.
 ### The on-screen display
 
 Press a volume or brightness key and a tab slides down from the top edge, centred between the clock
-and the toggles, with the glyph, a bar and the percentage. It follows further presses and takes itself
+and the tray (or the toggles, with nothing in the tray), with the glyph, a bar and the percentage. It follows further presses and takes itself
 away 1.7 seconds after the last one. Muted says `—`, with the glyph and the bar at nothing in grey
 rather than accent.
 
@@ -687,7 +707,7 @@ it would work with no change to your Hyprland config at all. (The brightness key
 kuori, but for a different reason: see `backlight` above.)
 
 It stays away entirely while the system panel is open, since the panel is showing those same sliders,
-and steps aside while the calendar is open, which covers the gap it hangs in. With several monitors it
+and steps aside while the calendar or a tray menu is open, either of which covers the gap it hangs in. With several monitors it
 appears on the focused one only.
 
 **Two styles**, picked by `Theme.osdStyle`. `"notch"` (the default) is the tab above. `"drop"` is a
@@ -893,6 +913,7 @@ every colour, size, duration and font in one place.
 | How long before it locks, and then how long before the screen goes off | `Theme.lockIdle`, `Theme.lockBlank`, in seconds |
 | Whether applications may hold idle off over D-Bus | `Theme.appInhibit` (they are still answered when false) |
 | Whether a feature whose daemon is down hides | `Theme.unavailableFeatures` (`"hide"` or `"show"`) |
+| Whether the tray shows, and whether it shows passive icons | `Theme.tray`, `Theme.trayPassive` |
 | Whether strip icons name themselves on hover, and how soon | `Theme.stripTips`, `Theme.tipDelay` |
 | Where captures are written | `~/.config/user-dirs.dirs`, not kuori |
 | Whether a drive is mounted as it is plugged in, whether eject powers it off, and how long "Safe to remove" stays | `Theme.drvAutomount`, `Theme.drvPowerOff`, `Theme.drvSafeLinger`; `Theme.drvFlushNotice` for how long an eject runs before it says it is writing |

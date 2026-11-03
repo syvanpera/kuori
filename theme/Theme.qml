@@ -194,6 +194,27 @@ Singleton {
   property int togglesGap: 28
   property int togglesSpacing: 11
 
+  // the tray tab: the icons applications put in a status notifier tray, in a tab
+  // of their own the toggles' gap clear of the toggles, and only while there is
+  // something in it. not in the design. false is the old way, and leaves the
+  // StatusNotifierWatcher name unclaimed for another bar.
+  property bool tray: true
+  // a passive item is an application saying it has nothing to report right now,
+  // which is what the spec means a tray to hide. true shows them anyway.
+  property bool trayPassive: false
+  property int traySpacing: 9
+  // the largest an icon can be without making the strip taller than notchHeight
+  // with its padding.
+  property int trayIconSize: 15
+
+  // its menu, hung under the strip the way the system panel is. the sizes of its
+  // rows are the system panel's list entries'.
+  property int trayMenuWidth: 220
+  property int trayMenuPadding: 8
+  property int trayMenuPaddingTop: 4
+  property int trayMenuSeparatorGap: 4
+  property real trayMenuDisabled: 0.4
+
   // the rule under the strip icon whose section the system panel is showing. the
   // design draws it as a text-decoration, 1.5px thick and 4px clear of the glyph;
   // it is a rectangle here because a font underline honours neither figure.

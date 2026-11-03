@@ -124,6 +124,7 @@ The hole has to be genuinely transparent, which a `Rectangle` cannot do.
 | The wallpaper on screen says `· current` | Not in the design, which has no state for it. Six pictures with no mark is six pictures you cannot tell apart from the one you are looking at. |
 | `Random wallpaper` sorts after the pictures | The design lists it last. An alphabetical sort would drop it wherever "random" falls, so a row may set `last: true`, which `AppSearch.byName` uses as a tiebreak only — a query that scores it higher still lifts it. |
 | Focus mark / focus strip | Not in the design at all — the user's own feature. `Theme.focusStyle` picks `"mark"` (corner wedge) or `"strip"` (a bar on the window's edge, `Theme.focusStripEdge` top or bottom). Unfocused windows on screen carry the same shape in hyprland's own `inactive_border` grey (`Theme.focusMarkUnfocused`), one `WindowMarker` per window in `UnfocusedIndicators` — the focused one keeps its single moving indicator and its one-frame blank, which a per-window delegate has no need for. Which special workspace a monitor is showing is `SpecialWorkspaces.on()`, and while one is, the windows underneath go unmarked (2026-11-01): the marks are on a layer above every window, so theirs were drawn across the special workspace's windows. **Floating windows are not marked** (`Theme.focusMarkFloating: false`) and get hyprland's own 2px border from a `floating-border` rule in their `windows.lua`: hyprland emits no event while a window is dragged or resized — nothing on socket2, nothing in the lua event list — so a mark stayed where the window had been until something unrelated fired. Hiding the mark only *during* a drag was considered and dropped: a `non_consuming` bind can catch `SUPER` + mouse drags, but a client-side titlebar drag goes through no bind at all. **A maximized window is marked** (`Theme.focusMarkMaximized`, 2026-10-03), though hyprland reports it with the same `fullscreen` field as a fullscreen one: that field is two flags, 1 maximized and 2 fullscreen, and the mark used to drop for any non-zero value. Unfocused windows on a workspace with a maximized window stay unmarked either way, `hasFullscreen` being true for both: they are behind it. |
+| A **tray** tab, left of the toggles | Not in the design at all, the user's ask (2026-11-03, for Steam). Placement was their call between this and right of the workspaces. See *The tray*. `Theme.tray: false` is the old way. |
 | The drop-down console is framed by a **notch** | Not in the design at all, the user's ask (2026-11-01) for the quake console in their `qconsole.lua`. See *The console notch*. `Theme.consoleWorkspace: ""` is the old way. |
 | The focus strip's outer corners are rounded by their own `Theme.focusStripEndRadius` | Not by half the thickness: the horns make the outer edge four times taller than the bar, so a radius scaled to the bar is round in the arithmetic and square to the eye. It followed `windowRadius` until the user tuned it, and the horns still do — they have to ride hyprland's own curve. |
 | A second click on the clock's time closes the panel | In the design the strip collapses to zero height when open, so its own toggle is unclickable. |
@@ -317,6 +318,45 @@ windows underneath were drawn across the console. `modules/ConsoleNotch.qml` mak
   `ctrl+shift+n`, typed with wtype; launching another `--class` instance is absorbed by the running
   one), and a burst of `grim -t ppm` frames through a close. Not tried on a second monitor or with the
   tabs hidden, where the reservation is 5 and the band above the console is nothing.
+
+## The tray
+
+`services/Tray.qml` is the only file that imports `Quickshell.Services.SystemTray`, and is named
+around its `SystemTray` singleton the way `Bluez` is. `modules/TrayIcons.qml` is the strip,
+`modules/TrayMenu.qml` and `TrayMenuEntry.qml` the menu.
+
+- **Reading `SystemTray` is what claims `org.kde.StatusNotifierWatcher`.** Nothing on this machine
+  owned the name before (no waybar), so Steam's AppIndicator had nowhere to register. It watches for
+  the name and registered itself within a second of the reload that first read the singleton, with
+  no restart of Steam (`RegisteredStatusNotifierItems` then listed
+  `/org/ayatana/NotificationItem/steam`). `Theme.tray: false` is short-circuited before the read,
+  so it leaves the name for another bar.
+- **The menu is drawn, not `display()`ed.** `SystemTrayItem.display()` hands the menu to a qt
+  popup of its own, which is not this shell's surface. `QsMenuOpener` gives the entries as objects:
+  `text` (dbusmenu's `_` mnemonics are stripped by `TrayMenu.label()`), `isSeparator`,
+  `buttonType`/`checkState`, `icon`, `hasChildren`, and the `triggered()` signal, which is *called*
+  to click one. A submenu is an entry handed to the opener as its `menu`, so walking in is pushing
+  it on `stack`. The opener being set is also what tells the application its menu is being looked
+  at.
+- **It grows from the strip's centre**, so the icon right clicked stays under the pointer. That is
+  over the toggles, which are `aside` while it is open, and the notch-style osd stands aside too,
+  the calendar's reasoning. The toggles' other reasons do not move the tray: the drop osd and the
+  system panel both stop at or short of the toggles (the panel cleared the tray's fillet with room
+  to spare on DP-9, 2026-11-03, with the drives icon on the strip; a narrower strip leaves less).
+- `Notch.clickable: false` with `keepStrip`: only an icon opens a menu, and the strip's own toggle,
+  still live while open, puts it away from the gaps. `StripButton` grew `buttons`, `otherClicked` and
+  `wheels` for it; a button that does not ask for the wheel sets `wheel.accepted` false, so a wheel
+  still passes through every other strip.
+- **The cursor keys go through `keySink.steered`**, the system panel or the tray menu, both of which
+  answer `step()` and `press()`. Left is the menu's `leave()`.
+- **`reset()` must not empty an empty stack.** The first read of `item` happens inside `handle`'s
+  binding, lands in `onItemChanged`, and a fresh `[]` is a change even when the old one was empty:
+  `Binding loop detected for property "handle"` once per screen, at load.
+- `kuori ipc call tray menu <n>` exists to open a menu without ydotool. Verified 2026-11-03 on
+  DP-9: Steam's icon on the strip, its whole menu (recent games, separators, Store … Exit Steam),
+  the toggles aside, the arrows walking it, and the same call closing it. **Not** verified by doing
+  it: real clicks (left to activate, right, middle, wheel), a submenu (Steam has none), a check or
+  radio entry, an entry with an icon, a passive item, and an application quitting with its menu out.
 
 ## More than one monitor
 

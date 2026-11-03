@@ -174,6 +174,17 @@ ShellRoot {
     }
   }
 
+  // a tray icon's menu, the first icon being 1, and the same again to put it
+  // away. a right click otherwise, and so how a menu is tested without one.
+  IpcHandler {
+    target: "tray"
+
+    function menu(index: int): void {
+      const item = Tray.items[index - 1]
+      if (item) Tray.toggleMenu(item, "")
+    }
+  }
+
   // every tab on every screen, put away for a desktop with nothing hanging off its
   // top edge, and the band they hang in given back to windows. not `show`, which
   // `qs ipc show` would answer instead.

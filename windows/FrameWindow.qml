@@ -55,6 +55,7 @@ PanelWindow {
     Region { item: root.tabs ? clock.hitArea : null }
     Region { item: root.tabs ? system.hitArea : null }
     Region { item: root.tabs ? toggles.hitArea : null }
+    Region { item: root.tabs ? tray.hitArea : null }
 
     // and while the console is down, everything but the notch round it, so a
     // click anywhere else can put it away. the tabs are already in above, and
@@ -119,8 +120,16 @@ PanelWindow {
     readonly property bool pairing: Bluez.asking && Notches.openOn(root.screenName) === "system" && Notches.row === "bluetooth"
     readonly property bool choosing: keySink.pairing && Bluez.request.kind !== "type"
 
-    // the system panel is open here, so the arrows and return are its cursor's.
-    readonly property bool steering: Notches.openOn(root.screenName) === "system" && !keySink.pairing
+    // the panel open here with a cursor of its own: the system panel, or a tray
+    // menu. the arrows and return are that cursor's.
+    readonly property Item steered: {
+      const open = Notches.openOn(root.screenName)
+
+      if (open === "system") return system.panelItem
+      if (open === "tray") return tray.panelItem
+      return null
+    }
+    readonly property bool steering: keySink.steered !== null && !keySink.pairing
 
     focus: true
 
@@ -131,8 +140,8 @@ PanelWindow {
     // nothing to that card.
     Keys.onReturnPressed: keySink.answer()
     Keys.onEnterPressed: keySink.answer()
-    Keys.onUpPressed: if (keySink.steering) system.panelItem?.step(-1)
-    Keys.onDownPressed: if (keySink.steering) system.panelItem?.step(1)
+    Keys.onUpPressed: if (keySink.steering) keySink.steered.step(-1)
+    Keys.onDownPressed: if (keySink.steering) keySink.steered.step(1)
 
     // the launcher's two home-row pairs as well: ctrl+n and ctrl+p the readline
     // way, ctrl+j and ctrl+k the vim way. the panel is one column, so both pairs
@@ -145,16 +154,20 @@ PanelWindow {
 
       if (delta === undefined) return
 
-      system.panelItem?.step(delta)
+      keySink.steered.step(delta)
       event.accepted = true
     }
     Keys.onTabPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
-    Keys.onLeftPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
+    // and in a tray menu, left goes back up out of a submenu.
+    Keys.onLeftPressed: {
+      if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
+      else if (keySink.steering && keySink.steered === tray.panelItem) tray.panelItem.leave()
+    }
     Keys.onRightPressed: if (keySink.choosing) Bluez.selected = 1 - Bluez.selected
 
     function answer(): void {
       if (keySink.choosing) keySink.choose()
-      else if (keySink.steering) system.panelItem?.press()
+      else if (keySink.steering) keySink.steered.press()
     }
 
     function choose(): void {
@@ -216,6 +229,18 @@ PanelWindow {
 
     visible: toggles.visible
     opacity: toggles.opacity
+  }
+
+  // the clock's reasoning: a shut tray wholly over the console notch is part of it.
+  NotchShadow {
+    notch: tray
+
+    visible: tray.visible
+    opacity: consoleNotch.covers(tray) && !tray.open ? 0 : tray.opacity
+
+    Behavior on opacity {
+      NumberAnimation { duration: Theme.notchFadeDuration }
+    }
   }
 
   // the osd's shadow belongs here with the tabs' own, for the same reason: it is
@@ -353,9 +378,53 @@ PanelWindow {
     // always. aside rather than visible, because the tab's own visibility follows
     // its fade. and while the console is down: it sits half on the notch's
     // shoulder, neither part of it nor clear of it.
-    aside: !root.tabs || Notches.openOn(root.screenName) === "system" || osd.visible || consoleNotch.lit
+    // and while a tray menu is out, which grows over it from the left.
+    aside: !root.tabs
+      || Notches.openOn(root.screenName) === "system"
+      || Notches.openOn(root.screenName) === "tray"
+      || osd.visible
+      || consoleNotch.lit
 
     Toggles {
+      screenName: root.screenName
+    }
+  }
+
+  // the tray, the toggles' gap clear of the toggles, and there only while some
+  // application has put something in it. not in the design.
+  //
+  // its menu grows from the strip's centre rather than from an edge, so the icon
+  // that was right clicked stays under the pointer. that is over the toggles,
+  // which step aside for it.
+  Notch {
+    id: tray
+
+    readonly property real centre: toggles.x - Theme.togglesGap - tray.stripWidth / 2
+
+    x: Math.round(tray.centre - width / 2)
+    y: Theme.borderWidth
+    placement: "center"
+    notchId: "tray"
+    screenName: root.screenName
+    trigger: "click"
+    padding: Theme.notchPadding
+
+    // a menu belongs to an icon, so only an icon opens one. the gaps between them
+    // still put an open one away.
+    clickable: false
+    keepStrip: true
+
+    // the toggles' reasons, except that a tray wholly over the console notch is
+    // part of it the way the clock is, and stays.
+    aside: !root.tabs
+      || Tray.items.length === 0
+      || (consoleNotch.lit && !consoleNotch.covers(tray))
+
+    panel: Component {
+      TrayMenu {}
+    }
+
+    TrayIcons {
       screenName: root.screenName
     }
   }
@@ -405,15 +474,19 @@ PanelWindow {
   }
 
   // the other style: a tab of its own, centred in the gap between the clock and
-  // the toggles. it stands aside for the calendar, which opens wide enough to
-  // cover the gap it hangs in, and it touches nothing else -- the system tab keeps
+  // the tray, or the toggles when the tray is empty. it stands aside for the
+  // calendar and for a tray menu, which open wide enough to cover the gap it
+  // hangs in, and it touches nothing else -- the system tab keeps
   // its corner, the toggles stay, and so do the toasts.
   OsdNotch {
     id: osdNotch
 
+    // and for a tray menu, which grows into the same gap from the other side.
     here: root.screenName === Screens.tabsName
       && Notches.openOn(root.screenName) !== "clock"
-    x: Math.round((clock.x + clock.width + toggles.x - width) / 2)
+      && Notches.openOn(root.screenName) !== "tray"
+    // between the clock and the tray's strip, or the toggles with no tray.
+    x: Math.round((clock.x + clock.width + (tray.aside ? toggles.x : tray.centre - tray.stripWidth / 2) - width) / 2)
     y: Theme.borderWidth
   }
 

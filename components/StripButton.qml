@@ -22,7 +22,16 @@ Item {
 
   default property alias content: holder.data
 
+  // the buttons it answers. the left one is clicked(); a tray icon also takes the
+  // right and middle ones, which arrive as otherClicked.
+  property int buttons: Qt.LeftButton
+
+  // whether it takes the wheel. off, a wheel passes through to whatever is under.
+  property bool wheels: false
+
   signal clicked()
+  signal otherClicked(int button)
+  signal scrolled(int delta, bool horizontal)
 
   implicitWidth: holder.implicitWidth
   implicitHeight: holder.implicitHeight
@@ -75,6 +84,7 @@ Item {
     anchors.fill: parent
 
     hoverEnabled: Theme.stripTips && root.tip !== ""
+    acceptedButtons: root.buttons
 
     // qt sends the next button its enter before the last one its exit, so a tip
     // still up is as warm as one that has just gone.
@@ -90,6 +100,19 @@ Item {
       Notches.tipGone = Date.now()
     }
 
-    onClicked: root.clicked()
+    onClicked: mouse => {
+      if (mouse.button === Qt.LeftButton) root.clicked()
+      else root.otherClicked(mouse.button)
+    }
+
+    // passed on as qt measures it, 120 to a notch: the tray spec gives its scroll
+    // no unit, and most applications only read the sign.
+    onWheel: wheel => {
+      wheel.accepted = root.wheels
+      if (!root.wheels) return
+
+      const horizontal = wheel.angleDelta.y === 0
+      root.scrolled(horizontal ? wheel.angleDelta.x : wheel.angleDelta.y, horizontal)
+    }
   }
 }
