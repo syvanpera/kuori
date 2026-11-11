@@ -69,15 +69,34 @@ PanelWindow {
   // overlap instead. nothing is lost by it: that panel is where the history is.
   visible: Notches.openOn(root.screenName) !== "system"
 
+  // one rounded region per card and one for the pill, each with its own radius.
+  // a region from the column itself is its bounding box: it blurred and swallowed
+  // clicks over the gaps between cards, outside their corners, and across the whole
+  // empty width to the left of the narrow dismiss pill. the visibility read is what
+  // makes a hidden pairing card or pill drop out, and the size test is what leaves
+  // the Repeater (a child of the column too) out.
+  Variants {
+    id: parts
+
+    model: Array.from(stack.children).filter(c => c.visible && c.width > 0 && c.height > 0)
+
+    Region {
+      required property Item modelData
+
+      item: modelData
+      radius: modelData?.radius ?? 0
+    }
+  }
+
   // only the cards are clickable; every other pixel of this surface belongs to
   // whatever is behind it. without this the whole top-right corner of the desktop
   // would stop answering the pointer whenever a toast was up.
-  mask: Region { item: stack }
+  mask: Region { regions: parts.instances }
 
   // the design's `backdrop-filter: blur(10px)`. hyprland does the blurring, on the
   // region we hand it -- no framebuffer of our own, which is what a MultiEffect
   // would have cost.
-  BackgroundEffect.blurRegion: Region { item: stack }
+  BackgroundEffect.blurRegion: Region { regions: parts.instances }
 
   Column {
     id: stack

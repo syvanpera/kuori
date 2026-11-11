@@ -1108,9 +1108,12 @@ Hard-won details:
 
 The toast surface is the launcher's window turned inside out — **no focus grab, no keyboard focus, no
 scrim** — and it is sized to the cards themselves (308px wide, as tall as the stack), so the rest of
-the desktop stays live by construction rather than by masking. The design's
-`backdrop-filter: blur(10px)` is `BackgroundEffect.blurRegion`, which hands the region to hyprland;
-their `decoration:blur` is already on, and no framebuffer of ours is involved.
+the desktop outside that box stays live by construction. Inside it, the mask and the design's
+`backdrop-filter: blur(10px)` (`BackgroundEffect.blurRegion`, which hands the region to hyprland;
+their `decoration:blur` is already on, and no framebuffer of ours is involved) are **one rounded
+region per card and one for the pill**, not the column: a region from an item is its bounding box,
+which blurred and swallowed clicks across the gaps, outside every corner, and over the whole empty
+width left of the narrow DISMISS ALL pill (2026-11-11).
 
 ```
 qs ipc -p . call notifications dnd | clear | dismiss
